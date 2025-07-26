@@ -81,4 +81,40 @@ export const assignRoleSchema = z.object({
                 .transform((v) => Number(v))
                 .pipe(z.number().int().positive()),
         rol: z.enum(["cotizador", "comprador"]),
-});
+})
+
+// Types
+export type Producto = {
+        id: string;
+        category: {
+                id: string;
+                nombre: string;
+                descripcion?: string | null;
+        };
+        createdBy?: {
+                id: number;
+                nombre: string;
+                email: string;
+                password: string;
+                token: string;
+                confirmed: boolean;
+                rol: string;
+                googleId?: string | null;
+                avatar?: string | null;
+                createdAt: string;
+                updatedAt: string;
+        } | null;
+        nombre: string;
+        descripcion?: string | null;
+        precio: string;
+        especificaciones?: string | null;
+        link_compra: string;
+        image_url: string;
+        createdAt: string;
+}
+
+export type Categoria = {
+        id: string,
+        nombre: string,
+        descripcion: string | null
+}

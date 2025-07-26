@@ -6,7 +6,8 @@ import {
   Menu,
   X,
   SquarePlus,
-  FileText
+  FileText,
+  ShoppingBag
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -19,6 +20,11 @@ const menuItems = [
     label: 'Inicio',
     icon: <Home size={20} />,
     href: '/admin',
+  },
+  {
+    label: 'Catálogo',
+    icon: <ShoppingBag size={20} />,
+    href: '/catalog',
   },
   {
     label: 'Agregar Producto',
