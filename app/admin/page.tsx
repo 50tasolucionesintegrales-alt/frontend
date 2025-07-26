@@ -1,5 +1,5 @@
 'use client';
-import { BarChart2, PieChart, Users, ShoppingCart, ClipboardList, Award, TrendingUp } from 'lucide-react';
+import { BarChart2, PieChart, Users, ShoppingCart, ClipboardList, Award, TrendingUp, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -68,27 +68,29 @@ export default function EstadisticasPage() {
 
         {/* Tarjetas de resumen */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <Link href='/admin/new-users' className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-green-100 text-[#63B23D]">
-                <Users size={24} />
+          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+            <Link href='/admin/new-users' className="flex items-center gap-4 group">
+              <div className="p-3 rounded-full bg-[#174940]/10 text-[#63B23D] group-hover:bg-[#63B23D]/20 transition-colors">
+                <Users size={24} className="group-hover:scale-110 transition-transform" />
               </div>
               <div>
-                <h3 className="text-2xl font-medium text-gray-500">Nuevos usuarios</h3>
-                <p className="text-lg font-bold text-[#174940]">Asignarles rol</p>
+                <h3 className="text-xl font-semibold text-[#174940] tracking-tight">Nuevos usuarios</h3>
+                <p className="text-base font-medium text-[#63B23D] mt-1">Asignar roles pendientes</p>
               </div>
+              <ChevronRight className="ml-auto text-[#999999] group-hover:text-[#63B23D] transition-colors" size={20} />
             </Link>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <Link href='/admin/users' className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-green-100 text-[#63B23D]">
-                <Users size={24} />
+          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+            <Link href='/admin/users' className="flex items-center gap-4 group">
+              <div className="p-3 rounded-full bg-[#174940]/10 text-[#63B23D] group-hover:bg-[#63B23D]/20 transition-colors">
+                <Users size={24} className="group-hover:scale-110 transition-transform" />
               </div>
               <div>
-                <h3 className="text-2xl font-medium text-gray-500">Usuarios</h3>
-                <p className="text-lg font-bold text-[#174940]">Cambiar rol o eliminar</p>
+                <h3 className="text-xl font-semibold text-[#174940] tracking-tight">Gestión de usuarios</h3>
+                <p className="text-base font-medium text-[#63B23D] mt-1">Modificar o eliminar</p>
               </div>
+              <ChevronRight className="ml-auto text-[#999999] group-hover:text-[#63B23D] transition-colors" size={20} />
             </Link>
           </div>
           
