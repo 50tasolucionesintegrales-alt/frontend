@@ -18,9 +18,6 @@ export default async function CatalogPage() {
         }
     }).then((res) => res.json())
 
-    console.log(resProd)
-    console.log(resCat)
-
     return (
         <Catalogo categorias={resCat} productos={resProd} />
     )

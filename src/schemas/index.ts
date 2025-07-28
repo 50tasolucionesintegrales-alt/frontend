@@ -83,6 +83,98 @@ export const assignRoleSchema = z.object({
         rol: z.enum(["cotizador", "comprador"]),
 })
 
+export const updateItemSchema = z.object({
+        cantidad: z.coerce.number(),
+        margenPct1: z.coerce.number(),
+        margenPct2: z.coerce.number(),
+        margenPct3: z.coerce.number(),
+        itemId: z.coerce.number(),
+        quoteId: z.coerce.number()
+})
+
+const CategorySchema = z.object({
+        id: z.string(),
+        nombre: z.string(),
+        descripcion: z.string(),
+});
+
+export const ProductSchema = z.object({
+        id: z.string(),
+        category: CategorySchema,
+        nombre: z.string(),
+        descripcion: z.string(),
+        precio: z.string(),
+        especificaciones: z.string().nullable(),
+        link_compra: z.string().url(),
+        image_url: z.string().url(),
+        createdAt: z.string().datetime(),
+});
+
+export const ItemSchema = z.object({
+        id: z.string(),
+        product: ProductSchema,
+        service: z.null(),
+        cantidad: z.number(),
+        costo_unitario: z.number(),
+        margenPct1: z.number(),
+        margenPct2: z.number(),
+        margenPct3: z.number(),
+        precioFinal1: z.number(),
+        precioFinal2: z.number(),
+        precioFinal3: z.number(),
+        subtotal1: z.number(),
+        subtotal2: z.number(),
+        subtotal3: z.number(),
+});
+
+export type Item = z.infer<typeof ItemSchema>
+
+const QuoteSchema = z.object({
+        id: z.string(),
+        status: z.string(),
+        createdAt: z.string().datetime(),
+        sentAt: z.string().datetime(),
+        tipo: z.string(),
+        titulo: z.string(),
+        descripcion: z.string(),
+        totalMargen1: z.number(),
+        totalMargen2: z.number(),
+        totalMargen3: z.number(),
+        pdf1: z.string(),
+        pdf2: z.string(),
+        pdf3: z.string(),
+        items: z.array(ItemSchema),
+});
+
+// 5. Array de cotizaciones
+export const QuotesSchema = z.array(QuoteSchema);
+
+// Inferencia de tipos (opcional)
+export type Quote = z.infer<typeof QuoteSchema>;
+export type Quotes = z.infer<typeof QuotesSchema>;
+
+export const ServiceSchema = z.object({
+        id: z.string(),
+        createdBy: userSchema,
+        nombre: z.string(),
+        descripcion: z.string(),
+        precioBase: z.string(),
+        createdAt: z.string().datetime(),
+})
+
+export const ServicesSchema = z.array(ServiceSchema)
+
+// Tipos inferidos (opcional)
+export type Service = z.infer<typeof ServiceSchema>
+
+export const AddServiceSchema = z.object({
+        nombre: z.string().min(1, 'El nombre es obligatorio'),
+        descripcion: z.string().min(1, 'La descripción es obligatoria'),
+        precioBase: z.string().min(1, 'El precio base es obligatorio'),
+})
+
+
+
 // Types
 export type Producto = {
         id: string;
@@ -118,3 +210,4 @@ export type Categoria = {
         nombre: string,
         descripcion: string | null
 }
+

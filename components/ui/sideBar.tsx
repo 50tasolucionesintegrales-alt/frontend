@@ -27,14 +27,14 @@ const menuItems = [
     href: '/catalog',
   },
   {
-    label: 'Agregar Producto',
+    label: 'Agregar',
     icon: <SquarePlus size={20} />,
-    href: '/admin/agregar-producto',
+    href: '/add',
   },
   {
     label: 'Cotizaciones',
     icon: <FileText size={20} />,
-    href: '/admin/cotizaciones',
+    href: '/quotes',
   },
   {
     label: 'Machotes',

@@ -3,6 +3,10 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary: #0F332D;
+  --secondary: #174940;
+  --accent: #63B23D;
+  --muted: #999999;
 }
 
 @theme inline {
@@ -21,10 +25,9 @@
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition;
+    @apply px-4 py-2 bg-[#174940] text-white rounded hover:bg-[#0d2a25] transition;
   }
 }
-
 
 body {
   background: var(--background);
@@ -34,23 +37,23 @@ body {
 
 /* driverjs-theme ➜ tu popover */
 .driverjs-theme .driver-popover {
-  @apply bg-white rounded-xl border-2 border-yellow-500 shadow-2xl;
+  @apply bg-white rounded-xl border-2 border-[#63B23D] shadow-2xl;
 }
 
 /* cabecera */
 .driverjs-theme .driver-popover-title {
-  @apply text-yellow-600 font-bold text-lg;
+  @apply text-[#174940] font-bold text-lg;
 }
 
 /* descripción */
 .driverjs-theme .driver-popover-description {
-  @apply text-gray-700 leading-relaxed;
+  @apply text-[#999999] leading-relaxed;
 }
 
 /* pie (botones) */
 .driverjs-theme .driver-popover-footer button {
   @apply rounded-md px-3 py-1 text-sm font-medium;
 }
-.driverjs-theme .driver-next-btn   { @apply bg-yellow-600 text-white hover:bg-yellow-700; }
-.driverjs-theme .driver-prev-btn   { @apply border border-yellow-600 text-yellow-600 hover:bg-yellow-50; }
-.driverjs-theme .driver-close-btn  { @apply text-gray-400 hover:text-gray-700; }
+.driverjs-theme .driver-next-btn   { @apply bg-[#174940] text-white hover:bg-[#0F332D]; }
+.driverjs-theme .driver-prev-btn   { @apply border border-[#174940] text-[#174940] hover:bg-[#f0f7f5]; }
+.driverjs-theme .driver-close-btn  { @apply text-[#999999] hover:text-[#666666]; }
