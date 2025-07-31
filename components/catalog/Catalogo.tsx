@@ -13,7 +13,7 @@ type props = {
 export default function Catalogo({ categorias, productos }: props) {
     const [searchQuery, setSearchQuery] = useState('');
     const scrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
-    const LIMITE_PRODUCTOS_SCROLL = 4; // número límite para activar scroll
+    const LIMITE_PRODUCTOS_SCROLL = 4;
 
     const productosFiltrados = (categoriaId: string) => {
         return productos.filter(
@@ -93,11 +93,17 @@ export default function Catalogo({ categorias, productos }: props) {
                                                 className="flex-shrink-0 w-64 bg-white rounded-xl shadow-sm"
                                             >
                                                 <div className="h-64 overflow-hidden rounded-t-xl">
-                                                    <img
-                                                        src={producto.image_url}
-                                                        alt={producto.nombre}
-                                                        className="h-full w-full object-cover"
-                                                    />
+                                                    {producto.image_url ? (
+                                                        <img
+                                                            src={producto.image_url}
+                                                            alt={producto.nombre}
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+                                                            <span className="text-gray-400">Sin imagen</span>
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div className="p-4">

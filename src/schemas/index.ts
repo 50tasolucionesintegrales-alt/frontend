@@ -174,6 +174,33 @@ export const AddServiceSchema = z.object({
 })
 
 
+export const OrderSummarySchema = z.object({
+        id: z.string(),
+        titulo: z.string(),
+        descripcion: z.string().nullable(),
+        status: z.enum(['draft', 'sent', 'partially_approved', 'approved', 'rejected']),
+        createdAt: z.string(),
+        sentAt: z.string().nullable(),
+        resolvedAt: z.string().nullable(),
+        total: z.number().nullable(),
+        progressPct: z.number().nullable()
+})
+
+
+export const PurchaseOrderItemSchema = z.object({
+        id: z.string(),
+        order: OrderSummarySchema,
+        product: ProductSchema,
+        cantidad: z.number(),
+        costo_unitario: z.number(),
+        subtotal: z.number(),
+        evidenceUrl: z.string().url().nullable(),
+        status: z.enum(['pending', 'approved', 'rejected']),
+        rejectReason: z.string().nullable(),
+        approvedAt: z.string().nullable()
+})
+
+export type PurchaseOrderItem = z.infer<typeof PurchaseOrderItemSchema>
 
 // Types
 export type Producto = {

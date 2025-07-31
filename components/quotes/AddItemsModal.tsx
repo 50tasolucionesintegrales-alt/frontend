@@ -1,62 +1,65 @@
 'use client'
-import { startTransition, useActionState, useEffect, useState } from 'react'
+import { useState, useEffect, startTransition, useActionState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { toast } from 'react-toastify'
-import { Item, Producto, Service } from '@/src/schemas'
 import { addItemsAction } from '@/actions/quotes/addItemsAction'
 import ProductSelectionModal from './ProductSelectionModal'
 import { useRouter } from 'next/navigation'
 
 export default function AddItemsModal({
   quoteId,
-  items,
-  token,
-  products,
-  services
+  quoteType,          // ← 'productos' | 'servicios'
+  availableItems,     // ← lista ya depurada según tipo
 }: {
   quoteId: string
-  items: Item[],
-  token: string | undefined
-  products: Producto[]
-  services: Service[]
+  quoteType: 'productos' | 'servicios'
+  availableItems: any[]
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen]         = useState(false)
   const [selected, setSelected] = useState<any[]>([])
+  const router = useRouter()
+
+  // Server Action
   const [state, dispatch, pending] = useActionState(addItemsAction, {
     errors: [],
-    success: ''
+    success: '',
   })
-  const router = useRouter()
 
   useEffect(() => {
     state.errors.forEach(e => toast.error(e))
     if (state.success) {
       toast.success(state.success)
-      setSelected([])
       router.refresh()
+      setSelected([])
       setOpen(false)
     }
   }, [state])
 
-  const handleSubmit = async () => {
+  /* ——— Enviar al back ——— */
+  const handleSubmit = () => {
     const itemsToSend = selected.map(item => ({
-      tipo: item.precioBase ? 'servicio' : 'producto',
-      productId: Number(item.id),
-      cantidad: item.cantidad || 1,
-      costoUnitario: parseFloat(item.precio || item.precioBase || '0'),
+      tipo: quoteType === 'productos' ? 'producto' : 'servicio',
+      ...(quoteType === 'productos'
+        ? { productId: Number(item.id) }
+        : { serviceId: Number(item.id) }),
+      cantidad: item.cantidad ?? 1,
+      costoUnitario: parseFloat(
+        item.precio ?? item.precioBase ?? '0'
+      ),
     }))
 
-    const formData = new FormData()
-    formData.append('quoteId', quoteId)
-    formData.append('items', JSON.stringify(itemsToSend))
-    startTransition(() => {
-      dispatch(formData)
-    })
+    const fd = new FormData()
+    fd.append('quoteId', quoteId)
+    fd.append('items', JSON.stringify(itemsToSend))
+    startTransition(() => dispatch(fd))
   }
 
   return (
     <>
-      <button className="mt-6 mb-5 px-4 py-2 bg-[#174940] text-white rounded hover:bg-[#14533f] font-semibold" onClick={() => setOpen(true)}>
+      <button
+        className="mt-6 mb-5 px-4 py-2 bg-[#174940] text-white rounded hover:bg-[#14533f] font-semibold"
+        onClick={() => setOpen(true)}
+      >
         Agregar ítems
       </button>
 
@@ -65,10 +68,13 @@ export default function AddItemsModal({
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl w-full max-w-2xl p-6 shadow-xl">
             <Dialog.Title className="text-lg font-semibold mb-4">
-              Seleccionar productos o servicios
+              Seleccionar {quoteType === 'productos' ? 'productos' : 'servicios'}
             </Dialog.Title>
 
-            <ProductSelectionModal onSelect={(items) => setSelected(items)} token={token} products={products} services={services} />
+            <ProductSelectionModal
+              items={availableItems}
+              onSelect={setSelected}
+            />
 
             <div className="mt-6 flex justify-end gap-4">
               <button onClick={() => setOpen(false)} className="btn-secondary">
@@ -79,7 +85,9 @@ export default function AddItemsModal({
                 disabled={pending || selected.length === 0}
                 className="btn-primary"
               >
-                {pending ? 'Agregando...' : `Agregar ${selected.length} ítem(s)`}
+                {pending
+                  ? 'Agregando…'
+                  : `Agregar ${selected.length} ítem(s)`}
               </button>
             </div>
           </div>

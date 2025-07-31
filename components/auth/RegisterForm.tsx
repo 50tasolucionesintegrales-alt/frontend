@@ -211,7 +211,7 @@ export default function RegisterForm() {
                 onClick={togglePwd}
                 className="absolute right-3 bottom-2 text-gray-400 focus:outline-none select-none"
               >
-                {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 
@@ -236,7 +236,7 @@ export default function RegisterForm() {
                 onClick={togglePwd2}
                 className="absolute right-3 bottom-2 text-gray-400 focus:outline-none select-none"
               >
-                {showPassword2 ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                {showPassword2 ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 

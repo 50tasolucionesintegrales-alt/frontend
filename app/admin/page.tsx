@@ -93,32 +93,34 @@ export default function EstadisticasPage() {
               <ChevronRight className="ml-auto text-[#999999] group-hover:text-[#63B23D] transition-colors" size={20} />
             </Link>
           </div>
-          
+
           <div className="bg-white rounded-xl shadow-md p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-blue-100 text-blue-600">
-                <ClipboardList size={24} />
-              </div>
-              <div>
-                <h3 className="text-lg font-medium text-gray-500">Cotizaciones realizadas</h3>
-                <p className="text-2xl font-bold text-[#174940]">{datos.resumen.cotizacionesRealizadas}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-purple-100 text-purple-600">
+            <Link href='/admin/orders' className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-[#174940]/10 text-[#63B23D]">
                 <ShoppingCart size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-medium text-gray-500">Órdenes completadas</h3>
-                <p className="text-2xl font-bold text-[#174940]">{datos.resumen.ordenesCompletadas}</p>
+                <h3 className="text-lg font-bold text-[#174940]">Órdenes de compra</h3>
+                <p className="text-base text-[#63B23D]">Gestionar ordenes</p>
               </div>
-            </div>
+              <ChevronRight className="ml-auto text-[#999999] group-hover:text-[#63B23D] transition-colors" size={20} />
+            </Link>
           </div>
           
           <div className="bg-white rounded-xl shadow-md p-6">
+            <Link href='/admin/quotes' className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-[#174940]/10 text-[#63B23D]">
+                <ClipboardList size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-[#174940]">Cotizaciones realizadas</h3>
+                <p className="text-base text-[#63B23D]">Ver cotizaciones</p>
+              </div>
+              <ChevronRight className="ml-auto text-[#999999] group-hover:text-[#63B23D] transition-colors" size={20} />
+            </Link>
+          </div>
+          
+          {/* <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
                 <TrendingUp size={24} />
@@ -128,7 +130,7 @@ export default function EstadisticasPage() {
                 <p className="text-2xl font-bold text-[#174940]">{datos.resumen.productosAgregados}</p>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Gráficos y tablas */}

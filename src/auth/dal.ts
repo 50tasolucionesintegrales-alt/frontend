@@ -24,7 +24,7 @@ export const verifySession = cache(async () => {
   }
 })
 
-export async function VerifyRole(allowed: ("cotizador" | "comprador" | "admin")[]) {
+export async function VerifyRole(allowed: ("cotizador" | "comprador" | "admin" | "unassigned")[]) {
     const { user } = await verifySession();
 
     if (!allowed.includes(user.rol)) {

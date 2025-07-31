@@ -9,7 +9,7 @@ type ActionStateType = {
 }
 
 export async function updatePassAction(prevState: ActionStateType, formData: FormData) {
-    const token = (await cookies()).get('CURSIFY_TOKEN')?.value
+    const token = (await cookies()).get('50TA_TOKEN')?.value
     const resetPassInput = {
         current_password: formData.get('current_password'),
         password: formData.get('new_password'),

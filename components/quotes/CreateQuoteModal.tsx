@@ -7,6 +7,7 @@ import { createDraft } from '@/actions/quotes/createQuoteAction'
 import { useActionState, useEffect } from 'react'
 import { useFormStatus } from 'react-dom'
 import { toast } from 'react-toastify'
+import { useRouter } from 'next/navigation'
 
 type Props = {
   open: boolean
@@ -35,6 +36,7 @@ export default function CreateQuoteModal({ open, onClose }: Props) {
     errors: [],
     success: '',
   })
+  const router = useRouter()
 
   useEffect(() => {
     if (state.errors?.length > 0) {
@@ -42,6 +44,7 @@ export default function CreateQuoteModal({ open, onClose }: Props) {
     }
     if (state.success) {
       toast.success(state.success)
+      router.refresh()
       onClose()
     }
   }, [state, onClose])

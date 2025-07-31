@@ -37,6 +37,11 @@ const menuItems = [
     href: '/quotes',
   },
   {
+    label: 'Ordenes de compra',
+    icon: <FileText size={20} />,
+    href: '/orders',
+  },
+  {
     label: 'Machotes',
     icon: <ClipboardList size={20} />,
     href: '/admin/machotes',

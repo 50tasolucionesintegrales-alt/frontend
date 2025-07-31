@@ -29,6 +29,7 @@ export default async function QuotePage({ params }: { params: { id: string } }) 
     }).then((res) => res.json())
 
     const quote = await resQuote.json()
+    console.log(quote)
 
     // Sacar IDs de productos ya agregados
     const usedProductIds = new Set(
@@ -47,11 +48,14 @@ export default async function QuotePage({ params }: { params: { id: string } }) 
     const productosFiltrados = productos.filter((p: any) => !usedProductIds.has(p.id))
     const serviciosFiltrados = servicios.filter((s: any) => !usedServiceIds.has(s.id))
 
+    const disponibles =
+        quote.tipo === 'productos' ? productosFiltrados : serviciosFiltrados
+
     return (
         <div className="p-6">
             <h1 className="text-2xl mb-4">{quote.titulo}</h1>
             <div className="flex justify-between">
-                <AddItemsModal quoteId={id} items={quote.items} token={token} products={productosFiltrados} services={serviciosFiltrados} />
+                <AddItemsModal quoteId={id} quoteType={quote.tipo} availableItems={disponibles} />
                 <Link href='/quotes' className="inline-flex items-center text-[#174940] hover:text-[#0F332D] mb-4 transition">
                     <ArrowLeft size={18} className="mr-1" />
                     Volver al catálogo
