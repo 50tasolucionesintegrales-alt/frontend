@@ -24,9 +24,11 @@ export default function OrderDetailTable({ order, productos }: Props) {
   const isAdmin = user?.rol?.includes('admin') ?? false
 
   const [items, setItems] = useState<PurchaseOrderItem[]>(order.items)
+  const allWithEvidence = items.length > 0 && items.every(it => Boolean(it.evidenceUrl))
+  const canResend = order.status === 'partially_approved'
 
   /* ------------- enviar orden -------------- */
-  const [state, dispatch] = useActionState(sendOrderAction, {
+  const [state, dispatch, pending] = useActionState(sendOrderAction, {
     errors: [] as string[],
     success: ''
   })
@@ -36,21 +38,17 @@ export default function OrderDetailTable({ order, productos }: Props) {
     if (state.success) toast.success(state.success)
   }, [state.errors, state.success])
 
-  /* ---------- callbacks estables ---------- */
-  /** actualizar UN ítem (subida de evidencia) */
   const handleItemUpdate = useCallback(
     (updated: PurchaseOrderItem) => {
       setItems(prev => prev.map(it => (it.id === updated.id ? updated : it)))
     },
-    [] // referencia estable
+    []
   )
 
-  /** reemplazar todos los ítems (cuando agregas productos) */
   const handleItemsReplace = useCallback((updatedOrder: any) => {
     setItems(updatedOrder.items)
   }, [])
 
-  /* ---------------------------------------- */
   return (
     <section className="mb-12">
       <div className="flex justify-between items-center mb-6">
@@ -92,16 +90,14 @@ export default function OrderDetailTable({ order, productos }: Props) {
                 Costo unitario
               </th>
               <th className="py-3 px-6 text-left text-sm font-medium text-white uppercase">
+                Subtotal
+              </th>
+              <th className="py-3 px-6 text-left text-sm font-medium text-white uppercase">
                 Evidencia
               </th>
               <th className="py-3 px-6 text-left text-sm font-medium text-white uppercase">
                 Estado
               </th>
-              {isAdmin && (
-                <th className="py-3 px-6 text-left text-sm font-medium text-white uppercase">
-                  Revisión
-                </th>
-              )}
             </tr>
           </thead>
 
@@ -130,13 +126,24 @@ export default function OrderDetailTable({ order, productos }: Props) {
         </table>
       </div>
 
-      {order.status === 'draft' && items.length !== 0 && (
+      {(order.status === 'draft' || order.status === 'partially_approved') && items.length !== 0 && (
         <form action={dispatch} className="mt-6">
           <input type="hidden" name="orderId" value={order.id} />
+
           <button
             type="submit"
-            className="px-6 py-2 bg-[#63B23D] text-white rounded-lg hover:bg-[#529e33] font-medium flex items-center"
+            disabled={
+              (order.status === 'draft' && !allWithEvidence) || pending
+            }
+            className={`px-6 py-2 rounded-lg font-medium flex items-center
+        ${order.status === 'draft'
+                ? allWithEvidence
+                  ? 'bg-[#63B23D] text-white hover:bg-[#529e33]'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-[#174940] text-white hover:bg-[#0F332D]'
+              }`}
           >
+            {/* icono */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 mr-2"
@@ -151,15 +158,21 @@ export default function OrderDetailTable({ order, productos }: Props) {
                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
-            Enviar orden
+            {order.status === 'draft' ? 'Enviar orden' : 'Reenviar orden'}
           </button>
+
+          {/* mensaje sólo para draft */}
+          {order.status === 'draft' && !allWithEvidence && (
+            <p className="text-xs text-red-500 mt-2">
+              Todos los ítems deben tener evidencia antes de enviar.
+            </p>
+          )}
         </form>
       )}
     </section>
   )
 }
 
-/* ---------- pequeño componente vacío ---------- */
 function EmptyState() {
   return (
     <div className="flex flex-col items-center text-[#999999]">

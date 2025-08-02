@@ -40,6 +40,7 @@ export default function CreateOrderModal () {
     }
     if (state.success) {
       toast.success(state.success)
+      router.refresh()
       setOpen(false)
     }
   }, [state])

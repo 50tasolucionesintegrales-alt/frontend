@@ -21,7 +21,7 @@ export default async function OrdersPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold">Órdenes enviadas</h2>
+        <h2 className="text-xl font-semibold mb-4 mt-8">Órdenes enviadas</h2>
         <OrderTable orders={sent} type="sent" />
       </section>
     </div>
