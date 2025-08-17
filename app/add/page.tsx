@@ -1,15 +1,29 @@
-import ProductServiceManager from '@/components/add/ProductServiceManager'
+import ProductAddAndManage from '@/components/add/ProductAddAndManage'
 import { cookies } from 'next/headers'
 
 export default async function page() {
     const token = (await cookies()).get('50TA_TOKEN')?.value
 
-    const resCat = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
+    const categories = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`
         }
     }).then((res) => res.json())
 
-    return <ProductServiceManager categorias={resCat} />
+    const products = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then((res) => res.json())
+
+    const servicios = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then((res) => res.json())
+
+    return <ProductAddAndManage categorias={categories} products={products} services={servicios} />
 }

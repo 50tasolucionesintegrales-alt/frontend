@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { Button } from '../ui/boton'
 import AddCategoryModal from './Category/AddCategoryModal'
-import ServiceForm from './ServiceForm'
-import ProductForm from './ProductForm'
+import ServiceForm from './service/ServiceForm'
+import ProductForm from './product/ProductForm'
 import { Categoria } from '@/src/schemas'
 
 type Props = {
@@ -35,7 +35,7 @@ export default function ProductServiceManager({categorias} : Props) {
           </svg>
           Nueva Categoría
         </Button>
-      </div>
+      </div> 
 
       {/* Tabs de selección */}
       <div className="flex space-x-4 border-b border-gray-200">

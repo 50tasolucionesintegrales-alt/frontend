@@ -2,7 +2,7 @@
 
 import { startTransition, useActionState, useEffect, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import AddProductAction from '@/actions/add/AddProductAction'
+import AddProductAction from '@/actions/add/products/AddProductAction'
 import { toast } from 'react-toastify'
 import { Categoria } from '@/src/schemas'
 

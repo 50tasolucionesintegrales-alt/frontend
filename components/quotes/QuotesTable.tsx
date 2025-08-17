@@ -26,7 +26,6 @@ export default function QuotesTable({ quotes, type }: props) {
                 <table className="w-full">
                     <thead className="bg-[#174940] text-white">
                         <tr>
-                            <th className="py-3 px-4 text-left">ID</th>
                             <th className="py-3 px-4 text-left">Título</th>
                             <th className="py-3 px-4 text-left">Descripción</th>
                             <th className="py-3 px-4 text-left">Creado</th>
@@ -36,7 +35,6 @@ export default function QuotesTable({ quotes, type }: props) {
                     <tbody className="divide-y divide-gray-200">
                         {quotes.map(q => (
                             <tr key={q.id} className="hover:bg-gray-50">
-                                <td className="py-3 px-4">{q.id}</td>
                                 <td className="py-3 px-4 font-medium">{q.titulo}</td>
                                 <td className="py-3 px-4">{q.descripcion ?? '—'}</td>
                                 <td className="py-3 px-4">{new Date(q.createdAt).toLocaleDateString()}</td>

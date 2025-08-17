@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useState } from 'react'
-import AddServiceAction from '@/actions/add/AddServiceAction'
+import AddServiceAction from '@/actions/add/services/AddServiceAction'
 import { toast } from 'react-toastify'
 
 export default function ServiceForm() {

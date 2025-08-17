@@ -16,6 +16,7 @@ import { Producto, PurchaseOrderItem } from '@/src/schemas'
 import OrderItemRow from '@/components/orders/OrderItemRow'
 import AddItemsModal from '../modals/orders/AddItemsModal'
 import sendOrderAction from '@/actions/orders/sendOrderAction'
+import { reopenOrderAction } from '@/actions/orders/reOpenAction'
 
 type Props = { order: any; productos: Producto[] }
 
@@ -29,8 +30,15 @@ export default function OrderDetailTable({ order, productos }: Props) {
 
   /* ------------- enviar orden -------------- */
   const [state, dispatch, pending] = useActionState(sendOrderAction, {
-    errors: [] as string[],
+    errors: [],
     success: ''
+  })
+
+  /* ------------- reabrir orden -------------- */
+  const [reopenState, reopenDispatch, reopenPending] = useActionState(reopenOrderAction,{ 
+    errors: [], 
+    success: '', 
+    order: undefined 
   })
 
   useEffect(() => {
@@ -38,6 +46,15 @@ export default function OrderDetailTable({ order, productos }: Props) {
     if (state.success) toast.success(state.success)
   }, [state.errors, state.success])
 
+  useEffect(() => {
+    reopenState.errors.forEach(e => toast.error(e))
+    if (reopenState.success && reopenState.order) {
+      toast.success(reopenState.success)
+      setItems(reopenState.order.items)
+      order.status = reopenState.order.status
+    }
+  }, [reopenState])
+  
   const handleItemUpdate = useCallback(
     (updated: PurchaseOrderItem) => {
       setItems(prev => prev.map(it => (it.id === updated.id ? updated : it)))
@@ -167,6 +184,34 @@ export default function OrderDetailTable({ order, productos }: Props) {
               Todos los ítems deben tener evidencia antes de enviar.
             </p>
           )}
+        </form>
+      )}
+
+      {order.status === 'sent' && (
+        <form action={reopenDispatch} className="mt-6">
+          <input type="hidden" name="orderId" value={order.id} />
+
+          <button
+            type="submit"
+            disabled={reopenPending}
+            className="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 flex items-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.276 0H20V4m0 0l-3.178 3.178M4 9l3.178-3.178M20 20v-5h-.582M4.582 15H4v5m0 0l3.178-3.178M20 20l-3.178-3.178"
+              />
+            </svg>
+            Reabrir orden
+          </button>
         </form>
       )}
     </section>
