@@ -1,0 +1,175 @@
+// components/admin/QuotesSentTable.tsx
+'use client'
+
+import Link from 'next/link'
+import { useState, useTransition } from 'react'
+import { toast } from 'react-toastify'
+import { getQuotePdfAction } from '@/actions/quotes/GetQuotePdfAction'
+import { Download, FileText, ArrowLeft, Box, Clock } from 'lucide-react'
+
+type QuoteRow = {
+  id: string
+  titulo: string
+  tipo: 'productos' | 'servicios'
+  sentAt?: string | null
+  // trae también totalMargen1..7
+  [k: string]: any
+}
+
+function activeMargins(q: QuoteRow): number[] {
+  const out: number[] = []
+  for (let i = 1; i <= 7; i++) {
+    const v = Number(q[`totalMargen${i}`] ?? 0)
+    if (v > 0) out.push(i)
+  }
+  return out
+}
+
+const fmtMoney = (n: number) =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n)
+
+export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
+  const [busy, setBusy] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  const handleDownload = (quoteId: string, empresa: number) => {
+    const key = `${quoteId}-${empresa}`
+    setBusy(key)
+    const downloadQuote = async () => {
+      const { dataUrl, filename, error } = await getQuotePdfAction(quoteId, empresa)
+      setBusy(null)
+      if (error || !dataUrl) return toast.error(error ?? 'No se pudo descargar el PDF')
+
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = filename || `quote_${quoteId}_m${empresa}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    }
+
+    startTransition(() => {
+      downloadQuote()
+    })
+  }
+
+  return (
+    <div className="p-6 bg-[#f8fafc] min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-[#0F332D] flex items-center">
+            <FileText className="h-8 w-8 mr-2 text-[#63B23D]" />
+            Cotizaciones Enviadas
+          </h1>
+          <Link
+            href="/admin"
+            className="flex items-center text-[#174940] hover:text-[#0F332D] transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 mr-1" />
+            Volver al dashboard
+          </Link>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg border border-[#e5e7eb] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#174940]">
+                <tr>
+                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
+                    Título
+                  </th>
+                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
+                    Tipo
+                  </th>
+                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-1" />
+                      Enviada
+                    </div>
+                  </th>
+                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
+                    Totales / Descargas
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-[#e5e7eb]">
+                {quotes.map((q) => {
+                  const margins = activeMargins(q)
+                  return (
+                    <tr key={q.id} className="hover:bg-[#f0f7f5] transition-colors">
+                      <td className="py-4 px-6 font-medium text-[#0F332D]">{q.titulo}</td>
+
+                      <td className="py-4 px-6 capitalize text-[#174940]">
+                        <span className="px-2 py-1 bg-[#174940]/10 rounded-full text-xs">
+                          {q.tipo}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-6 text-[#174940]">
+                        {q.sentAt
+                          ? new Date(q.sentAt).toLocaleDateString('es-MX', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })
+                          : '—'}
+                      </td>
+
+                      <td className="py-4 px-6">
+                        {margins.length === 0 ? (
+                          <span className="text-[#999999]">Sin totales</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {margins.map((n) => {
+                              const total = Number(q[`totalMargen${n}`] || 0)
+                              const key = `${q.id}-${n}`
+                              const loading = busy === key || isPending
+                              return (
+                                <button
+                                  key={n}
+                                  type="button"
+                                  onClick={() => handleDownload(q.id, n)}
+                                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#e5e7eb] bg-[#63B23D]/10 hover:bg-[#63B23D]/20 transition-colors"
+                                  title={`Descargar PDF Formato ${n}`}
+                                >
+                                  <span className="text-xs font-semibold text-[#174940]">M{n}</span>
+                                  <span className="text-sm font-medium text-[#0F332D]">
+                                    {fmtMoney(total)}
+                                  </span>
+                                  <Download
+                                    className={`h-4 w-4 text-[#63B23D] ${
+                                      loading ? 'animate-pulse' : ''
+                                    }`}
+                                  />
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+
+                {quotes.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-12 text-center">
+                      <div className="flex flex-col items-center justify-center text-[#999999]">
+                        <Box className="h-12 w-12 mb-3 text-[#e5e7eb]" />
+                        <p className="text-lg font-medium text-[#174940]">
+                          No hay cotizaciones enviadas
+                        </p>
+                        <p className="mt-1 max-w-md">Todas las cotizaciones que envíes aparecerán aquí</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

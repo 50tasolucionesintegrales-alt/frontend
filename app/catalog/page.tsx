@@ -1,3 +1,4 @@
+import { getProductImageDataUrl } from "@/actions/add/products/ProductImageAction"
 import Catalogo from "@/components/catalog/Catalogo"
 import { cookies } from "next/headers"
 
@@ -18,7 +19,14 @@ export default async function CatalogPage() {
         }
     }).then((res) => res.json())
 
+    const services = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }).then((res) => res.json())
+
     return (
-        <Catalogo categorias={resCat} productos={resProd} />
+        <Catalogo categorias={resCat} productos={resProd} servicios={services} getImageDataUrl={getProductImageDataUrl} />
     )
 }

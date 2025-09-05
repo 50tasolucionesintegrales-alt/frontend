@@ -1,4 +1,6 @@
 // app/admin/orders/[id]/page.tsx
+import { getProductImageDataUrl } from '@/actions/add/products/ProductImageAction'
+import { getEvidenceImageDataUrl } from '@/actions/orders/EvidenceImageAction'
 import AdminOrderItemsTable from '@/components/admin/orders/AdminOrderItemsTable'
 import DeleteOrderButton from '@/components/admin/orders/deleteOrder'
 import { ArrowLeft } from 'lucide-react'
@@ -14,8 +16,15 @@ async function getOrder(id: string) {
   return res.json()
 }
 
-export default async function AdminOrderDetailPage({ params }: { params: { id: string } }) {
-  const order = await getOrder(params.id)
+export default async function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const order = await getOrder(id)
+  const status = order.status === 'draft' ? 'Borrador'
+    : order.status === 'sent' ? 'Enviada'
+      : order.status === 'partially_approved' ? 'Aprobada parcialmente'
+        : order.status === 'approved' ? 'Aprobada'
+          : order.status === 'rejected' ? 'Rechazada'
+            : order.status;
 
   return (
     <div className="p-8 space-y-6">
@@ -30,9 +39,13 @@ export default async function AdminOrderDetailPage({ params }: { params: { id: s
         </div>
       </div>
 
-      <p className="text-gray-600">Estado: {order.status}</p>
+      <p className="text-gray-600">Estado: {status}</p>
 
-      <AdminOrderItemsTable initialItems={order.items} />
+      <AdminOrderItemsTable 
+        initialItems={order.items} 
+        getProductImageDataUrl={getProductImageDataUrl} 
+        getEvidenceImageDataUrl={getEvidenceImageDataUrl} 
+      />
     </div>
   )
 }

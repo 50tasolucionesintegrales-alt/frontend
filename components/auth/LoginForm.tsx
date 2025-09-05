@@ -16,7 +16,6 @@ import { Button } from '../ui/boton';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  /* ---------- lógica de autenticación (idéntica a tu login funcional) ---------- */
   const router = useRouter();
 
   const [state, dispatch] = useActionState(login, {
@@ -36,8 +35,8 @@ export default function LoginPage() {
             state.rol === 'admin'
               ? '/admin'
               : state.rol === 'cotizador'
-                ? '/cotizador'
-                : '/comprador';
+                ? '/catalog'
+                : '/catalog';
           router.push(destination);
         },
       });

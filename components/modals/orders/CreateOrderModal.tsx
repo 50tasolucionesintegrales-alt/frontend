@@ -1,21 +1,26 @@
 'use client'
 
-import { Fragment, useActionState, useEffect, useState } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
-import { motion } from 'framer-motion'
+import { useActionState, useEffect, useState } from 'react'
+import { Dialog } from '@headlessui/react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'react-toastify'
 import { useRouter } from 'next/navigation'
 import { useFormStatus } from 'react-dom'
 import { createOrderAction } from '@/actions/orders/createOrderAction'
+import { X } from 'lucide-react'
 
 /* ---------- Botón interno con estado pending ---------- */
-function SubmitBtn () {
+function SubmitButton() {
   const { pending } = useFormStatus()
   return (
     <button
       type="submit"
       disabled={pending}
-      className="px-4 py-2 bg-[#174940] text-white rounded hover:bg-[#14533f] disabled:opacity-50"
+      className={`w-full sm:w-auto px-6 py-2.5 rounded-lg font-medium transition-colors ${
+        pending
+          ? 'bg-green-400 cursor-not-allowed'
+          : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
+      }`}
     >
       {pending ? 'Creando…' : 'Guardar borrador'}
     </button>
@@ -23,7 +28,7 @@ function SubmitBtn () {
 }
 
 /* ------------------- Modal --------------------------- */
-export default function CreateOrderModal () {
+export default function CreateOrderModal() {
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
@@ -49,77 +54,90 @@ export default function CreateOrderModal () {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="mb-6 px-4 py-2 bg-[#174940] text-white rounded hover:bg-[#14533f]"
+        className="mb-6 px-6 py-2.5 bg-[#174940] text-white rounded-lg hover:bg-[#14533f] font-medium transition-colors shadow-sm"
       >
         + Nueva orden
       </button>
 
-      <Transition show={open} as={Fragment}>
-        <Dialog onClose={() => setOpen(false)} className="relative z-50">
-          <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+      <AnimatePresence>
+        {open && (
+          <Dialog open={open} onClose={() => setOpen(false)} className="relative z-50">
+            {/* Fondo oscuro con animación */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm"
+              aria-hidden="true"
+            />
 
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-90"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-90"
-            >
-              {/* Motion = animación extra */}
+            {/* Contenedor del modal */}
+            <div className="fixed inset-0 flex items-center justify-center p-4">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4"
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl mx-2"
               >
-                <Dialog.Title className="text-lg font-semibold">
-                  Nuevo borrador de orden
-                </Dialog.Title>
+                {/* Encabezado */}
+                <div className="flex items-center justify-between mb-6">
+                  <Dialog.Title className="text-xl font-bold text-gray-900">
+                    Nuevo borrador de orden
+                  </Dialog.Title>
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="text-gray-500 hover:text-gray-700 rounded-full p-1 transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
 
                 {/* ------------- Formulario ------------- */}
-                <form action={dispatch} className="space-y-4">
+                <form action={dispatch} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Título *
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Título <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="titulo"
                       required
-                      className="w-full px-3 py-2 border rounded"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                      placeholder="Título de la orden"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Descripción
                     </label>
                     <textarea
                       name="descripcion"
                       rows={3}
-                      className="w-full px-3 py-2 border rounded"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                      placeholder="Descripción (opcional)"
                     />
                   </div>
 
-                  <div className="flex justify-end gap-3">
+                  {/* Botones */}
+                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t mt-6">
                     <button
                       type="button"
                       onClick={() => setOpen(false)}
-                      className="px-4 py-2 rounded border"
+                      className="px-6 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       Cancelar
                     </button>
-                    <SubmitBtn />
+                    <SubmitButton />
                   </div>
                 </form>
               </motion.div>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition>
+            </div>
+          </Dialog>
+        )}
+      </AnimatePresence>
     </>
   )
 }

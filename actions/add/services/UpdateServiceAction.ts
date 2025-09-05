@@ -17,7 +17,7 @@ export default async function UpdateServiceAction(_prev: ActionType, formData: F
         id: formData.get('serviceId') as string,
         nombre: formData.get('nombre') as string,
         descripcion: formData.get('descripcion') as string,
-        precioBase: formData.get('precioBase') ? parseFloat(formData.get('precioBase') as string) : null,
+        precioBase: formData.get('precioBase')
     }
 
     if(!data.id) {
@@ -38,6 +38,7 @@ export default async function UpdateServiceAction(_prev: ActionType, formData: F
     })
 
     const json = await res.json()
+    console.log(res)
 
     if(!res.ok) {
         return {

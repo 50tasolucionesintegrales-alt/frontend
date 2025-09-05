@@ -2,16 +2,154 @@
 
 import { ArrowLeft, ShoppingCart, Share2, Heart, User, Calendar } from 'lucide-react';
 import Link from 'next/link';
-import { Producto } from '@/src/schemas';
+import { Producto, Quote } from '@/src/schemas';
 import { useRouter } from 'next/navigation';
+import { startTransition, useActionState, useCallback, useEffect, useMemo, useState } from 'react';
+import { addItemsAction } from '@/actions/quotes/addItemsAction';
+import { toast } from 'react-toastify';
+import { Dialog } from '@headlessui/react';
+import { createDraftAndAddItemAction } from '@/actions/quotes/createAndAddAction';
+import AddToOrderModal from '../modals/catalog/AddToOrderModal';
 
 interface Props {
-    producto: Producto;
+    producto: Producto
+    drafts: Quote[]
+    orders: any[]
+    getProductImageDataUrl: (imageId: string) => Promise<string | null>
 }
 
-export default function ProductDetail({ producto }: Props) {
+export default function ProductDetail({ producto, drafts, orders, getProductImageDataUrl }: Props) {
 
     const router = useRouter()
+
+    const [imgSrc, setImgSrc] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);     // ← para skeleton/spinner
+    const [loaded, setLoaded] = useState(false);      // ← para el fade-in del <img>
+    const [error, setError] = useState<string | null>(null);
+    const [orderOpen, setOrderOpen] = useState(false)
+
+    const fetchImage = useCallback(async () => {
+        setLoading(true);
+        setLoaded(false);
+        setError(null);
+        setImgSrc(null);
+
+        let active = true;
+        try {
+            const url = await getProductImageDataUrl(producto.id);
+            if (!active) return;
+            if (!url) {
+                // 404 o sin imagen
+                setImgSrc(null);
+            } else {
+                setImgSrc(url);
+            }
+        } catch (e: any) {
+            if (!active) return;
+            setError(e?.message || 'No se pudo cargar la imagen');
+            setImgSrc(null);
+        } finally {
+            if (active) setLoading(false);
+        }
+
+        return () => { active = false; };
+    }, [producto.id, getProductImageDataUrl]);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            if (cancelled) return;
+            await fetchImage();
+        })();
+        return () => { cancelled = true; };
+    }, [fetchImage]);
+
+
+    //Agregar a una cotización existente o nueva
+    // ====== NUEVO: modal para agregar a cotización ======
+    const [open, setOpen] = useState(false);
+    const [qty, setQty] = useState<number>(1);
+    const [search, setSearch] = useState('');
+
+    // filtra drafts en las que el producto AÚN no está
+    const availableQuotes = useMemo(() => {
+        const pid = String(producto.id);
+        return (drafts || []).filter(q =>
+            q.status === 'draft' &&
+            !(q.items || []).some(it => String(it.product?.id) === pid)
+        );
+    }, [drafts, producto.id]);
+
+    // server action state
+    const [aiState, aiDispatch, aiPending] = useActionState(addItemsAction, {
+        errors: [], success: '',
+    });
+
+    useEffect(() => {
+        aiState.errors?.forEach(e => toast.error(e));
+        if (aiState.success) {
+            toast.success('Producto agregado a la cotización');
+            setOpen(false);
+            // si quieres refrescar page de detalle para reflejar estado (opcional)
+            // router.refresh();
+        }
+    }, [aiState]);
+
+    const handleAddToQuote = (quoteId: string) => {
+        const costo = parseFloat(String(producto.precio ?? '0')) || 0;
+        const fd = new FormData();
+        fd.append('quoteId', quoteId);
+        fd.append('items', JSON.stringify([{
+            tipo: 'producto',
+            productId: Number(producto.id),
+            cantidad: qty,
+            costoUnitario: +costo.toFixed(2),
+            unidad: 'unidad'  // valor por defecto
+        }]));
+        startTransition(() => aiDispatch(fd));
+    };
+
+    const [newTitle, setNewTitle] = useState('');
+    const [newDesc, setNewDesc] = useState('');
+
+    const [newState, newDispatch, newPending] = useActionState(createDraftAndAddItemAction, {
+        errors: [],
+        success: '',
+    });
+
+    useEffect(() => {
+        newState.errors?.forEach(e => toast.error(e));
+        if (newState.success) {
+            toast.success(newState.success);
+            setOpen(false);
+            // si quieres, navega directo al detalle de la nueva cotización:
+            // if (newState.quoteId) router.push(`/quotes/${newState.quoteId}`);
+        }
+    }, [newState]);
+
+    const handleCreateAndAdd = () => {
+        const title = newTitle?.trim().slice(0, 80) || 'Cotización rápida';
+        const description = (newDesc || '').trim().slice(0, 120);
+        const cantidad = Math.max(1, Number(qty) || 1);
+
+        // Producto.precio suele ser string -> conviértelo
+        const costo = Number(producto.precio);
+        const costoUnitario = Number.isFinite(costo) ? costo : 0;
+
+        // unidad por defecto (mejor "pieza" que "unidad")
+        const unidad = 'pieza';
+
+        const fd = new FormData();
+        fd.append('title', title);
+        fd.append('description', description);
+        fd.append('productId', String(producto.id));
+        fd.append('cantidad', String(cantidad));
+        fd.append('costoUnitario', costoUnitario.toFixed(2)); // como string
+        fd.append('unidad', unidad);
+
+        startTransition(() => newDispatch(fd));
+    };
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] p-4 md:p-6">
@@ -23,12 +161,54 @@ export default function ProductDetail({ producto }: Props) {
 
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
-                        <div>
-                            <img
-                                src={producto.image_url}
-                                alt={producto.nombre}
-                                className="w-full h-96 object-contain rounded-xl bg-gray-100"
-                            />
+                        <div
+                            className="relative overflow-hidden rounded-t-xl"
+                            aria-busy={loading ? 'true' : 'false'}
+                            aria-live="polite"
+                        >
+                            {/* Estado: Cargando (skeleton + spinner) */}
+                            {loading && (
+                                <div className="absolute inset-0 animate-pulse bg-gray-100" />
+                            )}
+                            {loading && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <svg
+                                        className="h-6 w-6 animate-spin"
+                                        viewBox="0 0 24 24"
+                                        aria-label="Cargando imagen"
+                                    >
+                                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
+                                        <path d="M4 12a8 8 0 018-8" fill="currentColor" className="opacity-75" />
+                                    </svg>
+                                </div>
+                            )}
+
+                            {/* Estado: Éxito (con fade-in al cargar) */}
+                            {imgSrc && !error && (
+                                <img
+                                    src={imgSrc}
+                                    alt={producto.nombre}
+                                    loading="lazy"
+                                    decoding="async"
+                                    onLoad={() => setLoaded(true)}
+                                    className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                                />
+                            )}
+
+                            {/* Estado: Sin imagen o Error */}
+                            {!loading && (!imgSrc || error) && (
+                                <div className="absolute inset-0 bg-gray-100 flex flex-col items-center justify-center gap-2">
+                                    <span className="text-gray-400">{error ? 'Error al cargar' : 'Sin imagen'}</span>
+                                    <button
+                                        type="button"
+                                        onClick={fetchImage}
+                                        className="px-3 py-1 text-xs rounded-md bg-[#174940] text-white hover:bg-[#0F332D] transition-colors"
+                                        aria-label="Reintentar cargar imagen"
+                                    >
+                                        Reintentar
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         <div>
@@ -78,15 +258,20 @@ export default function ProductDetail({ producto }: Props) {
                             </div>
 
                             <div className="flex flex-wrap gap-3">
-                                <a
-                                    href={''}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                <button
+                                    type="button"
+                                    onClick={() => setOpen(true)}
                                     className="flex-1 bg-[#63B23D] hover:bg-[#4a8a2e] text-white py-3 px-6 rounded-lg font-medium transition flex items-center justify-center gap-2"
                                 >
                                     <ShoppingCart size={18} />
                                     Cotizar
-                                </a>
+                                </button>
+                                <button
+                                    onClick={() => setOrderOpen(true)}
+                                    className="flex-1 bg-[#63B23D] hover:bg-[#4a8a2e] text-white py-3 px-6 rounded-lg font-medium transition"
+                                >
+                                    Agregar a orden
+                                </button>
                                 <button className="p-3 border border-[#999999]/30 hover:bg-gray-50 rounded-lg transition">
                                     <Heart size={18} className="text-[#0F332D]" />
                                 </button>
@@ -98,6 +283,115 @@ export default function ProductDetail({ producto }: Props) {
                     </div>
                 </div>
             </div>
+
+            {/* Modal de selección de cotización */}
+            <Dialog open={open} onClose={() => setOpen(false)} className="relative z-50">
+                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+                <div className="fixed inset-0 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl w-full max-w-2xl p-6 shadow-xl">
+                        <Dialog.Title className="text-lg font-semibold mb-4">
+                            Agregar “{producto.nombre}” a una cotización
+                        </Dialog.Title>
+
+                        {/* Controles */}
+                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-[#174940]">Cantidad</span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={qty}
+                                    onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
+                                    className="w-24 px-3 py-1.5 border rounded-lg"
+                                />
+                            </div>
+                            <div className="text-sm text-[#999]">
+                                Costo unitario base: ${producto.precio}
+                            </div>
+                            <div className="flex-1 w-full sm:w-auto">
+                                <input
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Buscar cotización..."
+                                    className="w-full sm:w-64 px-3 py-2 border rounded-lg"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Lista de drafts disponibles */}
+                        <ul className="max-h-72 overflow-auto divide-y divide-[#e5e7eb] rounded-lg border border-[#e5e7eb]">
+                            {availableQuotes
+                                .filter(q => q.titulo.toLowerCase().includes(search.toLowerCase()))
+                                .map(q => (
+                                    <li key={q.id} className="flex items-center justify-between p-3">
+                                        <div>
+                                            <div className="font-medium text-[#0F332D]">{q.titulo}</div>
+                                            <div className="text-xs text-[#999]">ID: {q.id}</div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAddToQuote(q.id)}
+                                            disabled={aiPending}
+                                            className="px-3 py-2 bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] disabled:opacity-50"
+                                        >
+                                            {aiPending ? 'Agregando…' : 'Agregar'}
+                                        </button>
+                                    </li>
+                                ))}
+
+                            {availableQuotes.length === 0 && (
+                                <li className="py-10 text-center text-[#999]">
+                                    No hay cotizaciones disponibles (o ya está agregado en todas).
+                                </li>
+                            )}
+                        </ul>
+                        <div className="mt-6 border-t border-[#e5e7eb] pt-6">
+                            <h3 className="text-base font-semibold text-[#0F332D] mb-3">
+                                o crear una nueva cotización
+                            </h3>
+                            <div className="grid gap-3">
+                                <input
+                                    value={newTitle}
+                                    onChange={(e) => setNewTitle(e.target.value)}
+                                    placeholder="Título de la cotización"
+                                    className="w-full px-3 py-2 border rounded-lg"
+                                />
+                                <textarea
+                                    value={newDesc}
+                                    onChange={(e) => setNewDesc(e.target.value)}
+                                    placeholder="Descripción (opcional)"
+                                    className="w-full px-3 py-2 border rounded-lg min-h-[80px]"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleCreateAndAdd}
+                                    disabled={newPending || !newTitle.trim()}
+                                    className="px-4 py-2 bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] disabled:opacity-50"
+                                >
+                                    {newPending ? 'Creando…' : 'Crear y agregar producto'}
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                onClick={() => setOpen(false)}
+                                className="px-4 py-2 border border-[#e5e7eb] rounded-lg hover:bg-gray-50"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Dialog>
+            <AddToOrderModal
+                open={orderOpen}
+                onOpenChange={setOrderOpen}
+                productId={String(producto.id)}
+                productPrice={producto.precio}
+                orders={orders}   // pásale las órdenes en borrador del usuario
+            />
         </div>
     );
 }

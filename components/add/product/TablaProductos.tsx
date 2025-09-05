@@ -2,23 +2,32 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
-import EditProductModal from '../../modals/products/editProductModal'
+import { Search, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react'
+
+import EditProductModal from '@/components/modals/products/editProductModal'
 import DeleteProductAction from '@/actions/add/products/DeleteProductAction'
 import { Categoria, Producto } from '@/src/schemas'
-import { Search, ChevronLeft, ChevronRight, Edit2, Trash2, Box } from 'lucide-react'
+
+import ProductImage from './ProductImage'
+import ConfirmDialog from './confirmDialog'
 
 type Props = {
   products: Producto[]
   categorias: Categoria[]
+  getProductImageDataUrl: (id: string) => Promise<string | null>
 }
 
-export default function ProductTable({ products, categorias }: Props) {
+export default function ProductTable({ products, categorias, getProductImageDataUrl }: Props) {
   const [items, setItems] = useState<Producto[]>(products)
   const [q, setQ] = useState('')
   const [cat, setCat] = useState<string>('')
   const [page, setPage] = useState(1)
   const pageSize = 10
   const [editing, setEditing] = useState<Producto | null>(null)
+
+  // Confirmación
+  const [confirming, setConfirming] = useState<Producto | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     setItems(products)
@@ -38,20 +47,26 @@ export default function ProductTable({ products, categorias }: Props) {
   const paged = useMemo(() => {
     const start = (page - 1) * pageSize
     const slice = filtered.slice(start, start + pageSize)
-    if (slice.length === 0 && page > 1) {
-      setPage(p => Math.max(1, p - 1))
-    }
+    if (slice.length === 0 && page > 1) setPage(p => Math.max(1, p - 1))
     return slice
   }, [filtered, page])
 
-  const handleDelete = async (id: string) => {
-    const res = await DeleteProductAction(id)
-    if (res?.error) {
-      toast.error(res.error)
-      return
+  const doDelete = async (id: string) => {
+    setDeleting(true)
+    try {
+      const res = await DeleteProductAction(id)
+      if (res?.error) {
+        toast.error(res.error)
+        return
+      }
+      setItems(prev => prev.filter(p => p.id !== id))
+      toast.success('Producto eliminado')
+    } catch {
+      toast.error('No se pudo eliminar el producto')
+    } finally {
+      setDeleting(false)
+      setConfirming(null)
     }
-    setItems(prev => prev.filter(p => p.id !== id))
-    toast.success('Producto eliminado')
   }
 
   const handleEdited = (updated: Producto) => {
@@ -103,15 +118,13 @@ export default function ProductTable({ products, categorias }: Props) {
               <tr key={p.id} className="hover:bg-[#f0f7f5] transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      {p.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img className="h-10 w-10 rounded-md object-cover" src={p.image_url} alt={p.nombre} />
-                      ) : (
-                        <div className="h-10 w-10 rounded-md bg-gray-100 flex items-center justify-center"> 
-                          <Box className="h-6 w-6 text-gray-400" />
-                        </div>
-                      )}
+                    <div className="flex-shrink-0">
+                      <ProductImage
+                        productId={p.id}
+                        productName={p.nombre}
+                        getProductImageDataUrl={getProductImageDataUrl}
+                        className="h-10 w-10"
+                      />
                     </div>
                     <div className="ml-4">
                       <div className="text-sm font-medium text-[#0F332D]">{p.nombre}</div>
@@ -136,7 +149,7 @@ export default function ProductTable({ products, categorias }: Props) {
                       <span>Editar</span>
                     </button>
                     <button 
-                      onClick={() => handleDelete(p.id)}
+                      onClick={() => setConfirming(p)}
                       className="text-red-600 hover:text-red-800 flex items-center gap-1"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -154,11 +167,7 @@ export default function ProductTable({ products, categorias }: Props) {
                     <p className="text-lg font-medium text-[#174940]">
                       No se encontraron productos
                     </p>
-                    {q && (
-                      <p className="mt-1">
-                        Intenta con otro término de búsqueda
-                      </p>
-                    )}
+                    {q && <p className="mt-1">Intenta con otro término de búsqueda</p>}
                   </div>
                 </td>
               </tr>
@@ -175,9 +184,7 @@ export default function ProductTable({ products, categorias }: Props) {
         <div className="flex items-center gap-2">
           <button
             className={`px-4 py-2 rounded-lg flex items-center gap-1 ${
-              page === 1 
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-[#174940] text-white hover:bg-[#0F332D]'
+              page === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#174940] text-white hover:bg-[#0F332D]'
             } transition-colors`}
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
@@ -188,23 +195,16 @@ export default function ProductTable({ products, categorias }: Props) {
           <div className="flex items-center gap-1">
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               let pageNum
-              if (totalPages <= 5) {
-                pageNum = i + 1
-              } else if (page <= 3) {
-                pageNum = i + 1
-              } else if (page >= totalPages - 2) {
-                pageNum = totalPages - 4 + i
-              } else {
-                pageNum = page - 2 + i
-              }
+              if (totalPages <= 5) pageNum = i + 1
+              else if (page <= 3) pageNum = i + 1
+              else if (page >= totalPages - 2) pageNum = totalPages - 4 + i
+              else pageNum = page - 2 + i
 
               return (
                 <button
                   key={pageNum}
                   className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    page === pageNum
-                      ? 'bg-[#63B23D] text-white'
-                      : 'hover:bg-[#f0f7f5]'
+                    page === pageNum ? 'bg-[#63B23D] text-white' : 'hover:bg-[#f0f7f5]'
                   } transition-colors`}
                   onClick={() => setPage(pageNum)}
                 >
@@ -212,9 +212,7 @@ export default function ProductTable({ products, categorias }: Props) {
                 </button>
               )
             })}
-            {totalPages > 5 && page < totalPages - 2 && (
-              <span className="px-2">...</span>
-            )}
+            {totalPages > 5 && page < totalPages - 2 && <span className="px-2">...</span>}
             {totalPages > 5 && page < totalPages - 2 && (
               <button
                 className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-[#f0f7f5] transition-colors"
@@ -226,9 +224,7 @@ export default function ProductTable({ products, categorias }: Props) {
           </div>
           <button
             className={`px-4 py-2 rounded-lg flex items-center gap-1 ${
-              page === totalPages
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-[#174940] text-white hover:bg-[#0F332D]'
+              page === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#174940] text-white hover:bg-[#0F332D]'
             } transition-colors`}
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
@@ -249,6 +245,22 @@ export default function ProductTable({ products, categorias }: Props) {
           onEdited={handleEdited}
         />
       )}
+
+      {/* Modal confirmación (reutilizable) */}
+      <ConfirmDialog
+        open={!!confirming}
+        title="Confirmar eliminación"
+        description={
+          confirming
+            ? <>¿Seguro que deseas eliminar el producto <span className="font-semibold">{confirming.nombre}</span>?</>
+            : null
+        }
+        confirmLabel="Sí, eliminar"
+        cancelLabel="Cancelar"
+        loading={deleting}
+        onClose={() => setConfirming(null)}
+        onConfirm={() => confirming && doDelete(confirming.id)}
+      />
     </div>
   )
 }

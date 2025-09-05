@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useEffect, useActionState } from 'react'
+import { useState, useEffect, useActionState, useCallback } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { toast } from 'react-toastify'
 import { AlertTriangle, Box, XCircle, CheckCircle2, Upload, RefreshCw, Eye } from 'lucide-react'
@@ -18,11 +18,10 @@ function SubmitBtn({ label = 'Subir', icon: Icon = Upload }: { label?: string; i
     <button
       type="submit"
       disabled={pending}
-      className={`px-3 py-1.5 rounded-lg flex items-center gap-1 text-sm font-medium transition-all ${
-        pending 
-          ? 'bg-[#174940]/80 text-white' 
-          : 'bg-[#174940] text-white hover:bg-[#0F332D]'
-      }`}
+      className={`px-3 py-1.5 rounded-lg flex items-center gap-1 text-sm font-medium transition-all ${pending
+        ? 'bg-[#174940]/80 text-white'
+        : 'bg-[#174940] text-white hover:bg-[#0F332D]'
+        }`}
     >
       {pending ? (
         <RefreshCw className="h-4 w-4 animate-spin" />
@@ -40,12 +39,16 @@ export default function OrderItemRow({
   item,
   orderStatus,
   isAdmin,
-  onItemUpdate
+  onItemUpdate,
+  getProductImageDataUrl,
+  getEvidenceImageDataUrl
 }: {
   item: PurchaseOrderItem
   orderStatus: 'draft' | 'sent' | 'partially_approved' | 'approved' | 'rejected'
   isAdmin: boolean
   onItemUpdate: (updated: PurchaseOrderItem) => void
+  getProductImageDataUrl: (imageId: string) => Promise<string | null>
+  getEvidenceImageDataUrl: (imageId: string) => Promise<string | null>
 }) {
   const [evState, dispatchEv] = useActionState(uploadEvidenceAction, {
     success: '', errors: [], item: null
@@ -57,7 +60,10 @@ export default function OrderItemRow({
   useEffect(() => {
     evState.errors.forEach(e => toast.error(e))
     qtyState.errors.forEach(e => toast.error(e))
-    if (evState.success) toast.success(evState.success)
+    if (evState.success) {
+      toast.success(evState.success)
+      fetchImageEvidencia(); // ⬅️ Refresca la imagen de evidencia al subir una nueva
+    }
     if (qtyState.success) toast.success(qtyState.success)
 
     const updated = evState.item ?? qtyState.item
@@ -73,23 +79,128 @@ export default function OrderItemRow({
     pending: 'bg-yellow-100 text-yellow-600'
   }[item.status] || 'bg-gray-100 text-gray-600'
 
+  //Fetch Imagenes de productos
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchImageProductos = useCallback(async () => {
+    setLoading(true);
+    setLoaded(false);
+    setError(null);
+    setImgSrc(null);
+
+    let active = true;
+    try {
+      const url = await getProductImageDataUrl(item.product.id);
+      if (!active) return;
+      if (!url) {
+        // 404 o sin imagen
+        setImgSrc(null);
+      } else {
+        setImgSrc(url);
+      }
+    } catch (e: any) {
+      if (!active) return;
+      setError(e?.message || 'No se pudo cargar la imagen');
+      setImgSrc(null);
+    } finally {
+      if (active) setLoading(false);
+    }
+
+    return () => { active = false; };
+  }, [item.product.id, getProductImageDataUrl]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (cancelled) return;
+      await fetchImageProductos();
+    })();
+    return () => { cancelled = true; };
+  }, [fetchImageProductos]);
+
+  //Fetch imagenes de evidencia
+  const [eviImgSrc, setEviImgSrc] = useState<string | null>(null);
+  const [eviLoading, setEviLoading] = useState(false);
+  const [eviLoaded, setEviLoaded] = useState(false);
+  const [eviError, setEviError] = useState<string | null>(null);
+
+  // ⬇️ Trae la evidencia usando el ID del ÍTEM
+  const fetchImageEvidencia = useCallback(async () => {
+    setEviLoading(true);
+    setEviLoaded(false);
+    setEviError(null);
+    setEviImgSrc(null);
+
+    let active = true;
+    try {
+      const url = await getEvidenceImageDataUrl(String(item.id)); // 👈 antes usabas product.id
+      if (!active) return;
+      setEviImgSrc(url ?? null);
+    } catch (e: any) {
+      if (!active) return;
+      setEviError(e?.message || 'No se pudo cargar la evidencia');
+      setEviImgSrc(null);
+    } finally {
+      if (active) setEviLoading(false);
+    }
+
+    return () => { active = false; };
+  }, [item.id, getEvidenceImageDataUrl]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (cancelled) return;
+      await fetchImageEvidencia();
+    })();
+    return () => { cancelled = true; };
+  }, [fetchImageEvidencia]);
+
+
   return (
     <tr className="border-b border-[#e5e7eb] hover:bg-[#f0f7f5] transition-colors">
       {/* Producto */}
       <td className="py-4 px-6">
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0">
-            {item.product.image_url ? (
-              <div className="h-12 w-12 rounded-lg overflow-hidden border border-[#e5e7eb]">
-                <Image
-                  src={item.product.image_url}
-                  alt={item.product.nombre}
-                  width={48}
-                  height={48}
-                  className="h-full w-full object-cover"
-                />
+          <div
+            className="relative h-10 overflow-hidden rounded-t-xl"
+            aria-busy={loading ? 'true' : 'false'}
+            aria-live="polite"
+          >
+            {/* Estado: Cargando (skeleton + spinner) */}
+            {loading && (
+              <div className="absolute inset-0 animate-pulse bg-gray-100" />
+            )}
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg
+                  className="h-6 w-6 animate-spin"
+                  viewBox="0 0 24 24"
+                  aria-label="Cargando imagen"
+                >
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
+                  <path d="M4 12a8 8 0 018-8" fill="currentColor" className="opacity-75" />
+                </svg>
               </div>
-            ) : (
+            )}
+
+            {/* Estado: Éxito (con fade-in al cargar) */}
+            {imgSrc && !error && (
+              <img
+                src={imgSrc}
+                alt={item.product.nombre}
+                loading="lazy"
+                decoding="async"
+                onLoad={() => setLoaded(true)}
+                className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+              />
+            )}
+
+            {/* Estado: Sin imagen o Error */}
+            {!loading && (!imgSrc || error) && (
               <div className="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center border border-[#e5e7eb]">
                 <Box className="h-5 w-5 text-gray-400" />
               </div>
@@ -133,28 +244,51 @@ export default function OrderItemRow({
 
       {/* Evidencia */}
       <td className="px-6 py-4">
-        {item.evidenceUrl ? (
-          <div className="relative group">
-            <div className="h-16 w-16 rounded-lg overflow-hidden border border-[#e5e7eb]">
-              <Image
-                src={item.evidenceUrl}
-                alt="Evidencia"
-                width={64}
-                height={64}
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <a 
-              href={item.evidenceUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Eye className="h-5 w-5 text-white" />
-            </a>
-          </div>
-        ) : (
-          <span className="text-sm text-[#999999] italic">Sin evidencia</span>
+        <div
+          className="relative w-28 h-28 rounded-lg border border-[#e5e7eb] bg-white flex items-center justify-center overflow-hidden"
+          aria-busy={eviLoading ? 'true' : 'false'}
+          aria-live="polite"
+        >
+          {/* Cargando */}
+          {eviLoading && (
+            <>
+              <div className="absolute inset-0 animate-pulse bg-gray-100" />
+              <svg className="relative h-6 w-6 animate-spin text-gray-500" viewBox="0 0 24 24" aria-label="Cargando evidencia">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
+                <path d="M4 12a8 8 0 018-8" fill="currentColor" className="opacity-75" />
+              </svg>
+            </>
+          )}
+
+          {/* Imagen completa (object-contain para NO recortar) */}
+          {eviImgSrc && !eviError && !eviLoading && (
+            <img
+              src={eviImgSrc}
+              alt="Evidencia de recepción"
+              loading="lazy"
+              decoding="async"
+              onLoad={() => setEviLoaded(true)}
+              className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${eviLoaded ? 'opacity-100' : 'opacity-0'}`}
+            />
+          )}
+
+          {/* Sin evidencia / Error */}
+          {!eviLoading && (!eviImgSrc || eviError) && (
+            <span className="text-xs text-gray-500">Sin evidencia</span>
+          )}
+        </div>
+
+        {/* (Opcional) botón para ver en grande en un modal/lightbox */}
+        {eviImgSrc && !eviError && (
+          <button
+            type="button"
+            onClick={() => window.open(eviImgSrc as string, '_blank', 'noopener,noreferrer')}
+            className="mt-2 inline-flex items-center gap-1 text-[#174940] hover:underline text-sm"
+            title="Ver evidencia completa"
+          >
+            <Eye className="h-4 w-4" />
+            Ver completo
+          </button>
         )}
 
         {canUpload && (
@@ -165,12 +299,12 @@ export default function OrderItemRow({
                 <span className="truncate text-[#174940]">Seleccionar archivo</span>
                 <Upload className="h-4 w-4 text-[#999999]" />
               </div>
-              <input 
-                type="file" 
-                name="file" 
-                accept="image/*" 
-                required 
-                className="hidden" 
+              <input
+                type="file"
+                name="file"
+                accept="image/*"
+                required
+                className="hidden"
                 onChange={(e) => e.target.form?.requestSubmit()}
               />
             </label>

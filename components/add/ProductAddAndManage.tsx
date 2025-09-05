@@ -9,11 +9,11 @@ import { Categoria, Producto, Service } from '@/src/schemas'
 import ServiceTable from './service/servicetable'
 import CategoryTable from './Category/CategoriesTable'
 
-type Props = { categorias: Categoria[], products: Producto[], services: Service[] }
+type Props = { categorias: Categoria[], products: Producto[], services: Service[], getProductImageDataUrl: (id: string) => Promise<string | null> }
 type TopTab = 'crear' | 'administrar'
 type ManageTab = 'productos' | 'servicios' | 'categorias'
 
-export default function ProductAddAndManage({ categorias, products, services }: Props) {
+export default function ProductAddAndManage({ categorias, products, services, getProductImageDataUrl }: Props) {
   const [topTab, setTopTab] = useState<TopTab>('crear')
   const [manageTab, setManageTab] = useState<ManageTab>('productos')
 
@@ -52,7 +52,7 @@ export default function ProductAddAndManage({ categorias, products, services }: 
           </div>
 
           <div className="border rounded-b p-4 bg-white shadow-sm">
-            {manageTab === 'productos' && <ProductTable products={products} categorias={categorias} />}
+            {manageTab === 'productos' && <ProductTable products={products} categorias={categorias} getProductImageDataUrl={getProductImageDataUrl} />}
             {manageTab === 'servicios' && <ServiceTable services={services} />}
             {manageTab === 'categorias' && <CategoryTable categorias={categorias} />}
           </div>

@@ -20,17 +20,34 @@ export default function ProductForm({ categorias }: Props) {
   const [previewUrl, setPreviewUrl] = useState<string>('')
   const [file, setFile] = useState<File | null>(null)
 
+  const MAX_MB = 10; // ajusta si el BE tiene otro límite
+  const ACCEPT = {
+    'image/jpeg': [],
+    'image/png': [],
+    'image/webp': [],
+    'image/heic': [],
+    'image/heif': [],
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { 'image/*': [] },
+    accept: ACCEPT,
     multiple: false,
+    onDropRejected: () => toast.error('Formato no permitido'),
     onDrop: (files) => {
-      const selected = files[0]
-      setFileName(selected.name)
-      setFile(selected)
-      const url = URL.createObjectURL(selected)
-      setPreviewUrl(url)
+      const selected = files[0];
+      if (!selected) return;
+
+      if (selected.size > MAX_MB * 1024 * 1024) {
+        toast.error(`La imagen supera ${MAX_MB} MB`);
+        return;
+      }
+      setFileName(selected.name);
+      setFile(selected);
+
+      const url = URL.createObjectURL(selected);
+      setPreviewUrl(url);
     }
-  })
+  });
 
   useEffect(() => {
     return () => {

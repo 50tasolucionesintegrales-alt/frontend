@@ -83,14 +83,26 @@ export const assignRoleSchema = z.object({
         rol: z.enum(["cotizador", "comprador"]),
 })
 
+const numOpt = z.preprocess(
+  (v) => (v === '' || v === null || v === undefined ? undefined : v),
+  z.coerce.number().finite().optional()
+)
+
 export const updateItemSchema = z.object({
-        cantidad: z.coerce.number(),
-        margenPct1: z.coerce.number(),
-        margenPct2: z.coerce.number(),
-        margenPct3: z.coerce.number(),
-        itemId: z.coerce.number(),
-        quoteId: z.coerce.number()
-})
+  itemId: z.union([z.string(), z.number()]).transform(String),
+  quoteId: z.union([z.string(), z.number()]).transform(String),
+
+  cantidad: numOpt, // si en algún momento lo editas
+  unidad: z.string().optional(),
+
+  margenPct1: numOpt,
+  margenPct2: numOpt,
+  margenPct3: numOpt,
+  margenPct4: numOpt,
+  margenPct5: numOpt,
+  margenPct6: numOpt,
+  margenPct7: numOpt,
+}).strip()
 
 const CategorySchema = z.object({
         id: z.string(),
@@ -194,7 +206,9 @@ export const PurchaseOrderItemSchema = z.object({
         cantidad: z.number(),
         costo_unitario: z.number(),
         subtotal: z.number(),
+        evidenceSize: z.number().nullable(),
         evidenceUrl: z.string().url().nullable(),
+        createdAt: z.string(),
         status: z.enum(['pending', 'approved', 'rejected']),
         rejectReason: z.string().nullable(),
         approvedAt: z.string().nullable()
@@ -228,7 +242,8 @@ export type Producto = {
         precio: string;
         especificaciones?: string | null;
         link_compra: string;
-        image_url: string;
+        image_url?: string | null  // ← ahora opcional
+        hasImage?: boolean
         createdAt: string;
 }
 

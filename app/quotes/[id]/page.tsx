@@ -1,12 +1,13 @@
 // app/quotes/[id]/page.tsx
 
+import { getProductImageDataUrl } from "@/actions/add/products/ProductImageAction"
 import AddItemsModal from "@/components/quotes/AddItemsModal"
-import QuoteDetailTable from "@/components/quotes/QuoteDetailTable"
+import QuoteDetail from "@/components/quotes/QuoteDetail"
 import { ArrowLeft } from "lucide-react"
 import { cookies } from "next/headers"
 import Link from "next/link"
 
-export default async function QuotePage({ params }: { params: { id: string } }) {
+export default async function QuotePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const token = (await cookies()).get('50TA_TOKEN')?.value
     const resQuote = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${id}`, {
@@ -53,15 +54,18 @@ export default async function QuotePage({ params }: { params: { id: string } }) 
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl mb-4">{quote.titulo}</h1>
             <div className="flex justify-between">
-                <AddItemsModal quoteId={id} quoteType={quote.tipo} availableItems={disponibles} />
+                <h1 className="text-2xl mb-4">{quote.titulo}</h1>
+
                 <Link href='/quotes' className="inline-flex items-center text-[#174940] hover:text-[#0F332D] mb-4 transition">
                     <ArrowLeft size={18} className="mr-1" />
                     Volver al catálogo
                 </Link>
             </div>
-            <QuoteDetailTable quote={quote} />
+            {quote.status === 'draft' && (
+                <AddItemsModal quoteId={id} quoteType={quote.tipo} availableItems={disponibles} />
+            )}
+            <QuoteDetail quote={quote} getProductImageDataUrl={getProductImageDataUrl} />
         </div>
     )
 }

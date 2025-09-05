@@ -5,9 +5,13 @@ import AdminOrderItemRow from './AdminOrderItemRow'
 import { PurchaseOrderItem } from '@/src/schemas'
 
 export default function AdminOrderItemsTable({
-  initialItems
+  initialItems,
+  getProductImageDataUrl,
+  getEvidenceImageDataUrl
 }: {
   initialItems: PurchaseOrderItem[]
+  getProductImageDataUrl: (imageId: string) => Promise<string | null>
+  getEvidenceImageDataUrl: (imageId: string) => Promise<string | null>
 }) {
   const [items, setItems] = useState<PurchaseOrderItem[]>(initialItems)
 
@@ -54,6 +58,8 @@ export default function AdminOrderItemsTable({
               item={it}
               showActions={hasPending && it.status === 'pending'}
               onItemUpdate={handleItemUpdate}
+              getProductImageDataUrl={getProductImageDataUrl}
+              getEvidenceImageDataUrl={getEvidenceImageDataUrl}
             />
           ))}
         </tbody>

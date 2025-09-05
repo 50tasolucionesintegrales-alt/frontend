@@ -3,6 +3,7 @@
 import { cookies } from "next/headers"
 import { successSchema } from "@/src/schemas"
 import normalizeErrors from "@/src/helpers/normalizeError"
+import { revalidatePath } from "next/cache"
 
 type Actiontyope = {
     errors: string[]
@@ -20,7 +21,7 @@ export default async function sendOrderAction(prevState: Actiontyope, formData: 
         }
     })
 
-    const json = res.json()
+    const json = await res.json()
     
     if(!res.ok) {
         return {

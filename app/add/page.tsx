@@ -1,3 +1,4 @@
+import { getProductImageDataUrl } from '@/actions/add/products/ProductImageAction'
 import ProductAddAndManage from '@/components/add/ProductAddAndManage'
 import { cookies } from 'next/headers'
 
@@ -25,5 +26,5 @@ export default async function page() {
         }
     }).then((res) => res.json())
 
-    return <ProductAddAndManage categorias={categories} products={products} services={servicios} />
+    return <ProductAddAndManage categorias={categories} products={products} services={servicios} getProductImageDataUrl={getProductImageDataUrl} />
 }

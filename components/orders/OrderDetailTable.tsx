@@ -4,7 +4,8 @@ import {
   useState,
   useEffect,
   useCallback,
-  useActionState
+  useActionState,
+  useMemo
 } from 'react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -18,20 +19,33 @@ import AddItemsModal from '../modals/orders/AddItemsModal'
 import sendOrderAction from '@/actions/orders/sendOrderAction'
 import { reopenOrderAction } from '@/actions/orders/reOpenAction'
 
-type Props = { order: any; productos: Producto[] }
+type Props = { 
+  order: any; productos: 
+  Producto[], 
+  getProductImageDataUrl: (imageId: string) => Promise<string | null>,
+  getEvidenceImageDataUrl: (imageId: string) => Promise<string | null>
+}
 
-export default function OrderDetailTable({ order, productos }: Props) {
+export default function OrderDetailTable({ order, productos, getProductImageDataUrl, getEvidenceImageDataUrl }: Props) {
   const { user } = useAuthClient()
   const isAdmin = user?.rol?.includes('admin') ?? false
 
-  const [items, setItems] = useState<PurchaseOrderItem[]>(order.items)
-  const allWithEvidence = items.length > 0 && items.every(it => Boolean(it.evidenceUrl))
-  const canResend = order.status === 'partially_approved'
+  // Estado local: items y status (no mutes el prop!)
+  const [items, setItems] = useState<PurchaseOrderItem[]>(order.items);
+  const [status, setStatus] = useState<'draft' | 'sent' | 'partially_approved' | 'approved' | 'rejected'>(order.status);
+
+  // Derivar “todos con evidencia” desde items (recalcula en cada cambio)
+  const allWithEvidence = useMemo(
+    () => items.length > 0 && items.every(it => Number(it.evidenceSize) > 0),
+    [items]
+  );
+
+  const canResend = status === 'partially_approved'
 
   /* ------------- enviar orden -------------- */
   const [state, dispatch, pending] = useActionState(sendOrderAction, {
     errors: [],
-    success: ''
+    success: '',
   })
 
   /* ------------- reabrir orden -------------- */
@@ -43,17 +57,20 @@ export default function OrderDetailTable({ order, productos }: Props) {
 
   useEffect(() => {
     state.errors.forEach(e => toast.error(e))
-    if (state.success) toast.success(state.success)
+    if (state.success) {
+      toast.success(state.success)
+      setStatus(canResend ? 'partially_approved' : 'sent') // 👈 en vez de mutar prop;
+    }
   }, [state.errors, state.success])
 
   useEffect(() => {
-    reopenState.errors.forEach(e => toast.error(e))
+    reopenState.errors.forEach(e => toast.error(e));
     if (reopenState.success && reopenState.order) {
-      toast.success(reopenState.success)
-      setItems(reopenState.order.items)
-      order.status = reopenState.order.status
+      toast.success(reopenState.success);
+      setItems(reopenState.order.items);
+      setStatus(reopenState.order.status); // 👈 en vez de mutar prop
     }
-  }, [reopenState])
+  }, [reopenState]);
   
   const handleItemUpdate = useCallback(
     (updated: PurchaseOrderItem) => {
@@ -133,9 +150,11 @@ export default function OrderDetailTable({ order, productos }: Props) {
                 <OrderItemRow
                   key={item.id}
                   item={item}
-                  orderStatus={order.status}
+                  orderStatus={status}
                   isAdmin={isAdmin}
                   onItemUpdate={handleItemUpdate}
+                  getProductImageDataUrl={getProductImageDataUrl}
+                  getEvidenceImageDataUrl={getEvidenceImageDataUrl}
                 />
               ))
             )}
@@ -143,7 +162,7 @@ export default function OrderDetailTable({ order, productos }: Props) {
         </table>
       </div>
 
-      {(order.status === 'draft' || order.status === 'partially_approved') && items.length !== 0 && (
+      {(status === 'draft' || status === 'partially_approved') && items.length !== 0 && (
         <form action={dispatch} className="mt-6">
           <input type="hidden" name="orderId" value={order.id} />
 
@@ -153,7 +172,7 @@ export default function OrderDetailTable({ order, productos }: Props) {
               (order.status === 'draft' && !allWithEvidence) || pending
             }
             className={`px-6 py-2 rounded-lg font-medium flex items-center
-        ${order.status === 'draft'
+        ${status === 'draft'
                 ? allWithEvidence
                   ? 'bg-[#63B23D] text-white hover:bg-[#529e33]'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -175,11 +194,11 @@ export default function OrderDetailTable({ order, productos }: Props) {
                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
-            {order.status === 'draft' ? 'Enviar orden' : 'Reenviar orden'}
+            {status === 'draft' ? 'Enviar orden' : 'Reenviar orden'}
           </button>
 
           {/* mensaje sólo para draft */}
-          {order.status === 'draft' && !allWithEvidence && (
+          {status === 'draft' && !allWithEvidence && (
             <p className="text-xs text-red-500 mt-2">
               Todos los ítems deben tener evidencia antes de enviar.
             </p>
@@ -187,7 +206,7 @@ export default function OrderDetailTable({ order, productos }: Props) {
         </form>
       )}
 
-      {order.status === 'sent' && (
+      {status === 'sent' && (
         <form action={reopenDispatch} className="mt-6">
           <input type="hidden" name="orderId" value={order.id} />
 

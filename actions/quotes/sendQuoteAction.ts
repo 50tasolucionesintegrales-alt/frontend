@@ -1,39 +1,36 @@
+// /actions/quotes/sendQuoteAction.ts
 'use server'
 
-import normalizeErrors from "@/src/helpers/normalizeError"
-import { successSchema } from "@/src/schemas"
-import { cookies } from "next/headers"
+import normalizeErrors from '@/src/helpers/normalizeError'
+import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 
-type ActionType = {
-    errors: string[]
-    success: string
-}
+type ActionType = { errors: string[]; success: string }
 
-export default async function sendQuoteAction(prevState: ActionType, formData: FormData) {
-    const token = (await cookies()).get('50TA_TOKEN')?.value
-    const id = formData.get('quoteId')
+export default async function sendQuoteAction(
+  prevState: ActionType,
+  formData: FormData
+) {
+  const token = (await cookies()).get('50TA_TOKEN')?.value
+  const id = formData.get('quoteId')?.toString()
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${id}/send`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-        }
-    })
+  if (!token) return { errors: ['No autenticado'], success: '' }
+  if (!id)    return { errors: ['Falta quoteId'], success: '' }
 
-    const json = await res.json()
-    if(!res) {
-        return {
-            ...normalizeErrors(json),
-            success: ''
-        }
-    }
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${id}/send`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  })
 
-    console.log(json)
-    // const { message } = successSchema.parse(json)
+  let json: any = null
+  try { json = await res.json() } catch {}
 
-    return {
-        errors: [],
-        success: 'Cotización enviada correctamente'
-    }
+  if (!res.ok) {
+    return { ...normalizeErrors(json || { message: res.statusText }), success: '' }
+  }
+
+  // Para que cambie a "sent" en el UI al refrescar
+  revalidatePath(`/quotes/${id}`)
+  return { errors: [], success: 'Cotización enviada correctamente' }
 }

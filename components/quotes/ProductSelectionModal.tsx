@@ -1,28 +1,114 @@
 'use client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Search, X } from 'lucide-react'
+
+type SelItem = {
+  id: string | number
+  nombre: string
+  cantidad: number
+  precio: number     // costo unitario normalizado (number)
+  unidad?: string
+}
 
 export default function ProductSelectionModal({
   items,
   onSelect,
+  defaultUnidad = 'pieza',
 }: {
   items: any[]
-  onSelect: (items: any[]) => void
+  onSelect: (items: SelItem[]) => void
+  defaultUnidad?: string
 }) {
   const [search, setSearch] = useState('')
-  const [selected, setSelected] = useState<any[]>([])
+  const [selected, setSelected] = useState<SelItem[]>([])
 
-  const filtered = items.filter(i =>
-    i.nombre.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return items
+    return items.filter(i => i.nombre?.toLowerCase().includes(q))
+  }, [items, search])
 
-  const toggleItem = (item: any) => {
-    const newSelected = selected.some(s => s.id === item.id)
-      ? selected.filter(s => s.id !== item.id)
-      : [...selected, item]
-    setSelected(newSelected)
-    onSelect(newSelected)
+  const parsePrecio = (v: any): number => {
+    if (typeof v === 'number') return v
+    if (typeof v !== 'string') return 0
+    const clean = v
+      .replace(/[^\d,.\-]/g, '')           // quita $ y letras
+      .replace(/\.(?=\d{3}(?:\D|$))/g, '') // quita miles con punto
+      .replace(/,(?=\d{3}(?:\D|$))/g, '')  // quita miles con coma
+      .replace(',', '.')                   // coma decimal → punto
+    const n = Number(clean)
+    return Number.isFinite(n) ? n : 0
   }
+
+  // Precio inicial que viene del listado de items
+  const getPrecioInicial = (row: any): number => {
+    // productos: row.precio (string/number)
+    // servicios: row.precioBase (o ajusta a row.costo si así lo tienes)
+    return parsePrecio(row.precio ?? row.precioBase ?? row.costo ?? 0)
+  }
+
+  const toggleItem = (row: any) => {
+    const exists = selected.find(s => String(s.id) === String(row.id))
+    let next: SelItem[]
+    if (exists) {
+      next = selected.filter(s => String(s.id) !== String(row.id))
+    } else {
+      next = [
+        ...selected,
+        {
+          id: row.id,
+          nombre: row.nombre,
+          cantidad: 1,
+          precio: +getPrecioInicial(row).toFixed(2),
+          unidad: (row.unidad ?? defaultUnidad).toString().trim() || defaultUnidad,
+        },
+      ]
+    }
+    setSelected(next)
+    onSelect(next)
+  }
+
+  const updateCantidad = (id: string | number, value: string) => {
+    const n = Number(value)
+    const cantidad = Number.isFinite(n) && n > 0 ? Math.floor(n) : 1
+    const next = selected.map(s => (String(s.id) === String(id) ? { ...s, cantidad } : s))
+    setSelected(next)
+    onSelect(next)
+  }
+
+  const updatePrecio = (id: string | number, value: string) => {
+    const n = parsePrecio(value)
+    const next = selected.map(s => (String(s.id) === String(id) ? { ...s, precio: +n.toFixed(2) } : s))
+    setSelected(next)
+    onSelect(next)
+  }
+
+  const selectAllFiltered = () => {
+    // añade los no seleccionados de la lista filtrada
+    const map = new Map<string, SelItem>(selected.map(s => [String(s.id), s]))
+    filtered.forEach(row => {
+      const key = String(row.id)
+      if (!map.has(key)) {
+        map.set(key, {
+          id: row.id,
+          nombre: row.nombre,
+          cantidad: 1,
+          precio: +getPrecioInicial(row).toFixed(2),
+          unidad: (row.unidad ?? defaultUnidad).toString().trim() || defaultUnidad,
+        })
+      }
+    })
+    const next = Array.from(map.values())
+    setSelected(next)
+    onSelect(next)
+  }
+
+  const clearSelection = () => {
+    setSelected([])
+    onSelect([])
+  }
+
+  const isChecked = (id: any) => selected.some(s => String(s.id) === String(id))
 
   return (
     <div className="space-y-4 p-1">
@@ -32,10 +118,10 @@ export default function ProductSelectionModal({
           <Search className="h-5 w-5 text-[#999999]" />
         </div>
         <input
-          placeholder="Buscar productos..."
+          placeholder="Buscar…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition-all"
+          className="w-full pl-10 pr-10 py-2 border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition-all"
         />
         {search && (
           <button
@@ -47,12 +133,28 @@ export default function ProductSelectionModal({
         )}
       </div>
 
-      {/* Contador de seleccionados */}
-      {selected.length > 0 && (
+      {/* Barra de acciones y contador */}
+      <div className="flex items-center justify-between">
         <div className="text-sm text-[#174940] font-medium">
           {selected.length} {selected.length === 1 ? 'ítem seleccionado' : 'ítems seleccionados'}
         </div>
-      )}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={selectAllFiltered}
+            className="px-3 py-1.5 text-sm bg-white border border-[#e5e7eb] rounded-lg hover:bg-gray-50"
+          >
+            Seleccionar filtrados
+          </button>
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="px-3 py-1.5 text-sm bg-white border border-[#e5e7eb] rounded-lg hover:bg-gray-50"
+          >
+            Limpiar
+          </button>
+        </div>
+      </div>
 
       {/* Lista */}
       <div className="border border-[#e5e7eb] rounded-lg overflow-hidden">
@@ -66,26 +168,68 @@ export default function ProductSelectionModal({
               </div>
             </li>
           ) : (
-            filtered.map(item => {
-              const isSelected = selected.some(s => s.id === item.id)
+            filtered.map(row => {
+              const checked = isChecked(row.id)
+              const sel = selected.find(s => String(s.id) === String(row.id))
               return (
-                <li 
-                  key={item.id} 
-                  className={`hover:bg-[#f0f7f5] transition-colors ${isSelected ? 'bg-[#f0f7f5]' : ''}`}
-                >
-                  <label className="flex items-center px-4 py-3 cursor-pointer">
-                    <div className="flex items-center h-5">
+                <li key={row.id} className={`transition-colors ${checked ? 'bg-[#f0f7f5]' : 'hover:bg-[#f0f7f5]'}`}>
+                  <div className="px-4 py-3">
+                    <label className="flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleItem(item)}
+                        checked={checked}
+                        onChange={() => toggleItem(row)}
                         className="h-4 w-4 text-[#63B23D] border-[#e5e7eb] rounded focus:ring-[#63B23D]"
                       />
-                    </div>
-                    <span className="ml-3 text-sm text-[#0F332D]">
-                      {item.nombre}
-                    </span>
-                  </label>
+                      <span className="ml-3 text-sm text-[#0F332D] flex-1">{row.nombre}</span>
+                      {/* Muestra precio base a la derecha */}
+                      <span className="text-xs text-[#174940]/70">
+                        ${getPrecioInicial(row).toFixed(2)}
+                      </span>
+                    </label>
+
+                    {/* Si está seleccionado, muestra edición rápida */}
+                    {checked && sel && (
+                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 pl-7">
+                        <div>
+                          <label className="block text-xs text-[#174940]/80 mb-1">Cantidad</label>
+                          <input
+                            type="number"
+                            min={1}
+                            step={1}
+                            value={sel.cantidad}
+                            onChange={(e) => updateCantidad(sel.id, e.target.value)}
+                            className="w-full px-3 py-1.5 border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-[#174940]/80 mb-1">Costo unitario</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={sel.precio}
+                            onChange={(e) => updatePrecio(sel.id, e.target.value)}
+                            className="w-full px-3 py-1.5 border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none"
+                          />
+                        </div>
+                        <div className="col-span-2 sm:col-span-1">
+                          <label className="block text-xs text-[#174940]/80 mb-1">Unidad</label>
+                          <input
+                            type="text"
+                            value={sel.unidad ?? defaultUnidad}
+                            onChange={(e) => {
+                              const next = selected.map(s =>
+                                String(s.id) === String(sel.id) ? { ...s, unidad: e.target.value || defaultUnidad } : s
+                              )
+                              setSelected(next)
+                              onSelect(next)
+                            }}
+                            className="w-full px-3 py-1.5 border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </li>
               )
             })

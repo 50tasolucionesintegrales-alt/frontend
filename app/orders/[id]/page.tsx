@@ -1,7 +1,9 @@
 import { cookies } from "next/headers"
 import OrderDetailTable from "@/components/orders/OrderDetailTable"
+import { getProductImageDataUrl } from '@/actions/add/products/ProductImageAction';
+import { getEvidenceImageDataUrl } from "@/actions/orders/EvidenceImageAction";
 
-export default async function OrdersDetailPage({ params }: { params: { id: string } }) {
+export default async function OrdersDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const token = (await cookies()).get('50TA_TOKEN')?.value
     const  order = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/${id}`, {
@@ -26,6 +28,11 @@ export default async function OrdersDetailPage({ params }: { params: { id: strin
 
     const productosFiltrados = productos.filter((p: any) => !usedProductIds.has(p.id))
   return (
-    <OrderDetailTable order={order} productos={productosFiltrados} />
+    <OrderDetailTable 
+        order={order} 
+        productos={productosFiltrados}
+        getProductImageDataUrl={getProductImageDataUrl} 
+        getEvidenceImageDataUrl={getEvidenceImageDataUrl} 
+    />
   )
 }

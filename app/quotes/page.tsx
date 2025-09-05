@@ -31,7 +31,7 @@ export default async function QuotesPage() {
             
 
             <section>
-                <h2 className="text-xl">Enviadas</h2>
+                <h2 className="text-2xl mb-4">Enviadas</h2>
                 <QuotesTable quotes={quotesSend} type='sent' />
             </section>
         </div>

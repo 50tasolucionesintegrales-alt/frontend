@@ -5,11 +5,12 @@ import MetricsClient from "@/components/admin/Metrics";
 export default async function AdminMetricsPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  // Lee filtros desde la URL (snake_case como tu DTO)
-  const preset = (searchParams?.preset as DtoPreset) || "last_30d";
-  const limit  = Number(searchParams?.limit ?? 10);
+const params = await searchParams;   // 👈 await aquí
+
+  const preset = (params?.preset as DtoPreset) || "last_30d";
+  const limit  = Number(params?.limit ?? 10);
 
   const q: RangeQuery = { preset, limit };
 
