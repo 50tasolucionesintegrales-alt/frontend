@@ -1,7 +1,6 @@
 'use client';
 
 import { ArrowLeft, ShoppingCart, Share2, Heart, User, Calendar } from 'lucide-react';
-import Link from 'next/link';
 import { Producto, Quote } from '@/src/schemas';
 import { useRouter } from 'next/navigation';
 import { startTransition, useActionState, useCallback, useEffect, useMemo, useState } from 'react';

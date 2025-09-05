@@ -8,7 +8,6 @@ import EditCategoryModal from '@/components/modals/categories/EditModal'
 // actions los creas tú:
 import DeleteCategoryAction from '@/actions/add/categories/DeleteCategoryAction'
 import { Categoria } from '@/src/schemas' // id, nombre, descripcion
-import { error } from 'console'
 
 export default function CategoryTable({ categorias: initial }: { categorias: Categoria[] }) {
   const [items, setItems] = useState<Categoria[]>(initial)

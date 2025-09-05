@@ -1,7 +1,7 @@
 'use client'
 
 import { Quotes } from '@/src/schemas'
-import { Clock, Eye, PlusCircle, Send } from 'lucide-react'
+import { Clock, Eye } from 'lucide-react'
 import React, { useState } from 'react'
 import CreateQuoteModal from './CreateQuoteModal'
 import Link from 'next/link'

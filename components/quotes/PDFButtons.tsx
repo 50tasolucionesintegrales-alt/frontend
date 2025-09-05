@@ -1,5 +1,5 @@
 'use client'
-import { Download, Eye, Loader2, RefreshCw } from 'lucide-react'
+import { Download, Eye, Loader2 } from 'lucide-react'
 import { usePdfActions } from './hooks/usePDFsActions'
 
 export function PdfButtons({

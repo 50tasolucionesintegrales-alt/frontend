@@ -2,8 +2,7 @@
 
 import { Categoria, Producto, Service } from '@/src/schemas';
 import { ChevronRight, ChevronLeft, Search } from 'lucide-react';
-import Link from 'next/link';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import ProductCard from './ProductCard';
 import ServiceCard from './ServiceCard'; // 👉 NUEVO
 

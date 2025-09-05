@@ -1,8 +1,6 @@
 // app/quotes/page.tsx
-import CreateQuoteModal from "@/components/quotes/CreateQuoteModal"
 import QuotesTable from "@/components/quotes/QuotesTable"
 import { cookies } from "next/headers"
-import { useState } from "react"
 
 export default async function QuotesPage() {
     const token = (await cookies()).get('50TA_TOKEN')?.value

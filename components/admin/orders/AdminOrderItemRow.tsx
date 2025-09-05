@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { useState, useEffect, useActionState, useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { approveItemAction } from '@/actions/admin/orders/approveItemAction'

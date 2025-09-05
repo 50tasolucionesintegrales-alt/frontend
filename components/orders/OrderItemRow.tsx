@@ -1,10 +1,8 @@
 'use client'
 
-import Image from 'next/image'
 import { useState, useEffect, useActionState, useCallback } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
 import { toast } from 'react-toastify'
-import { AlertTriangle, Box, XCircle, CheckCircle2, Upload, RefreshCw, Eye } from 'lucide-react'
+import { Box, Upload, RefreshCw, Eye } from 'lucide-react'
 import { useFormStatus } from 'react-dom'
 
 import { uploadEvidenceAction } from '@/actions/orders/uploadEvidenceAction'

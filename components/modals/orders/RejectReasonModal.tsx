@@ -1,6 +1,6 @@
-import { AlertTriangle, Box, XCircle } from 'lucide-react'
+import { AlertTriangle, XCircle } from 'lucide-react'
 import { Dialog, Transition } from '@headlessui/react'
-import { useState, useEffect, useActionState } from 'react'
+import { useState } from 'react'
 
 /* ──────────────────────────────── */
 /*      Modal motivo de rechazo     */

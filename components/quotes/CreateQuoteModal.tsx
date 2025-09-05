@@ -2,7 +2,7 @@
 
 import { Dialog } from '@headlessui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { createDraft } from '@/actions/quotes/createQuoteAction'
 import { useActionState, useEffect } from 'react'
 import { useFormStatus } from 'react-dom'
