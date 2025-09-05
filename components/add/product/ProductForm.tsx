@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone'
 import AddProductAction from '@/actions/add/products/AddProductAction'
 import { toast } from 'react-toastify'
 import { Categoria } from '@/src/schemas'
+import Image from 'next/image'
 
 type Props = {
   categorias: Categoria[]
@@ -151,7 +152,14 @@ export default function ProductForm({ categorias }: Props) {
                 </>
               )}
               {previewUrl && (
-                <img src={previewUrl} alt="Vista previa" className="mt-2 max-h-40 object-contain" />
+                <Image
+                  src={previewUrl}
+                  alt="Vista previa"
+                  width={160}       // 👈 requerido
+                  height={160}      // 👈 requerido
+                  className="mt-2 max-h-40 object-contain"
+                  unoptimized       // 👈 evita error al ser blob/base64
+                />
               )}
             </div>
           </div>

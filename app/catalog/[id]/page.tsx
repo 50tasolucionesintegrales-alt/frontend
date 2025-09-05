@@ -2,6 +2,7 @@ import { getProductImageDataUrl } from '@/actions/add/products/ProductImageActio
 import ProductDetail from '@/components/catalog/productoDetalle';
 import ServiceDetail from '@/components/catalog/ServicioDetalle'; // ojo con el nombre/ubicación del archivo
 import getDraftOrders from '@/src/lib/orders/getDraftOrders';
+import { Producto, Quote, Service } from '@/src/schemas';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
@@ -31,17 +32,17 @@ async function fetchJSON<T>(url: string, token?: string, init?: RequestInit): Pr
   }
 }
 
-export default async function CatalogIdPage({ params }: { params: { id: string } }) {
+export default async function CatalogIdPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const token = (await cookies()).get('50TA_TOKEN')?.value;
 
   const ordersPromise = getDraftOrders();
-  const quotesPromise = fetchJSON<any>(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, token);
+  const quotesPromise = fetchJSON<Quote[]>(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, token);
 
   // Llamamos en paralelo; fetchJSON no lanza, siempre resuelve FetchResult
   const [prodRes, svcRes] = await Promise.all([
-    fetchJSON<any>(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`, token, { method: 'GET' }),
-    fetchJSON<any>(`${process.env.NEXT_PUBLIC_API_URL}/services/${id}`, token, { method: 'GET' }),
+    fetchJSON<Producto>(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`, token, { method: 'GET' }),
+    fetchJSON<Service>(`${process.env.NEXT_PUBLIC_API_URL}/services/${id}`, token, { method: 'GET' }),
   ]);
 
   const [orders, quotesDraft] = await Promise.all([

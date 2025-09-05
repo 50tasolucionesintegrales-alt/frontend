@@ -32,7 +32,7 @@ export default function ServiceTable({ services }: { services: Service[] }) {
 
   const onDelete = async (id: string) => {
     const res = await DeleteServiceAction(prev, id)
-    if ((res as any)?.error) { toast.error((res as any).error); return }
+    if (res.errors) { toast.error(res.errors); return }
     setItems(prev => prev.filter(x => x.id !== id))
     toast.success('Servicio eliminado')
   }

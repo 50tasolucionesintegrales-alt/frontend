@@ -8,18 +8,23 @@ import { getQuotePdfAction } from '@/actions/quotes/GetQuotePdfAction'
 import { Download, FileText, ArrowLeft, Box, Clock } from 'lucide-react'
 
 type QuoteRow = {
-  id: string
-  titulo: string
-  tipo: 'productos' | 'servicios'
-  sentAt?: string | null
-  // trae también totalMargen1..7
-  [k: string]: any
-}
+  id: string;
+  titulo: string;
+  tipo: 'productos' | 'servicios';
+  sentAt?: string | null;
+  totalMargen1?: number;
+  totalMargen2?: number;
+  totalMargen3?: number;
+  totalMargen4?: number;
+  totalMargen5?: number;
+  totalMargen6?: number;
+  totalMargen7?: number;
+};
 
 function activeMargins(q: QuoteRow): number[] {
   const out: number[] = []
   for (let i = 1; i <= 7; i++) {
-    const v = Number(q[`totalMargen${i}`] ?? 0)
+    const v = Number((q[`totalMargen${i}` as keyof QuoteRow] as number | undefined) ?? 0)
     if (v > 0) out.push(i)
   }
   return out
@@ -122,7 +127,7 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
                         ) : (
                           <div className="flex flex-wrap gap-2">
                             {margins.map((n) => {
-                              const total = Number(q[`totalMargen${n}`] || 0)
+                              const total = Number((q[`totalMargen${n}` as keyof QuoteRow] as number | undefined)  || 0)
                               const key = `${q.id}-${n}`
                               const loading = busy === key || isPending
                               return (

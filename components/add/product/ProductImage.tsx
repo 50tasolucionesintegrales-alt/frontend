@@ -31,9 +31,9 @@ export default function ProductImage({
       const url = await getProductImageDataUrl(productId)
       if (cancelled) return
       setImgSrc(url ?? null)
-    } catch (e: any) {
+    } catch (e) {
       if (cancelled) return
-      setError(e?.message || 'No se pudo cargar la imagen')
+      setError((e as Error)?.message || 'No se pudo cargar la imagen')
       setImgSrc(null)
     } finally {
       if (!cancelled) setLoading(false)

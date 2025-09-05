@@ -37,7 +37,7 @@ export default function ProductTable({ products, categorias, getProductImageData
     const qLower = q.trim().toLowerCase()
     return items.filter(p => {
       const matchesQ = qLower ? p.nombre.toLowerCase().includes(qLower) : true
-      const pCatId = (p as any).categoryId ?? p.category?.id
+      const pCatId = p.category?.id
       const matchesCat = cat ? pCatId === cat : true
       return matchesQ && matchesCat
     })
@@ -136,7 +136,7 @@ export default function ProductTable({ products, categorias, getProductImageData
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#174940]">
                   {p.category?.nombre ??
-                    categorias.find(c => c.id === ((p as any).categoryId ?? p.category?.id))?.nombre ??
+                    categorias.find(c => c.id === (p.category.id))?.nombre ??
                     '—'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

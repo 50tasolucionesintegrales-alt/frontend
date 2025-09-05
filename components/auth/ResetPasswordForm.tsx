@@ -30,7 +30,7 @@ export default function ResetPasswordForm({ token }: { token: string }) {
         onClose: () => router.push('/auth/login'),
       });
     }
-  }, [state]);
+  }, [state, router]);
 
   const togglePwd = () => setShowPassword((prev) => !prev);
   const togglePwd2 = () => setShowPassword2((prev) => !prev);
@@ -87,7 +87,6 @@ export default function ResetPasswordForm({ token }: { token: string }) {
             </button>
           </div>
 
-          {/* Botón submit */}
           <button
             type="submit"
             className="w-full py-2 bg-[#63B23D] hover:bg-[#4b8f2f] text-white text-base font-bold rounded-xl transition duration-200"

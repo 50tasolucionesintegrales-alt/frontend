@@ -3,6 +3,7 @@
 import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download } from 'lucide-react';
+import Image from 'next/image';
 
 export default function EvidenceModal({
   open,
@@ -19,7 +20,6 @@ export default function EvidenceModal({
     <AnimatePresence>
       {open && (
         <Dialog open={open} onClose={onClose} className="relative z-[70]">
-          {/* Fondo oscuro con animación */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -29,7 +29,6 @@ export default function EvidenceModal({
             aria-hidden="true"
           />
 
-          {/* Contenedor del modal */}
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -38,7 +37,6 @@ export default function EvidenceModal({
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="relative w-full max-w-5xl rounded-xl bg-white shadow-xl overflow-hidden mx-2"
             >
-              {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b">
                 <Dialog.Title className="text-lg font-bold text-gray-900">
                   {alt}
@@ -64,14 +62,16 @@ export default function EvidenceModal({
                 </div>
               </div>
 
-              {/* Contenido de la imagen */}
               <div className="bg-gray-50">
                 <div className="max-h-[80vh] flex items-center justify-center p-6">
                   {src ? (
-                    <img
+                    <Image
                       src={src}
                       alt={alt}
+                      width={800} 
+                      height={600}
                       className="max-w-full max-h-[75vh] object-contain rounded-lg"
+                      unoptimized
                     />
                   ) : (
                     <div className="text-gray-500 py-12">Sin evidencia disponible</div>

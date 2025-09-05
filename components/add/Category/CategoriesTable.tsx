@@ -31,7 +31,7 @@ export default function CategoryTable({ categorias: initial }: { categorias: Cat
 
   const onDelete = async (id: string) => {
     const res = await DeleteCategoryAction(prev, id)
-    if ((res as any)?.error) { toast.error((res as any).error); return }
+    if (res.errors) { toast.error(res.errors); return }
     setItems(prev => prev.filter(x => x.id !== id))
     toast.success('Categoría eliminada')
   }

@@ -2,6 +2,7 @@ import { cookies } from "next/headers"
 import OrderDetailTable from "@/components/orders/OrderDetailTable"
 import { getProductImageDataUrl } from '@/actions/add/products/ProductImageAction';
 import { getEvidenceImageDataUrl } from "@/actions/orders/EvidenceImageAction";
+import { Item, Producto } from "@/src/schemas";
 
 export default async function OrdersDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -22,11 +23,11 @@ export default async function OrdersDetailPage({ params }: { params: Promise<{ i
     // Sacar IDs de productos ya agregados
     const usedProductIds = new Set(
         order.items
-            .filter((item: any) => item.product)
-            .map((item: any) => item.product.id)
+            .filter((item: Item) => item.product)
+            .map((item: Item) => item.product.id)
     )
 
-    const productosFiltrados = productos.filter((p: any) => !usedProductIds.has(p.id))
+    const productosFiltrados = productos.filter((p: Producto) => !usedProductIds.has(p.id))
   return (
     <OrderDetailTable 
         order={order} 

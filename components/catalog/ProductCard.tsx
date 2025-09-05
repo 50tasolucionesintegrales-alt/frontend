@@ -1,18 +1,19 @@
 'use client';
 
 import { Producto } from "@/src/schemas";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 
 type Props = {
   producto: Producto;
-  getImageDataUrl: (id: string) => Promise<string | null>; // Server Action
+  getImageDataUrl: (id: string) => Promise<string | null>;
 };
 
 export default function ProductCard({ producto, getImageDataUrl }: Props) {
   const [imgSrc, setImgSrc] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);     // ← para skeleton/spinner
-  const [loaded, setLoaded] = useState(false);      // ← para el fade-in del <img>
+  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchImage = useCallback(async () => {
@@ -26,14 +27,13 @@ export default function ProductCard({ producto, getImageDataUrl }: Props) {
       const url = await getImageDataUrl(producto.id);
       if (!active) return;
       if (!url) {
-        // 404 o sin imagen
         setImgSrc(null);
       } else {
         setImgSrc(url);
       }
-    } catch (e: any) {
+    } catch (e) {
       if (!active) return;
-      setError(e?.message || 'No se pudo cargar la imagen');
+      setError((e as Error).message || 'No se pudo cargar la imagen');
       setImgSrc(null);
     } finally {
       if (active) setLoading(false);
@@ -58,7 +58,6 @@ export default function ProductCard({ producto, getImageDataUrl }: Props) {
         aria-busy={loading ? 'true' : 'false'}
         aria-live="polite"
       >
-        {/* Estado: Cargando (skeleton + spinner) */}
         {loading && (
           <div className="absolute inset-0 animate-pulse bg-gray-100" />
         )}
@@ -75,19 +74,20 @@ export default function ProductCard({ producto, getImageDataUrl }: Props) {
           </div>
         )}
 
-        {/* Estado: Éxito (con fade-in al cargar) */}
         {imgSrc && !error && (
-          <img
+          <Image
             src={imgSrc}
             alt={producto.nombre}
+            width={400}
+            height={400}
             loading="lazy"
-            decoding="async"
             onLoad={() => setLoaded(true)}
-            className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"
+              }`}
+            unoptimized
           />
         )}
 
-        {/* Estado: Sin imagen o Error */}
         {!loading && (!imgSrc || error) && (
           <div className="absolute inset-0 bg-gray-100 flex flex-col items-center justify-center gap-2">
             <span className="text-gray-400">{error ? 'Error al cargar' : 'Sin imagen'}</span>

@@ -2,23 +2,35 @@
 import { useMemo, useState } from 'react'
 import { Search, X } from 'lucide-react'
 
+type SelectableRow = {
+  id: string | number
+  nombre: string
+  precio?: number | string
+  precioBase?: number | string
+  costo?: number | string
+  unidad?: string
+} & Record<string, unknown>
+
 type SelItem = {
   id: string | number
   nombre: string
   cantidad: number
-  precio: number     // costo unitario normalizado (number)
+  precio: number
   unidad?: string
+}
+
+type ProductSelectionModalProps = {
+  items: ReadonlyArray<SelectableRow>
+  onSelect: (items: SelItem[]) => void
+  defaultUnidad?: string
 }
 
 export default function ProductSelectionModal({
   items,
   onSelect,
   defaultUnidad = 'pieza',
-}: {
-  items: any[]
-  onSelect: (items: SelItem[]) => void
-  defaultUnidad?: string
-}) {
+}: ProductSelectionModalProps
+) {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<SelItem[]>([])
 
@@ -28,7 +40,7 @@ export default function ProductSelectionModal({
     return items.filter(i => i.nombre?.toLowerCase().includes(q))
   }, [items, search])
 
-  const parsePrecio = (v: any): number => {
+  const parsePrecio = (v: unknown): number => {
     if (typeof v === 'number') return v
     if (typeof v !== 'string') return 0
     const clean = v
@@ -41,13 +53,13 @@ export default function ProductSelectionModal({
   }
 
   // Precio inicial que viene del listado de items
-  const getPrecioInicial = (row: any): number => {
+  const getPrecioInicial = (row: SelectableRow): number => {
     // productos: row.precio (string/number)
     // servicios: row.precioBase (o ajusta a row.costo si así lo tienes)
     return parsePrecio(row.precio ?? row.precioBase ?? row.costo ?? 0)
   }
 
-  const toggleItem = (row: any) => {
+  const toggleItem = (row: SelectableRow) => {
     const exists = selected.find(s => String(s.id) === String(row.id))
     let next: SelItem[]
     if (exists) {
@@ -108,7 +120,7 @@ export default function ProductSelectionModal({
     onSelect([])
   }
 
-  const isChecked = (id: any) => selected.some(s => String(s.id) === String(id))
+  const isChecked = (id: string | number): boolean => selected.some((s: SelItem) => String(s.id) === String(id))
 
   return (
     <div className="space-y-4 p-1">

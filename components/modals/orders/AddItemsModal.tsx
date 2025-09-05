@@ -4,7 +4,7 @@ import { Fragment, useState, useEffect, startTransition, useActionState } from '
 import { Dialog, Transition } from '@headlessui/react'
 import { toast } from 'react-toastify'
 import { addOrderItemsAction } from '@/actions/orders/addOrderItemsAction'
-import { Producto } from '@/src/schemas'
+import { Order, Producto } from '@/src/schemas'
 import { Loader2, Plus } from 'lucide-react'
 
 export default function AddItemsModal({
@@ -14,31 +14,30 @@ export default function AddItemsModal({
 }: {
   orderId: string
   products: Producto[]
-  onSuccess: (updatedOrder: any) => void
+  onSuccess: (updatedOrder: Order) => void
 }) {
-  /* ---------- estado local ---------- */
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<Producto[]>([])
 
-  /* ---------- server-action ---------- */
   const [state, dispatch, pending] = useActionState(addOrderItemsAction, {
     success: '',
     errors: [],
-    order: undefined as any
+    order: undefined
   })
 
-  /* ---------- feedback ---------- */
   useEffect(() => {
-    state.errors.forEach(e => toast.error(e))
+    state.errors.forEach(e => toast.error(e));
     if (state.success) {
-      toast.success(state.success)
-      state.order && onSuccess(state.order)  // refresca items en el padre
-      setSelected([])
-      setOpen(false)
+      toast.success(state.success);
+      if (state.order) {
+        onSuccess(state.order);
+      }
+      setSelected([]);
+      setOpen(false);
     }
-  }, [state])
+  }, [state, onSuccess]);
 
-  /* ---------- toggle selección ---------- */
+
   const toggle = (p: Producto) =>
     setSelected(prev =>
       prev.some(s => s.id === p.id)
@@ -46,7 +45,6 @@ export default function AddItemsModal({
         : [...prev, p]
     )
 
-  /* ---------- submit ---------- */
   const handleSubmit = () => {
     if (!selected.length) return toast.error('Selecciona al menos un producto')
 
@@ -63,7 +61,6 @@ export default function AddItemsModal({
     startTransition(() => dispatch(fd))
   }
 
-  /* ---------- UI ---------- */
   return (
     <>
       <button

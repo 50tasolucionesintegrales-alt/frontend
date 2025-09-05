@@ -48,7 +48,7 @@ export default function CreateOrderModal() {
       router.refresh()
       setOpen(false)
     }
-  }, [state])
+  }, [state, router])
 
   return (
     <>

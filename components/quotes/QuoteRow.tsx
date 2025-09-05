@@ -1,8 +1,16 @@
 'use client'
-import Link from 'next/link'
+
 import { Box, Percent, Edit3 } from 'lucide-react'
 import type { Item } from '@/src/schemas'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
+
+type MarginKey =
+  | `margenPct${number}`
+  | `precioFinal${number}`
+  | `subtotal${number}`;
+
+type ItemWithMargins = Item & Partial<Record<MarginKey, number>>;
 
 export function QuoteRow({
   item, isProductQuote, selectedFormats, isSent, onSubmit, quoteId, getProductImageDataUrl
@@ -36,17 +44,22 @@ export function QuoteRow({
 
   return (
     <tr className="hover:bg-[#f0f7f5] transition-colors">
-      {/* Producto/Servicio (sticky) */}
       <td className="py-4 px-6 sticky left-0 bg-white z-10">
         <div className="flex items-center gap-4">
-          {/* SOLO productos muestran imagen/badge */}
           {isProductQuote ? (
             <div className="flex-shrink-0">
               {loading ? (
                 <div className="h-12 w-12 rounded-lg border border-[#e5e7eb] bg-gray-100 animate-pulse" />
               ) : imgSrc ? (
                 <div className="h-12 w-12 rounded-lg overflow-hidden border border-[#e5e7eb]">
-                  <img src={imgSrc} alt={entity.nombre} className="h-full w-full object-cover" />
+                    <Image
+                      src={imgSrc ?? "/placeholder.png"}
+                      alt={entity.nombre}
+                      width={400}
+                      height={400}
+                      className="h-full w-full object-cover"
+                      unoptimized
+                    />
                 </div>
               ) : (
                 <div className="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center border border-[#e5e7eb]">
@@ -58,36 +71,10 @@ export function QuoteRow({
 
           <div>
             <div className="font-medium text-[#0F332D]">{entity.nombre}</div>
-            {isProductQuote ? (
-              (entity as any).link_compra ? (
-                <Link
-                  href={(entity as any).link_compra}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[#63B23D] hover:underline flex items-center mt-1"
-                >
-                  Comprar producto
-                </Link>
-              ) : null
-            ) : (entity as any).link ? (
-              <Link
-                href={(entity as any).link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-[#63B23D] hover:underline flex items-center mt-1"
-              >
-                Ver detalles del servicio
-              </Link>
-            ) : (
-              <div className="text-sm text-[#999999] mt-1">
-                {(entity as any).descripcion?.slice(0, 80) ?? '—'}
-              </div>
-            )}
           </div>
         </div>
       </td>
 
-      {/* Cantidad → SOLO productos muestran la celda */}
       {isProductQuote && (
         <td className="py-4 px-6">
           <input
@@ -102,18 +89,17 @@ export function QuoteRow({
         </td>
       )}
 
-      {/* Costo Unitario */}
       <td className="py-4 px-6">
         <div className="text-[#174940] font-medium text-center">
           ${item.costo_unitario.toFixed(2)}
         </div>
       </td>
 
-      {/* Márgenes dinámicos */}
       {selectedFormats.map(n => {
-        const pct = (item as any)[`margenPct${n}`]
-        const precio = (item as any)[`precioFinal${n}`]
-        const subtotal = (item as any)[`subtotal${n}`]
+        const it = item as ItemWithMargins;
+        const pct = it[`margenPct${n}`];
+        const precio = it[`precioFinal${n}`];
+        const subtotal = it[`subtotal${n}`];
         return (
           <td key={n} className="py-4 px-6">
             <div className="flex flex-col items-center">
@@ -141,14 +127,12 @@ export function QuoteRow({
         )
       })}
 
-      {/* Acción (sticky) */}
       {!isSent && (
         <td className="py-4 px-6 sticky right-0 bg-white z-10">
           <form id={`form-${item.id}`} action={onSubmit}>
             <input type="hidden" name="itemId" value={item.id} />
             <input type="hidden" name="quoteId" value={quoteId} />
 
-            {/* Para SERVICIOS: manda cantidad escondida aquí */}
             {!isProductQuote && (
               <input type="hidden" name="cantidad" value={item.cantidad} />
             )}

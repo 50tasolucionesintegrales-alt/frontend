@@ -47,7 +47,7 @@ export default function CreateQuoteModal({ open, onClose }: Props) {
       router.refresh()
       onClose()
     }
-  }, [state, onClose])
+  }, [state, onClose, router])
 
   return (
     <AnimatePresence>

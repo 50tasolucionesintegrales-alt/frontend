@@ -1,7 +1,7 @@
 // src/lib/metrics.server.ts
 import { cookies } from "next/headers";
 
-const API = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL
+const API = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL;
 
 /** Presets esperados por tu DTO */
 export type DtoPreset =
@@ -45,23 +45,94 @@ async function apiGet<T>(path: string, query?: RangeQuery): Promise<T> {
 
   const ct = res.headers.get("content-type") || "";
   if (!res.ok) {
-    const payload = ct.includes("application/json") ? await res.json().catch(() => ({})) : await res.text();
-    throw new Error(`GET ${url} → ${res.status} ${typeof payload === "string" ? payload : JSON.stringify(payload)}`);
+    const payload = ct.includes("application/json")
+      ? await res.json().catch(() => ({}))
+      : await res.text();
+    throw new Error(
+      `GET ${url} → ${res.status} ${
+        typeof payload === "string" ? payload : JSON.stringify(payload)
+      }`,
+    );
   }
-  return res.json();
+  return res.json() as Promise<T>;
 }
 
-/* ===== Endpoints (coinciden con tu MetricsController) ===== */
+/* ========= Tipos DTO ========= */
+
+// Top cotizadores/compradores
+export type UserCountRow = {
+  userId: string;
+  nombre: string;
+  email: string;
+  cantidad: number;
+};
+
+// Top productos
+export type TopProductoRow = {
+  productId: string;
+  nombre: string;
+  vecesCotizado: number;
+  cantidadTotal: number;
+};
+
+// Top logins y actividad de logins
+export type TopLoginRow = {
+  userId: string;
+  nombre: string;
+  email: string;
+  logins: number;
+};
+
+export type LoginActivityPoint = {
+  day: string;   // YYYY-MM-DD
+  logins: number;
+};
+
+// Resúmenes por usuario
+export type QuoteSummary = {
+  id: string;
+  titulo: string;
+  tipo: "productos" | "servicios";
+  sentAt: string | null;
+  total: number;
+};
+
+export type OrderSummary = {
+  id: string;
+  titulo: string;
+  status: "pending" | "approved" | "rejected" | "partially_approved";
+  sentAt: string | null;
+  total: number;
+};
+
+export type UserLoginCount = { total: number };
+
+/* ===== Endpoints tipados ===== */
 export const MetricsAPI = {
-  topCotizadores: (q: RangeQuery) => apiGet<any[]>("top-cotizadores", q),
-  topCompradores: (q: RangeQuery) => apiGet<any[]>("top-compradores", q),
-  topProductos:   (q: RangeQuery) => apiGet<any[]>("top-productos", q),
+  topCotizadores: (q: RangeQuery) =>
+    apiGet<UserCountRow[]>("top-cotizadores", q),
 
-  topLogins:      (q: RangeQuery) => apiGet<any[]>("top-logins", q),
-  loginActivity:  (q: RangeQuery) => apiGet<any[]>("logins/activity", q),
+  topCompradores: (q: RangeQuery) =>
+    apiGet<UserCountRow[]>("top-compradores", q),
 
-  quotesByUser:   (id: number, q: RangeQuery) => apiGet<any>(`users/${id}/quotes`, q),
-  ordersByUser:   (id: number, q: RangeQuery) => apiGet<any>(`users/${id}/orders`, q),
-  userLoginActivity: (id: number, q: RangeQuery) => apiGet<any>(`users/${id}/logins`, q),
-  userLoginCount:    (id: number, q: RangeQuery) => apiGet<any>(`users/${id}/logins/count`, q),
+  topProductos: (q: RangeQuery) =>
+    apiGet<TopProductoRow[]>("top-productos", q),
+
+  topLogins: (q: RangeQuery) =>
+    apiGet<TopLoginRow[]>("top-logins", q),
+
+  loginActivity: (q: RangeQuery) =>
+    apiGet<LoginActivityPoint[]>("logins/activity", q),
+
+  quotesByUser: (id: number, q: RangeQuery) =>
+    apiGet<QuoteSummary[]>(`users/${id}/quotes`, q),
+
+  ordersByUser: (id: number, q: RangeQuery) =>
+    apiGet<OrderSummary[]>(`users/${id}/orders`, q),
+
+  userLoginActivity: (id: number, q: RangeQuery) =>
+    apiGet<LoginActivityPoint[]>(`users/${id}/logins`, q),
+
+  userLoginCount: (id: number, q: RangeQuery) =>
+    apiGet<UserLoginCount>(`users/${id}/logins/count`, q),
 };

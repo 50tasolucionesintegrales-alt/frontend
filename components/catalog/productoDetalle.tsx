@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, ShoppingCart, Share2, Heart, User, Calendar } from 'lucide-react';
-import { Producto, Quote } from '@/src/schemas';
+import { Order, Producto, Quote } from '@/src/schemas';
 import { useRouter } from 'next/navigation';
 import { startTransition, useActionState, useCallback, useEffect, useMemo, useState } from 'react';
 import { addItemsAction } from '@/actions/quotes/addItemsAction';
@@ -9,11 +9,12 @@ import { toast } from 'react-toastify';
 import { Dialog } from '@headlessui/react';
 import { createDraftAndAddItemAction } from '@/actions/quotes/createAndAddAction';
 import AddToOrderModal from '../modals/catalog/AddToOrderModal';
+import Image from 'next/image';
 
 interface Props {
     producto: Producto
     drafts: Quote[]
-    orders: any[]
+    orders: Order[]
     getProductImageDataUrl: (imageId: string) => Promise<string | null>
 }
 
@@ -22,8 +23,8 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
     const router = useRouter()
 
     const [imgSrc, setImgSrc] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);     // ← para skeleton/spinner
-    const [loaded, setLoaded] = useState(false);      // ← para el fade-in del <img>
+    const [loading, setLoading] = useState(true);
+    const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [orderOpen, setOrderOpen] = useState(false)
 
@@ -38,14 +39,13 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
             const url = await getProductImageDataUrl(producto.id);
             if (!active) return;
             if (!url) {
-                // 404 o sin imagen
                 setImgSrc(null);
             } else {
                 setImgSrc(url);
             }
-        } catch (e: any) {
+        } catch (e) {
             if (!active) return;
-            setError(e?.message || 'No se pudo cargar la imagen');
+            setError((e as Error).message || 'No se pudo cargar la imagen');
             setImgSrc(null);
         } finally {
             if (active) setLoading(false);
@@ -64,13 +64,10 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
     }, [fetchImage]);
 
 
-    //Agregar a una cotización existente o nueva
-    // ====== NUEVO: modal para agregar a cotización ======
     const [open, setOpen] = useState(false);
     const [qty, setQty] = useState<number>(1);
     const [search, setSearch] = useState('');
 
-    // filtra drafts en las que el producto AÚN no está
     const availableQuotes = useMemo(() => {
         const pid = String(producto.id);
         return (drafts || []).filter(q =>
@@ -79,7 +76,6 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
         );
     }, [drafts, producto.id]);
 
-    // server action state
     const [aiState, aiDispatch, aiPending] = useActionState(addItemsAction, {
         errors: [], success: '',
     });
@@ -89,8 +85,6 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
         if (aiState.success) {
             toast.success('Producto agregado a la cotización');
             setOpen(false);
-            // si quieres refrescar page de detalle para reflejar estado (opcional)
-            // router.refresh();
         }
     }, [aiState]);
 
@@ -103,7 +97,7 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
             productId: Number(producto.id),
             cantidad: qty,
             costoUnitario: +costo.toFixed(2),
-            unidad: 'unidad'  // valor por defecto
+            unidad: 'pieza'
         }]));
         startTransition(() => aiDispatch(fd));
     };
@@ -121,8 +115,6 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
         if (newState.success) {
             toast.success(newState.success);
             setOpen(false);
-            // si quieres, navega directo al detalle de la nueva cotización:
-            // if (newState.quoteId) router.push(`/quotes/${newState.quoteId}`);
         }
     }, [newState]);
 
@@ -131,11 +123,9 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
         const description = (newDesc || '').trim().slice(0, 120);
         const cantidad = Math.max(1, Number(qty) || 1);
 
-        // Producto.precio suele ser string -> conviértelo
         const costo = Number(producto.precio);
         const costoUnitario = Number.isFinite(costo) ? costo : 0;
 
-        // unidad por defecto (mejor "pieza" que "unidad")
         const unidad = 'pieza';
 
         const fd = new FormData();
@@ -143,7 +133,7 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
         fd.append('description', description);
         fd.append('productId', String(producto.id));
         fd.append('cantidad', String(cantidad));
-        fd.append('costoUnitario', costoUnitario.toFixed(2)); // como string
+        fd.append('costoUnitario', costoUnitario.toFixed(2));
         fd.append('unidad', unidad);
 
         startTransition(() => newDispatch(fd));
@@ -165,7 +155,6 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                             aria-busy={loading ? 'true' : 'false'}
                             aria-live="polite"
                         >
-                            {/* Estado: Cargando (skeleton + spinner) */}
                             {loading && (
                                 <div className="absolute inset-0 animate-pulse bg-gray-100" />
                             )}
@@ -182,19 +171,20 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                                 </div>
                             )}
 
-                            {/* Estado: Éxito (con fade-in al cargar) */}
                             {imgSrc && !error && (
-                                <img
+                                <Image
                                     src={imgSrc}
                                     alt={producto.nombre}
+                                    width={400}
+                                    height={400}
                                     loading="lazy"
-                                    decoding="async"
                                     onLoad={() => setLoaded(true)}
-                                    className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                                    className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"
+                                        }`}
+                                    unoptimized
                                 />
                             )}
 
-                            {/* Estado: Sin imagen o Error */}
                             {!loading && (!imgSrc || error) && (
                                 <div className="absolute inset-0 bg-gray-100 flex flex-col items-center justify-center gap-2">
                                     <span className="text-gray-400">{error ? 'Error al cargar' : 'Sin imagen'}</span>
@@ -292,7 +282,6 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                             Agregar “{producto.nombre}” a una cotización
                         </Dialog.Title>
 
-                        {/* Controles */}
                         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-[#174940]">Cantidad</span>
@@ -317,7 +306,6 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                             </div>
                         </div>
 
-                        {/* Lista de drafts disponibles */}
                         <ul className="max-h-72 overflow-auto divide-y divide-[#e5e7eb] rounded-lg border border-[#e5e7eb]">
                             {availableQuotes
                                 .filter(q => q.titulo.toLowerCase().includes(search.toLowerCase()))
@@ -389,7 +377,7 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                 onOpenChange={setOrderOpen}
                 productId={String(producto.id)}
                 productPrice={producto.precio}
-                orders={orders}   // pásale las órdenes en borrador del usuario
+                orders={orders}
             />
         </div>
     );

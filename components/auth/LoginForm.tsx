@@ -4,7 +4,6 @@ import {
   useActionState,
   useEffect,
   useState,
-  startTransition,
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -14,6 +13,7 @@ import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { login } from '@/actions/auth/loginAction';
 import { Button } from '../ui/boton';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,16 +43,13 @@ export default function LoginPage() {
     }
   }, [state, router]);
 
-  /* ---------- estado UI ---------- */
   const [showPassword, setShowPassword] = useState(true);
   const togglePwd = () => setShowPassword((prev) => !prev);
 
-  /* ---------- data para triángulos decorativos ---------- */
   const triangles = Array.from({ length: 100 });
 
   return (
     <div className="relative min-h-screen w-full font-sans bg-[#0F332D] overflow-hidden flex flex-col lg:flex-row items-center justify-center">
-      {/* Fondo diagonal */}
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -60,7 +57,6 @@ export default function LoginPage() {
         }}
       />
 
-      {/* Triángulos lado izquierdo (color lado derecho) */}
       <div className="hidden lg:block absolute left-0 top-0 h-full w-1/2 z-0 pointer-events-none overflow-hidden">
         <div className="grid grid-cols-6 gap-2 h-full opacity-30">
           {triangles.map((_, i) => (
@@ -72,7 +68,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Triángulos lado derecho (color lado izquierdo) */}
       <div className="hidden lg:block absolute right-0 top-0 h-full w-1/2 z-0 pointer-events-none overflow-hidden">
         <div className="grid grid-cols-6 gap-2 h-full opacity-30">
           {triangles.map((_, i) => (
@@ -84,7 +79,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Clipping para triángulos */}
       <style jsx>{`
         .clip-triangle {
           clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
@@ -95,10 +89,12 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-6xl flex flex-col lg:flex-row items-stretch rounded-xl overflow-hidden shadow-xl bg-transparent">
         {/* Información de la empresa */}
         <div className="w-full lg:w-1/2 text-white p-6 md:p-10 flex flex-col justify-center items-center space-y-5 text-center bg-transparent">
-          <img
+          <Image
             src="/LOGOSINCUENTAB.png"
-            alt="Logo"
-            className="w-30 h-30 md:w-35 md:h-35 lg:w-40 lg:h-40 object-contain rounded-md shadow p-2"
+            alt="Logo Sin Cuenta"
+            width={160}
+            height={160}
+            className="w-30 h-30 md:w-36 md:h-36 lg:w-40 lg:h-40 object-contain rounded-md shadow p-2"
           />
           <h2 className="text-3xl font-bold text-[#63B23D]">
             Sin Cuenta Soluciones Integrales

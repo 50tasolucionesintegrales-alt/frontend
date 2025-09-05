@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import AdminOrderItemRow from './AdminOrderItemRow'
 import { PurchaseOrderItem } from '@/src/schemas'
+import EvidenceModal from '@/components/modals/orders/EvidenceModal'
 
 export default function AdminOrderItemsTable({
   initialItems,
@@ -14,6 +15,8 @@ export default function AdminOrderItemsTable({
   getEvidenceImageDataUrl: (imageId: string) => Promise<string | null>
 }) {
   const [items, setItems] = useState<PurchaseOrderItem[]>(initialItems)
+  const [eviOpen, setEviOpen] = useState(false)
+  const [eviImgSrc, setEviImgSrc] = useState<string | null>(null)
 
   const handleItemUpdate = useCallback((updated: PurchaseOrderItem) => {
     setItems(prev =>
@@ -52,7 +55,7 @@ export default function AdminOrderItemsTable({
         </thead>
 
         <tbody className="bg-white divide-y divide-[#e5e7eb]">
-          {items.map(it => (
+            {items.map((it: PurchaseOrderItem) => (
             <AdminOrderItemRow
               key={it.id}
               item={it}
@@ -60,8 +63,12 @@ export default function AdminOrderItemsTable({
               onItemUpdate={handleItemUpdate}
               getProductImageDataUrl={getProductImageDataUrl}
               getEvidenceImageDataUrl={getEvidenceImageDataUrl}
+              onOpenEvidence={(src: string | null) => {
+              setEviImgSrc(src)
+              setEviOpen(true)
+              }}
             />
-          ))}
+            ))}
         </tbody>
       </table>
 
@@ -88,6 +95,12 @@ export default function AdminOrderItemsTable({
           </div>
         </div>
       )}
+      <EvidenceModal
+        open={eviOpen}
+        onClose={() => setEviOpen(false)}
+        src={eviImgSrc}
+        alt={`Evidencia de recepción`}
+      />
     </div>
   )
 }

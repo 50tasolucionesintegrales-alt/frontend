@@ -12,7 +12,7 @@ import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 import { useAuthClient } from '@/src/context/authClientContext'
-import { Producto, PurchaseOrderItem } from '@/src/schemas'
+import { Order, Producto, PurchaseOrderItem } from '@/src/schemas'
 
 import OrderItemRow from '@/components/orders/OrderItemRow'
 import AddItemsModal from '../modals/orders/AddItemsModal'
@@ -20,7 +20,7 @@ import sendOrderAction from '@/actions/orders/sendOrderAction'
 import { reopenOrderAction } from '@/actions/orders/reOpenAction'
 
 type Props = { 
-  order: any; productos: 
+  order: Order; productos: 
   Producto[], 
   getProductImageDataUrl: (imageId: string) => Promise<string | null>,
   getEvidenceImageDataUrl: (imageId: string) => Promise<string | null>
@@ -61,7 +61,7 @@ export default function OrderDetailTable({ order, productos, getProductImageData
       toast.success(state.success)
       setStatus(canResend ? 'partially_approved' : 'sent') // 👈 en vez de mutar prop;
     }
-  }, [state.errors, state.success])
+  }, [state.errors, state.success, canResend]);
 
   useEffect(() => {
     reopenState.errors.forEach(e => toast.error(e));
@@ -79,7 +79,7 @@ export default function OrderDetailTable({ order, productos, getProductImageData
     []
   )
 
-  const handleItemsReplace = useCallback((updatedOrder: any) => {
+  const handleItemsReplace = useCallback((updatedOrder: Order) => {
     setItems(updatedOrder.items)
   }, [])
 

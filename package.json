@@ -6,7 +6,8 @@
     "dev": "next dev -p 5173",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@chakra-ui/pin-input": "^2.1.0",

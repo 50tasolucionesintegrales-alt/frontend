@@ -36,12 +36,12 @@ export default function EditProductModal({
   onClose: () => void
   producto: Producto
   categorias: { id: string; nombre: string }[]
-  onEdited: (p: any) => void
+  onEdited: (p: Producto) => void
 }) {
   const [state, formAction, pending] = useActionState(UpdateProductAction, {
     errors: [],
     success: '',
-    item: undefined as any
+    item: undefined
   })
   const router = useRouter()
 
@@ -62,8 +62,7 @@ export default function EditProductModal({
     }
   }, [state.success, state.item, onEdited, onClose, router])
 
-  const defaultCategoryId =
-    (producto as any).categoryId ?? producto.category?.id ?? ''
+  const defaultCategoryId = producto.category?.id ?? ''
 
   return (
     <AnimatePresence>

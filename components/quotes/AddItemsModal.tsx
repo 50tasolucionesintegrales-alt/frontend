@@ -7,18 +7,27 @@ import { addItemsAction } from '@/actions/quotes/addItemsAction'
 import ProductSelectionModal from './ProductSelectionModal'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
+import { Producto } from '@/src/schemas'
+
+type SelectedItem = {
+  id: string | number;
+  cantidad?: number | string;
+  precio?: number | string;
+  precioBase?: number | string;
+  unidad?: string;
+};
 
 export default function AddItemsModal({
   quoteId,
-  quoteType,          // ← 'productos' | 'servicios'
-  availableItems,     // ← lista ya depurada según tipo
+  quoteType,
+  availableItems,
 }: {
   quoteId: string
   quoteType: 'productos' | 'servicios'
-  availableItems: any[]
+  availableItems: Producto[]
 }) {
   const [open, setOpen]         = useState(false)
-  const [selected, setSelected] = useState<any[]>([])
+  const [selected, setSelected] = useState<SelectedItem[]>([])
   const router = useRouter()
 
   // Server Action
@@ -35,16 +44,16 @@ export default function AddItemsModal({
       setSelected([])
       setOpen(false)
     }
-  }, [state])
+  }, [state, router])
 
   /* ——— Enviar al back ——— */
   const handleSubmit = () => {
-    const sanitizeUnidad = (v: any) =>
+    const sanitizeUnidad = (v: unknown) =>
       (typeof v === 'string' ? v : String(v ?? ''))
         .trim()
         .slice(0, 120) || 'pieza';
 
-    const parsePrecio = (v: any): number => {
+    const parsePrecio = (v: unknown): number => {
       if (typeof v === 'number') return v;
       if (typeof v !== 'string') return 0;
       // limpia $ y separadores, soporta coma/punto

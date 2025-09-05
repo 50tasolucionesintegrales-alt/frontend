@@ -46,7 +46,7 @@ export default function AddCategoryModal({ open, onClose }: {
             router.refresh()
             onClose()
         }
-    }, [state, onClose])
+    }, [state, onClose, router])
 
     return (
         <AnimatePresence>

@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
 export const registerSchema = z.object({
         nombre: z.string()
                 .min(1, { message: "El nombre es obligatorio" }),
@@ -84,24 +82,24 @@ export const assignRoleSchema = z.object({
 })
 
 const numOpt = z.preprocess(
-  (v) => (v === '' || v === null || v === undefined ? undefined : v),
-  z.coerce.number().finite().optional()
+        (v) => (v === '' || v === null || v === undefined ? undefined : v),
+        z.coerce.number().finite().optional()
 )
 
 export const updateItemSchema = z.object({
-  itemId: z.union([z.string(), z.number()]).transform(String),
-  quoteId: z.union([z.string(), z.number()]).transform(String),
+        itemId: z.union([z.string(), z.number()]).transform(String),
+        quoteId: z.union([z.string(), z.number()]).transform(String),
 
-  cantidad: numOpt, // si en algún momento lo editas
-  unidad: z.string().optional(),
+        cantidad: numOpt, // si en algún momento lo editas
+        unidad: z.string().optional(),
 
-  margenPct1: numOpt,
-  margenPct2: numOpt,
-  margenPct3: numOpt,
-  margenPct4: numOpt,
-  margenPct5: numOpt,
-  margenPct6: numOpt,
-  margenPct7: numOpt,
+        margenPct1: numOpt,
+        margenPct2: numOpt,
+        margenPct3: numOpt,
+        margenPct4: numOpt,
+        margenPct5: numOpt,
+        margenPct6: numOpt,
+        margenPct7: numOpt,
 }).strip()
 
 const CategorySchema = z.object({
@@ -122,10 +120,25 @@ export const ProductSchema = z.object({
         createdAt: z.string().datetime(),
 });
 
+
+export const ServiceSchema = z.object({
+        id: z.string(),
+        createdBy: userSchema,
+        nombre: z.string(),
+        descripcion: z.string(),
+        precioBase: z.string(),
+        createdAt: z.string().datetime(),
+})
+
+export const ServicesSchema = z.array(ServiceSchema)
+
+// Tipos inferidos (opcional)
+export type Service = z.infer<typeof ServiceSchema>
+
 export const ItemSchema = z.object({
         id: z.string(),
         product: ProductSchema,
-        service: z.null(),
+        service: ServiceSchema.optional().nullable(),
         cantidad: z.number(),
         costo_unitario: z.number(),
         margenPct1: z.number(),
@@ -165,20 +178,6 @@ export const QuotesSchema = z.array(QuoteSchema);
 export type Quote = z.infer<typeof QuoteSchema>;
 export type Quotes = z.infer<typeof QuotesSchema>;
 
-export const ServiceSchema = z.object({
-        id: z.string(),
-        createdBy: userSchema,
-        nombre: z.string(),
-        descripcion: z.string(),
-        precioBase: z.string(),
-        createdAt: z.string().datetime(),
-})
-
-export const ServicesSchema = z.array(ServiceSchema)
-
-// Tipos inferidos (opcional)
-export type Service = z.infer<typeof ServiceSchema>
-
 export const AddServiceSchema = z.object({
         nombre: z.string().min(1, 'El nombre es obligatorio'),
         descripcion: z.string().min(1, 'La descripción es obligatoria'),
@@ -216,6 +215,28 @@ export const PurchaseOrderItemSchema = z.object({
 
 export type PurchaseOrderItem = z.infer<typeof PurchaseOrderItemSchema>
 
+export const OrderSchema = z.object({
+        id: z.string(),
+        user: userSchema,
+        titulo: z.string(),
+        descripcion: z.string(),
+        status: z.enum([
+                "draft",
+                "sent",
+                "approved",
+                "rejected",
+                "partially_approved",
+        ]),
+        createdAt: z.string(),
+        sentAt: z.string().nullable(),
+        resolvedAt: z.string().nullable(),
+        total: z.number(),
+        progressPct: z.number(),
+        items: z.array(PurchaseOrderItemSchema),
+});
+
+export type Order = z.infer<typeof OrderSchema>;
+
 // Types
 export type Producto = {
         id: string;
@@ -242,7 +263,7 @@ export type Producto = {
         precio: string;
         especificaciones?: string | null;
         link_compra: string;
-        image_url?: string | null  // ← ahora opcional
+        image_url?: string | null
         hasImage?: boolean
         createdAt: string;
 }
@@ -252,4 +273,3 @@ export type Categoria = {
         nombre: string,
         descripcion: string | null
 }
-

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ValidateTokenForm from './ValidateTokenForm';
 import ResetPasswordForm from './ResetPasswordForm';
 import { KeyRound, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
 
 export default function PasswordResetHandler() {
   const [isValidToken, setIsValidToken] = useState(false);
@@ -12,7 +13,6 @@ export default function PasswordResetHandler() {
 
   return (
     <div className="relative min-h-screen w-full font-sans bg-[#0F332D] overflow-hidden flex flex-col lg:flex-row items-center justify-center">
-      {/* Fondo diagonal */}
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -20,7 +20,6 @@ export default function PasswordResetHandler() {
         }}
       />
 
-      {/* Triángulos */}
       <div className="hidden lg:block absolute left-0 top-0 h-full w-1/2 z-0 pointer-events-none overflow-hidden">
         <div className="grid grid-cols-6 gap-2 h-full opacity-30">
           {triangles.map((_, i) => (
@@ -36,7 +35,6 @@ export default function PasswordResetHandler() {
         </div>
       </div>
 
-      {/* Clip-path style */}
       <style jsx>{`
         .clip-triangle {
           clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
@@ -47,9 +45,11 @@ export default function PasswordResetHandler() {
       <div className="relative z-10 w-full max-w-6xl flex flex-col lg:flex-row items-stretch rounded-xl overflow-hidden shadow-xl bg-transparent">
         {/* Columna izquierda: branding */}
         <div className="w-full lg:w-1/2 text-white p-6 md:p-10 flex flex-col justify-center items-center space-y-5 text-center bg-transparent">
-          <img
+          <Image
             src="/LOGOSINCUENTAB.png"
             alt="Logo Sin Cuenta"
+            width={160}
+            height={160}
             className="w-30 h-30 md:w-36 md:h-36 lg:w-40 lg:h-40 object-contain rounded-md shadow p-2"
           />
           <h2 className="text-3xl font-bold text-[#63B23D]">

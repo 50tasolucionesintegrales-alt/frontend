@@ -3,6 +3,7 @@
 import { getProductImageDataUrl } from "@/actions/add/products/ProductImageAction"
 import AddItemsModal from "@/components/quotes/AddItemsModal"
 import QuoteDetail from "@/components/quotes/QuoteDetail"
+import { Item, Producto, Service } from "@/src/schemas"
 import { ArrowLeft } from "lucide-react"
 import { cookies } from "next/headers"
 import Link from "next/link"
@@ -32,25 +33,25 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
     const quote = await resQuote.json()
     console.log(quote)
 
-    // Sacar IDs de productos ya agregados
     const usedProductIds = new Set(
         quote.items
-            .filter((item: any) => item.product) // asegurar que sea producto
-            .map((item: any) => item.product.id)
+            .filter((item: Item) => item.product)
+            .map((item: Item) => item.product.id)
     )
 
     const usedServiceIds = new Set(
         quote.items
-            .filter((item: any) => item.service) // asegurar que sea servicio
-            .map((item: any) => item.service.id)
+            .filter((item: Item) => item.service)
+            .map((item: Item) => item.service?.id)
     )
 
-    // Filtrar productos y servicios disponibles
-    const productosFiltrados = productos.filter((p: any) => !usedProductIds.has(p.id))
-    const serviciosFiltrados = servicios.filter((s: any) => !usedServiceIds.has(s.id))
+    const productosFiltrados = productos.filter((p: Producto) => !usedProductIds.has(p.id))
+    const serviciosFiltrados = servicios.filter((s: Service) => !usedServiceIds.has(s.id))
 
     const disponibles =
         quote.tipo === 'productos' ? productosFiltrados : serviciosFiltrados
+
+        console.log({ disponibles })
 
     return (
         <div className="p-6">

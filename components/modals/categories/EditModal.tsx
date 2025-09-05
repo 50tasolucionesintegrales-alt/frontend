@@ -38,7 +38,7 @@ export default function EditCategoryModal({
   onEdited: (c: Categoria) => void
 }) {
   const [state, formAction, pending] = useActionState(UpdateCategoryAction, {
-    errors: [], success: '', item: undefined as any
+    errors: [], success: '', item: undefined
   })
   const router = useRouter()
 
@@ -55,7 +55,7 @@ export default function EditCategoryModal({
       onEdited(state.item as Categoria); 
       onClose() 
     }
-  }, [state.success, state.item, onClose, onEdited])
+  }, [state.success, state.item, onClose, onEdited, router])
 
   return (
     <AnimatePresence>

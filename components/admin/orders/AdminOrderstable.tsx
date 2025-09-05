@@ -3,9 +3,10 @@
 import Link from 'next/link'
 import { useMemo } from 'react'
 import { Clock, CheckCircle, ArrowRight } from 'lucide-react'
+import { Order } from '@/src/schemas'
 
 type Props = {
-  orders: any[]
+  orders: Order[]
   type: 'pending' | 'resolved'
 }
 
@@ -66,7 +67,7 @@ export default function AdminOrderTable({ orders, type }: Props) {
 
         <tbody className="bg-white divide-y divide-[#e5e7eb]">
           {orders.map((o, idx) => {
-            const approvedItems = o.items.filter((it: any) => it.status === 'approved').length
+            const approvedItems = o.items.filter((it) => it.status === 'approved').length
             const totalItems = o.items.length
             const progress = o.progressPct ?? 0
             const fecha = type === 'pending' ? o.sentAt : o.resolvedAt

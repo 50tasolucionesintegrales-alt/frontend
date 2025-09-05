@@ -3,7 +3,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from "next/link";
-import { Award, BarChart2, ChevronRight, ClipboardList, ShoppingCart, TrendingUp, Users } from "lucide-react";
+import { Award, BarChart2, ChevronRight, ClipboardList, LucideIcon, ShoppingCart, TrendingUp, Users } from "lucide-react";
 
 type DtoPreset =
   | "last_7d"
@@ -23,10 +23,10 @@ type Props = {
   topLogins: Array<{ userId: string; nombre: string; email: string; logins: number }>;
   loginActivity: Array<{ day: string; logins: number }>;
   // opcionales:
-  quotesByUser?: any;
-  ordersByUser?: any;
-  userLoginActivity?: any;
-  userLoginCount?: any;
+  quotesByUser?: unknown;
+  ordersByUser?: unknown;
+  userLoginActivity?: unknown;
+  userLoginCount?: unknown;
 };
 
 function presetLabel(preset: DtoPreset) {
@@ -165,7 +165,7 @@ export default function MetricsClient(props: Props) {
 }
 
 /* ===== UI helpers ===== */
-function CardLink({ href, title, subtitle, Icon }: { href: string; title: string; subtitle: string; Icon: any }) {
+function CardLink({ href, title, subtitle, Icon }: { href: string; title: string; subtitle: string; Icon: LucideIcon }) {
   return (
     <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
       <Link href={href} className="flex items-center gap-4 group">

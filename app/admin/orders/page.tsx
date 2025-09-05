@@ -19,8 +19,6 @@ export default async function OrdersAdminPage() {
     }
   }).then((res) => res.json())
 
-  console.log(OrdersPend)
-  console.log(OrdersRes)
   return (
     <div className="space-y-10 p-8">
       <div className="flex justify-between">

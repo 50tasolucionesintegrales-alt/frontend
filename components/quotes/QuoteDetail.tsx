@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useTransition } from 'react'
+import { startTransition, useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 import type { Quote, Item } from '@/src/schemas'
@@ -24,7 +24,6 @@ export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: 
   const isSent = quote.status === 'sent'
   const isProductQuote = quote.tipo === 'productos'
 
-  const [isPending, startTransition] = useTransition()
   const [stateSend, dispatchSend]   = useActionState(sendQuoteAction, { errors: [], success: '' })
   const [stateReopen, dispatchReopen] = useActionState(reOpenQuoteAction, { errors: [], success: '' })
 

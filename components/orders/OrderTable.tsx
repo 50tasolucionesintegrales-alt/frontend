@@ -1,9 +1,10 @@
 "use client";
 
+import { Order } from "@/src/schemas";
 import Link from "next/link";
 
 type Props = {
-  orders: any[];
+  orders: Order[];
   type: "draft" | "sent";
 };
 

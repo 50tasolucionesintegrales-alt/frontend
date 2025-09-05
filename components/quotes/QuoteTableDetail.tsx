@@ -3,6 +3,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Item } from '@/src/schemas'
 import { QuoteRow } from './QuoteRow'
+import Image from 'next/image'
+
+type MarginKey =
+  | `margenPct${number}`
+  | `precioFinal${number}`
+  | `subtotal${number}`;
+
+type ItemWithMargins = Item & Partial<Record<MarginKey, number>>;
+
 
 export function QuoteTable({
   quoteId,
@@ -26,10 +35,8 @@ export function QuoteTable({
   const [atEnd, setAtEnd] = useState(false)
 
   const minWidth = useMemo(() => {
-    // base: primera col + costo + acción + márgenes dinámicos
-    // ajusta a tu gusto; sólo asegura que no colapse
     const base = isProductQuote ? 880 : 760
-    const perMargin = 220 // ancho estimado por columna de margen
+    const perMargin = 220
     return base + selectedFormats.length * perMargin
   }, [isProductQuote, selectedFormats])
 
@@ -59,9 +66,7 @@ export function QuoteTable({
 
   return (
     <div className="relative">
-      {/* --------- Vista TABLE (md y arriba) --------- */}
       <div className="hidden md:block relative">
-        {/* Flechas (ocultas cuando no aplican) */}
         {!atStart && (
           <button
             onClick={() => scrollByX(-320)}
@@ -81,7 +86,6 @@ export function QuoteTable({
           </button>
         )}
 
-        {/* Sombras de borde que sugieren scroll */}
         {!atStart && (
           <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-white to-transparent z-10" />
         )}
@@ -100,7 +104,6 @@ export function QuoteTable({
                   {isProductQuote ? 'Producto' : 'Servicio'}
                 </th>
 
-                {/* SOLO productos muestran “Cantidad” */}
                 {isProductQuote && (
                   <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
                     Cantidad
@@ -146,7 +149,6 @@ export function QuoteTable({
         </div>
       </div>
 
-      {/* --------- Vista CARDS (móvil) --------- */}
       <div className="md:hidden space-y-3">
         {items.map((item) => (
           <MobileQuoteCard
@@ -165,7 +167,6 @@ export function QuoteTable({
   )
 }
 
-/* === Tarjeta responsive para móvil === */
 function MobileQuoteCard({
   quoteId,
   item,
@@ -203,11 +204,17 @@ function MobileQuoteCard({
   return (
     <div className="border border-[#e5e7eb] rounded-xl p-3 bg-white">
       <div className="flex items-start gap-3">
-        {/* Imagen solo productos */}
         {isProductQuote && (
           <div className="h-14 w-14 rounded-lg border border-[#e5e7eb] overflow-hidden bg-gray-50 flex items-center justify-center">
             {img ? (
-              <img src={img} alt={entity.nombre} className="h-full w-full object-cover" />
+              <Image
+                src={img ?? "/placeholder.png"}
+                alt={entity.nombre}
+                width={400}
+                height={400}
+                className="h-full w-full object-cover"
+                unoptimized
+              />
             ) : (
               <div className="text-xs text-gray-400">Sin img</div>
             )}
@@ -218,12 +225,11 @@ function MobileQuoteCard({
           <div className="font-medium text-[#0F332D]">{entity.nombre}</div>
           {!isProductQuote && (
             <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-              {(entity as any).descripcion ?? '—'}
+              {entity.descripcion ?? '—'}
             </div>
           )}
 
           <div className="mt-2 grid grid-cols-2 gap-2">
-            {/* Cantidad solo productos */}
             {isProductQuote && (
               <label className="block">
                 <span className="text-xs text-gray-500">Cantidad</span>
@@ -247,12 +253,12 @@ function MobileQuoteCard({
             </label>
           </div>
 
-          {/* Márgenes (stacked) */}
           <div className="mt-3 grid grid-cols-2 gap-3">
             {selectedFormats.map((n) => {
-              const pct = (item as any)[`margenPct${n}`]
-              const precio = (item as any)[`precioFinal${n}`]
-              const subtotal = (item as any)[`subtotal${n}`]
+              const it = item as ItemWithMargins;
+              const pct = it[`margenPct${n}`];
+              const precio = it[`precioFinal${n}`];
+              const subtotal = it[`subtotal${n}`];
               return (
                 <div key={n} className="border border-[#e5e7eb] rounded-lg p-2">
                   <div className="text-[10px] text-gray-500">Margen {n}</div>

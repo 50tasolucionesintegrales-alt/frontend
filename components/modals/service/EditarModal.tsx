@@ -38,7 +38,7 @@ export default function EditServiceModal({
   onEdited: (s: Service) => void
 }) {
   const [state, formAction, pending] = useActionState(UpdateServiceAction, {
-    errors: [], success: '', item: undefined as any
+    errors: [], success: '', item: undefined
   })
   const router = useRouter()
 

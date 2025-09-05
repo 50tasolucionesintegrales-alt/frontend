@@ -2,15 +2,16 @@
 
 import { useState, useEffect, useActionState, useCallback } from 'react'
 import { toast } from 'react-toastify'
-import { Box, Upload, RefreshCw, Eye } from 'lucide-react'
+import { Box, Upload, RefreshCw, Eye, LucideIcon } from 'lucide-react'
 import { useFormStatus } from 'react-dom'
 
 import { uploadEvidenceAction } from '@/actions/orders/uploadEvidenceAction'
 import rejectItemsAction from '@/actions/orders/rejectItemsAction'
 import { PurchaseOrderItem } from '@/src/schemas'
 import { RejectReasonModal } from '../modals/orders/RejectReasonModal'
+import Image from 'next/image'
 
-function SubmitBtn({ label = 'Subir', icon: Icon = Upload }: { label?: string; icon?: any }) {
+function SubmitBtn({ label = 'Subir', icon: Icon = Upload }: { label?: string; icon?: LucideIcon }) {
   const { pending } = useFormStatus()
   return (
     <button
@@ -36,7 +37,6 @@ function SubmitBtn({ label = 'Subir', icon: Icon = Upload }: { label?: string; i
 export default function OrderItemRow({
   item,
   orderStatus,
-  isAdmin,
   onItemUpdate,
   getProductImageDataUrl,
   getEvidenceImageDataUrl
@@ -49,35 +49,13 @@ export default function OrderItemRow({
   getEvidenceImageDataUrl: (imageId: string) => Promise<string | null>
 }) {
   const [evState, dispatchEv] = useActionState(uploadEvidenceAction, {
-    success: '', errors: [], item: null
-  })
+    success: '', errors: [], item: null,
+  });
   const [qtyState, dispatchQty] = useActionState(rejectItemsAction, {
-    success: '', errors: [], item: null
-  })
+    success: '', errors: [], item: null,
+  });
 
-  useEffect(() => {
-    evState.errors.forEach(e => toast.error(e))
-    qtyState.errors.forEach(e => toast.error(e))
-    if (evState.success) {
-      toast.success(evState.success)
-      fetchImageEvidencia(); // ⬅️ Refresca la imagen de evidencia al subir una nueva
-    }
-    if (qtyState.success) toast.success(qtyState.success)
-
-    const updated = evState.item ?? qtyState.item
-    if (updated) onItemUpdate(updated)
-  }, [evState, qtyState, onItemUpdate])
-
-  const canUpload = item.status !== 'approved' && ['draft', 'partially_approved'].includes(orderStatus)
-  const canEditQty = ['draft', 'partially_approved'].includes(orderStatus) && item.status !== 'approved'
-
-  const statusBadge = {
-    approved: 'bg-[#63B23D]/10 text-[#63B23D]',
-    rejected: 'bg-red-100 text-red-600',
-    pending: 'bg-yellow-100 text-yellow-600'
-  }[item.status] || 'bg-gray-100 text-gray-600'
-
-  //Fetch Imagenes de productos
+  // ----- estado imágenes de producto -----
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -89,26 +67,19 @@ export default function OrderItemRow({
     setError(null);
     setImgSrc(null);
 
-    let active = true;
+    const active = true;
     try {
       const url = await getProductImageDataUrl(item.product.id);
       if (!active) return;
-      if (!url) {
-        // 404 o sin imagen
-        setImgSrc(null);
-      } else {
-        setImgSrc(url);
-      }
-    } catch (e: any) {
+      setImgSrc(url ?? null);
+    } catch (e: unknown) {
       if (!active) return;
-      setError(e?.message || 'No se pudo cargar la imagen');
+      setError(e instanceof Error ? e.message : 'No se pudo cargar la imagen');
       setImgSrc(null);
     } finally {
       if (active) setLoading(false);
     }
-
-    return () => { active = false; };
-  }, [item.product.id, getProductImageDataUrl]);
+  }, [getProductImageDataUrl, item.product.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -119,34 +90,31 @@ export default function OrderItemRow({
     return () => { cancelled = true; };
   }, [fetchImageProductos]);
 
-  //Fetch imagenes de evidencia
+  // ----- estado imágenes de evidencia -----
   const [eviImgSrc, setEviImgSrc] = useState<string | null>(null);
   const [eviLoading, setEviLoading] = useState(false);
   const [eviLoaded, setEviLoaded] = useState(false);
   const [eviError, setEviError] = useState<string | null>(null);
 
-  // ⬇️ Trae la evidencia usando el ID del ÍTEM
   const fetchImageEvidencia = useCallback(async () => {
     setEviLoading(true);
     setEviLoaded(false);
     setEviError(null);
     setEviImgSrc(null);
 
-    let active = true;
+    const activeEvi = true;
     try {
-      const url = await getEvidenceImageDataUrl(String(item.id)); // 👈 antes usabas product.id
-      if (!active) return;
+      const url = await getEvidenceImageDataUrl(String(item.id));
+      if (!activeEvi) return;
       setEviImgSrc(url ?? null);
-    } catch (e: any) {
-      if (!active) return;
-      setEviError(e?.message || 'No se pudo cargar la evidencia');
+    } catch (e: unknown) {
+      if (!activeEvi) return;
+      setEviError(e instanceof Error ? e.message : 'No se pudo cargar la evidencia');
       setEviImgSrc(null);
     } finally {
-      if (active) setEviLoading(false);
+      if (activeEvi) setEviLoading(false);
     }
-
-    return () => { active = false; };
-  }, [item.id, getEvidenceImageDataUrl]);
+  }, [getEvidenceImageDataUrl, item.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -157,10 +125,46 @@ export default function OrderItemRow({
     return () => { cancelled = true; };
   }, [fetchImageEvidencia]);
 
+  // ----- notificaciones y actualización -----
+  useEffect(() => {
+    evState.errors.forEach((e) => toast.error(e));
+  }, [evState.errors]);
+
+  useEffect(() => {
+    qtyState.errors.forEach((e) => toast.error(e));
+  }, [qtyState.errors]);
+
+  useEffect(() => {
+    if (evState.success) {
+      toast.success(evState.success);
+      fetchImageEvidencia();
+    }
+  }, [evState.success, fetchImageEvidencia]);
+
+  useEffect(() => {
+    if (qtyState.success) {
+      toast.success(qtyState.success);
+    }
+  }, [qtyState.success]);
+
+  useEffect(() => {
+    const updated = evState.item ?? qtyState.item;
+    if (updated) {
+      onItemUpdate(updated);
+    }
+  }, [evState.item, qtyState.item, onItemUpdate]);
+
+  const canUpload = item.status !== 'approved' && ['draft', 'partially_approved'].includes(orderStatus)
+  const canEditQty = ['draft', 'partially_approved'].includes(orderStatus) && item.status !== 'approved'
+
+  const statusBadge = {
+    approved: 'bg-[#63B23D]/10 text-[#63B23D]',
+    rejected: 'bg-red-100 text-red-600',
+    pending: 'bg-yellow-100 text-yellow-600'
+  }[item.status] || 'bg-gray-100 text-gray-600'
 
   return (
     <tr className="border-b border-[#e5e7eb] hover:bg-[#f0f7f5] transition-colors">
-      {/* Producto */}
       <td className="py-4 px-6">
         <div className="flex items-center gap-4">
           <div
@@ -168,7 +172,6 @@ export default function OrderItemRow({
             aria-busy={loading ? 'true' : 'false'}
             aria-live="polite"
           >
-            {/* Estado: Cargando (skeleton + spinner) */}
             {loading && (
               <div className="absolute inset-0 animate-pulse bg-gray-100" />
             )}
@@ -185,19 +188,20 @@ export default function OrderItemRow({
               </div>
             )}
 
-            {/* Estado: Éxito (con fade-in al cargar) */}
             {imgSrc && !error && (
-              <img
-                src={imgSrc}
+              <Image
+                src={imgSrc ?? "/placeholder.png"}
                 alt={item.product.nombre}
+                width={400}
+                height={400}
                 loading="lazy"
-                decoding="async"
                 onLoad={() => setLoaded(true)}
-                className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"
+                  }`}
+                unoptimized
               />
             )}
 
-            {/* Estado: Sin imagen o Error */}
             {!loading && (!imgSrc || error) && (
               <div className="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center border border-[#e5e7eb]">
                 <Box className="h-5 w-5 text-gray-400" />
@@ -210,7 +214,6 @@ export default function OrderItemRow({
         </div>
       </td>
 
-      {/* Cantidad */}
       <td className="px-6 py-4">
         {canEditQty ? (
           <form action={dispatchQty} className="flex items-center gap-2">
@@ -230,24 +233,20 @@ export default function OrderItemRow({
         )}
       </td>
 
-      {/* Precio Unitario */}
       <td className="px-6 py-4 text-[#174940] font-medium">
         ${item.costo_unitario.toFixed(2)}
       </td>
 
-      {/* Subtotal */}
       <td className="px-6 py-4 text-[#0F332D] font-bold">
         ${item.subtotal.toFixed(2)}
       </td>
 
-      {/* Evidencia */}
       <td className="px-6 py-4">
         <div
           className="relative w-28 h-28 rounded-lg border border-[#e5e7eb] bg-white flex items-center justify-center overflow-hidden"
           aria-busy={eviLoading ? 'true' : 'false'}
           aria-live="polite"
         >
-          {/* Cargando */}
           {eviLoading && (
             <>
               <div className="absolute inset-0 animate-pulse bg-gray-100" />
@@ -258,25 +257,26 @@ export default function OrderItemRow({
             </>
           )}
 
-          {/* Imagen completa (object-contain para NO recortar) */}
           {eviImgSrc && !eviError && !eviLoading && (
-            <img
-              src={eviImgSrc}
+            <Image
+              src={eviImgSrc ?? "/placeholder.png"}
               alt="Evidencia de recepción"
+              width={800}
+              height={600}
               loading="lazy"
-              decoding="async"
               onLoad={() => setEviLoaded(true)}
-              className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${eviLoaded ? 'opacity-100' : 'opacity-0'}`}
+              className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${eviLoaded ? "opacity-100" : "opacity-0"
+                }`}
+              unoptimized
             />
+
           )}
 
-          {/* Sin evidencia / Error */}
           {!eviLoading && (!eviImgSrc || eviError) && (
             <span className="text-xs text-gray-500">Sin evidencia</span>
           )}
         </div>
 
-        {/* (Opcional) botón para ver en grande en un modal/lightbox */}
         {eviImgSrc && !eviError && (
           <button
             type="button"
@@ -310,7 +310,6 @@ export default function OrderItemRow({
         )}
       </td>
 
-      {/* Estado */}
       <td className="px-6 py-4">
         <div className="flex items-center gap-2">
           <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${statusBadge}`}>

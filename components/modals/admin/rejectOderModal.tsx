@@ -53,7 +53,7 @@ export function RechazarModal({
       router.refresh()
       setOpen(false)
     }
-  }, [state])
+  }, [state, router])
 
   if (disabled) return null
 

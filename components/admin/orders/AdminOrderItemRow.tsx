@@ -6,8 +6,8 @@ import { approveItemAction } from '@/actions/admin/orders/approveItemAction'
 import { PurchaseOrderItem } from '@/src/schemas'
 import { RechazarModal } from '@/components/modals/admin/rejectOderModal'
 import { useFormStatus } from 'react-dom'
-import { CheckCircle2, XCircle, Eye, Loader2, Box } from 'lucide-react'
-import EvidenceModal from '@/components/modals/orders/EvidenceModal'
+import { CheckCircle2, Eye, Loader2, Box } from 'lucide-react'
+import Image from 'next/image'
 
 function SubmitBtn({ label }: { label: string }) {
   const { pending } = useFormStatus()
@@ -36,6 +36,7 @@ type RowProps = {
   className?: string
   getProductImageDataUrl: (imageId: string) => Promise<string | null>
   getEvidenceImageDataUrl: (imageId: string) => Promise<string | null>
+  onOpenEvidence: (src: string | null) => void
 }
 
 export default function AdminOrderItemRow({
@@ -44,9 +45,9 @@ export default function AdminOrderItemRow({
   onItemUpdate,
   className = '',
   getProductImageDataUrl,
-  getEvidenceImageDataUrl
+  getEvidenceImageDataUrl,
+  onOpenEvidence
 }: RowProps) {
-  const [eviOpen, setEviOpen] = useState(false);
   const [status, setStatus] = useState(item.status)
   const [state, dispatch] = useActionState(approveItemAction, {
     success: '',
@@ -61,7 +62,7 @@ export default function AdminOrderItemRow({
       onItemUpdate(state.item)
     }
     if (state.success) toast.success(state.success)
-  }, [state])
+  }, [state, onItemUpdate])
 
   const canAct = showActions && status === 'pending'
   const statusColor = {
@@ -96,9 +97,9 @@ export default function AdminOrderItemRow({
       } else {
         setImgSrc(url);
       }
-    } catch (e: any) {
+    } catch (e) {
       if (!active) return;
-      setError(e?.message || 'No se pudo cargar la imagen');
+      setError((e as Error).message || 'No se pudo cargar la imagen');
       setImgSrc(null);
     } finally {
       if (active) setLoading(false);
@@ -134,9 +135,9 @@ export default function AdminOrderItemRow({
       const url = await getEvidenceImageDataUrl(String(item.id)); // 👈 antes usabas product.id
       if (!active) return;
       setEviImgSrc(url ?? null);
-    } catch (e: any) {
+    } catch (e) {
       if (!active) return;
-      setEviError(e?.message || 'No se pudo cargar la evidencia');
+      setEviError((e as Error).message || 'No se pudo cargar la evidencia');
       setEviImgSrc(null);
     } finally {
       if (active) setEviLoading(false);
@@ -183,13 +184,16 @@ export default function AdminOrderItemRow({
 
               {/* Estado: Éxito (con fade-in al cargar) */}
               {imgSrc && !error && (
-                <img
+                <Image
                   src={imgSrc}
                   alt={item.product.nombre}
+                  width={400}          // 👈 tamaño base obligatorio
+                  height={400}
                   loading="lazy"
-                  decoding="async"
                   onLoad={() => setLoaded(true)}
-                  className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                  className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"
+                    }`}
+                  unoptimized          // 👈 evita error si es blob/base64 o URL externa sin config
                 />
               )}
 
@@ -233,13 +237,16 @@ export default function AdminOrderItemRow({
 
             {/* Imagen completa (object-contain para NO recortar) */}
             {eviImgSrc && !eviError && !eviLoading && (
-              <img
+              <Image
                 src={eviImgSrc}
                 alt="Evidencia de recepción"
+                width={600}          // 👈 ajusta según el contenedor
+                height={400}
                 loading="lazy"
-                decoding="async"
                 onLoad={() => setEviLoaded(true)}
-                className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${eviLoaded ? 'opacity-100' : 'opacity-0'}`}
+                className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${eviLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                unoptimized
               />
             )}
 
@@ -254,7 +261,7 @@ export default function AdminOrderItemRow({
             <div className="mt-2 flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setEviOpen(true)}
+                onClick={() => onOpenEvidence(eviImgSrc)}
                 className="inline-flex items-center gap-1 text-[#174940] hover:underline text-sm"
                 title="Ver evidencia completa"
               >
@@ -293,12 +300,6 @@ export default function AdminOrderItemRow({
           </td>
         )}
       </tr>
-      <EvidenceModal
-        open={eviOpen}
-        onClose={() => setEviOpen(false)}
-        src={eviImgSrc}
-        alt={`Evidencia de ${item.product?.nombre ?? 'ítem'}`}
-      />
     </>
   )
 }

@@ -7,12 +7,11 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 import { addOrderItemsAction } from '@/actions/orders/addOrderItemsAction'
 import { createOrderAndAddItemAction } from '@/actions/orders/createOrderAndAddAction'
+import { Order } from '@/src/schemas'
 
 export default function AddToOrderModal({
-  /** ← CONTROLADO DESDE EL PADRE */
   open,
   onOpenChange,
-  /** datos */
   productId,
   productPrice,
   orders,
@@ -21,11 +20,10 @@ export default function AddToOrderModal({
   onOpenChange?: (v: boolean) => void
   productId: string
   productPrice: string | number
-  orders: any[]
+  orders: Order[]
 }) {
   const router = useRouter()
 
-  // soporte controlado / no controlado
   const [uOpen, setUOpen] = useState(false)
   const isControlled = typeof open === 'boolean' && typeof onOpenChange === 'function'
   const _open = isControlled ? (open as boolean) : uOpen
@@ -42,7 +40,8 @@ export default function AddToOrderModal({
   const [addState, addDispatch, addPending] = useActionState(addOrderItemsAction, { success: '', errors: [], order: undefined })
   const [newState, newDispatch, newPending] = useActionState(createOrderAndAddItemAction, { success: '', errors: [], order: undefined })
 
-  const productInOrder = (o: any) => (o.items || []).some((it: any) => String(it.product?.id) === String(productId))
+  const productInOrder = (o: { items?: { product?: { id?: string } }[] }) => 
+    (o.items || []).some((it) => String(it.product?.id) === String(productId))
 
   const handleAddToExisting = () => {
     if (!selectedOrderId) return toast.error('Selecciona una orden')
