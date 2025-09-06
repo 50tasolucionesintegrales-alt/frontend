@@ -1,0 +1,39 @@
+import type { Metadata } from "next";
+import { Outfit } from "next/font/google";
+import NextTopLoader from "nextjs-toploader";
+import "./globals.css";
+
+const outfit = Outfit({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "50TA",
+  description: "Soluciones Integrales",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        className={outfit.className}
+      >
+          <NextTopLoader
+            color="#63B23D"  // Color principal (puedes usar tu color branding)
+            height={3}      // Un poco más gruesa para mejor visibilidad
+            crawlSpeed={200} // Animación un poco más rápida
+            easing="ease"    // Suaviza la animación
+            speed={400}      // Velocidad de progreso
+            showSpinner={false}
+            initialPosition={0.08}
+            shadow="0 0 8px #4f46e5, 0 0 4px #4f46e5" // Sombra sutil con efecto glow
+            template='<div class="bar" role="bar"><div class="peg"></div></div>'
+            zIndex={1600}    // Asegura que esté por encima de otros elementos
+          />
+          {children}
+      </body>
+    </html>
+  );
+}
