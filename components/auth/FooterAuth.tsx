@@ -1,55 +1,118 @@
-import { Facebook, Instagram } from 'lucide-react';
-import Link from 'next/link';
+import { FaFacebook, FaInstagram, FaLinkedin } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 
 export default function FooterAuth() {
   return (
-    <footer className="bg-[#174940] text-white">
-      <div className="max-w-7xl mx-auto px-4 py-10 grid gap-8 sm:grid-cols-3">
-        {/* Enlaces */}
-        <div>
-          <h3 className="font-semibold mb-3 text-[#63B23D]">Enlaces de interés</h3>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <Link href="#" className="hover:text-[#63B23D] transition-colors">
-                Políticas de privacidad
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="hover:text-[#63B23D] transition-colors">
-                Términos y condiciones
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="hover:text-[#63B23D] transition-colors">
-                Preguntas frecuentes
-              </Link>
-            </li>
-          </ul>
-        </div>
+    <footer className="bg-gray-900 text-white">
+      <div className="container mx-auto px-6 py-12">
+        {/* Contenido principal */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-8">
+          {/* Columna 1: Enlaces de interés */}
+          <div className="mb-6 md:mb-0">
+            <h2 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">
+              Enlaces de interés
+            </h2>
+            <ul className="space-y-3">
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-white transition duration-300 hover:pl-2 block"
+                >
+                  Políticas de privacidad
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-white transition duration-300 hover:pl-2 block"
+                >
+                  Términos y condiciones
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-white transition duration-300 hover:pl-2 block"
+                >
+                  Preguntas frecuentes
+                </a>
+              </li>
+            </ul>
+          </div>
 
-        {/* Redes */}
-        <div>
-          <h3 className="font-semibold mb-3 text-[#63B23D]">Redes sociales</h3>
-          <div className="flex gap-4">
-            <Link href="#" className="hover:text-[#63B23D] transition">
-              <Facebook className="w-5 h-5" />
-            </Link>
-            <Link href="#" className="hover:text-[#63B23D] transition">
-              <Instagram className="w-5 h-5" />
-            </Link>
+          {/* Columna 2: Redes sociales */}
+          <div className="mb-6 md:mb-0">
+            <h2 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">
+              Síguenos
+            </h2>
+            <div className="flex space-x-4">
+              <a
+                href="#"
+                className="text-gray-300 hover:text-blue-500 transition duration-300"
+                aria-label="Facebook"
+              >
+                <FaFacebook size={20} />
+              </a>
+              <a
+                href="#"
+                className="text-gray-300 hover:text-pink-600 transition duration-300"
+                aria-label="Instagram"
+              >
+                <FaInstagram size={20} />
+              </a>
+              <a
+                href="#"
+                className="text-gray-300 hover:text-gray-600 transition duration-300"
+                aria-label="Twitter"
+              >
+                <FaXTwitter size={20} />
+              </a>
+              <a
+                href="#"
+                className="text-gray-300 hover:text-blue-700 transition duration-300"
+                aria-label="LinkedIn"
+              >
+                <FaLinkedin size={20} />
+              </a>
+            </div>
+          </div>
+
+          {/* Columna 3: Contacto */}
+          <div className="mb-6 md:mb-0">
+            <h2 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">
+              Contacto
+            </h2>
+            <p className="text-gray-300 mb-2">contacto@sincuenta.com</p>
+            <p className="text-gray-300">+52 55 0000 0000</p>
+          </div>
+
+          {/* Columna 4: Newsletter */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">
+              Suscríbete
+            </h2>
+            <p className="text-gray-300 mb-4">
+              Recibe las últimas actualizaciones en tu correo.
+            </p>
+            <div className="flex">
+              <input
+                type="email"
+                placeholder="Tu correo electrónico"
+                className="px-4 py-2 w-full rounded-l focus:outline-none text-gray-900"
+              />
+              <button className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-r transition duration-300">
+                Enviar
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Contacto */}
-        <div>
-          <h3 className="font-semibold mb-3 text-[#63B23D]">Contacto</h3>
-          <p className="text-sm">contacto@sincuenta.com</p>
-          <p className="text-sm mt-1">+52 55 0000 0000</p>
+        {/* Derechos de autor */}
+        <div className="border-t border-gray-800 pt-6 text-center md:text-left">
+          <p className="text-gray-400">
+            &copy; {new Date().getFullYear()} Sin Cuenta Soluciones Integrales. Todos los derechos reservados.
+          </p>
         </div>
-      </div>
-
-      <div className="bg-[#0F332D] text-center py-4 text-xs text-gray-300">
-        &copy; {new Date().getFullYear()} Sin Cuenta Soluciones Integrales. Todos los derechos reservados.
       </div>
     </footer>
   );
