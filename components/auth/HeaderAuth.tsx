@@ -41,6 +41,7 @@ export default function Header() {
               Registrarse
             </Link>
           </div>
+        </div>
 
         {/* Menú móvil */}
         {mobileOpen && (
