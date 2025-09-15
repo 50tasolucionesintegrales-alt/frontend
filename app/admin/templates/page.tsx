@@ -5,9 +5,10 @@ import { getTemplates, deleteTemplate } from '@/actions/admin/templates/actions'
 import AddTemplateModal from '@/components/modals/templates/addTemplateModal'
 import UpdateTemplateModal from '@/components/modals/templates/updateTemplateModal'
 import ViewTemplateModal from '@/components/modals/templates/viewTemplateModal'
-import { Button } from '@/components/ui/Button'
+import TemplateCard from '@/components/admin/templates/templateCard'
+import { FileText } from 'lucide-react'
 
-type Template = { id: number, nombre: string, descripcion: string | null }
+type Template = { id: number; nombre: string; descripcion: string | null }
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([])
@@ -29,11 +30,7 @@ export default function TemplatesPage() {
         }))
       )
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error('fetchTemplates error:', err.message)
-      } else {
-        console.error('fetchTemplates error:', err)
-      }
+      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -41,48 +38,67 @@ export default function TemplatesPage() {
 
   useEffect(() => { fetchTemplates() }, [])
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('¿Eliminar template?')) return
-
+  const handleDelete = async (template: Template) => {
+    if (!confirm(`¿Eliminar template "${template.nombre}"?`)) return
     try {
-      const res = await deleteTemplate(id)
-      if (res.ok) {
-        alert('Template eliminado correctamente')
-        fetchTemplates()
-      } else {
-        alert('Error al eliminar template: ' + (res.error ?? 'Desconocido'))
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error) alert('Error al eliminar template: ' + err.message)
-      else alert('Error al eliminar template')
+      const res = await deleteTemplate(template.id)
+      if (res.ok) fetchTemplates()
+      else console.error('Error al eliminar template:', res.error)
+    } catch (err) {
+      console.error(err)
     }
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Templates</h1>
-      <Button onClick={() => setShowAddModal(true)}>Agregar Template</Button>
-
-      {loading ? <p>Cargando templates...</p> : (
-        templates.length === 0 ? <p>No hay templates</p> :
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          {templates.map(t => (
-            <div key={t.id} className="border p-2 rounded">
-              <div className="font-semibold">{t.nombre}</div>
-              <div className="text-sm">{t.descripcion}</div>
-              <div className="flex gap-2 mt-2">
-                <Button onClick={() => { setSelectedTemplate(t); setShowUpdateModal(true) }}>Editar</Button>
-                <Button onClick={() => handleDelete(t.id)} variant="outline">Eliminar</Button>
-                <Button onClick={() => setViewTemplateId(t.id)}>Ver PDF</Button>
-              </div>
+    <div className="flex-1 p-6 md:p-8 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <header className="mb-8 flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1">
+            <FileText size={28} className="text-[#63B23D]" />
+            <div>
+              <h1 className="text-3xl font-bold text-[#174940]">Gestionar Machotes</h1>
+              <p className="text-gray-600 text-sm md:block mt-1">
+                Administra tus plantillas PDF de cotización
+              </p>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
 
-      {showAddModal && <AddTemplateModal onClose={() => setShowAddModal(false)} onSuccess={fetchTemplates} />}
-      {showUpdateModal && selectedTemplate && <UpdateTemplateModal template={selectedTemplate} onClose={() => setShowUpdateModal(false)} onSuccess={fetchTemplates} />}
-      {viewTemplateId !== null && <ViewTemplateModal templateId={viewTemplateId} onClose={() => setViewTemplateId(null)} />}
+          {/* Botón agregar */}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-[#63B23D] hover:bg-[#4D912C] text-white px-4 py-2 rounded-md font-medium"
+          >
+            Agregar Machote
+          </button>
+        </header>
+
+        {/* Grid de Templates */}
+        {loading ? (
+          <p className="text-gray-500">Cargando machotes...</p>
+        ) : templates.length === 0 ? (
+          <p className="text-gray-500">No hay machotes disponibles</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+            {templates.map(t => (
+              <TemplateCard
+                key={t.id}
+                template={t}
+                onEdit={(tpl: Template) => { setSelectedTemplate(tpl); setShowUpdateModal(true) }}
+                onDelete={handleDelete}
+                onView={(tpl: Template) => setViewTemplateId(tpl.id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Modals */}
+        {showAddModal && <AddTemplateModal onClose={() => setShowAddModal(false)} onSuccess={fetchTemplates} />}
+        {showUpdateModal && selectedTemplate &&
+          <UpdateTemplateModal template={selectedTemplate} onClose={() => setShowUpdateModal(false)} onSuccess={fetchTemplates} />}
+        {viewTemplateId !== null &&
+          <ViewTemplateModal templateId={viewTemplateId} onClose={() => setViewTemplateId(null)} />}
+      </div>
     </div>
   )
 }

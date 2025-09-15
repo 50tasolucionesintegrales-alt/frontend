@@ -1,8 +1,7 @@
 'use client';
 
 import { Quote, Service } from '@/src/schemas';
-import { NotebookText, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { NotebookText } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import AddServiceToQuoteModal from '../modals/catalog/AddServiceToQuote';
 
@@ -37,12 +36,6 @@ export default function ServiceDetail({ service, drafts, createServiceQuoteHref 
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="mb-4">
-        <Link href="/catalogo" className="inline-flex items-center text-[#174940] hover:underline">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Volver al catálogo
-        </Link>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <div className="border border-[#174940]/15 rounded-2xl p-5 bg-white">

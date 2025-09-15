@@ -38,9 +38,6 @@ export default function ResetPasswordForm({ token }: { token: string }) {
   return (
     <div className="flex items-center justify-center min-h-96">
       <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg border border-gray-100">
-        <h2 className="text-2xl font-bold text-[#63B23D] text-center mb-6">
-          Cambia tu contraseña
-        </h2>
 
         <form className="space-y-6" action={dispatch}>
           {/* Nueva contraseña */}

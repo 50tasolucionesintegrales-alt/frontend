@@ -1,8 +1,7 @@
 'use client';
 
-import { ArrowLeft, ShoppingCart, Share2, Heart, User, Calendar } from 'lucide-react';
+import { ShoppingCart, Share2, Heart, User, Calendar } from 'lucide-react';
 import { Order, Producto, Quote } from '@/src/schemas';
-import { useRouter } from 'next/navigation';
 import { startTransition, useActionState, useCallback, useEffect, useMemo, useState } from 'react';
 import { addItemsAction } from '@/actions/quotes/addItemsAction';
 import { toast } from 'react-toastify';
@@ -19,9 +18,6 @@ interface Props {
 }
 
 export default function ProductDetail({ producto, drafts, orders, getProductImageDataUrl }: Props) {
-
-    const router = useRouter()
-
     const [imgSrc, setImgSrc] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [loaded, setLoaded] = useState(false);
@@ -143,10 +139,6 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] p-4 md:p-6">
             <div className="max-w-6xl mx-auto">
-                <button onClick={() => (router.back())} className="inline-flex items-center text-[#174940] hover:text-[#0F332D] mb-4 transition">
-                    <ArrowLeft size={18} className="mr-1" />
-                    Volver al catálogo
-                </button>
 
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">

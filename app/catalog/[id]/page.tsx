@@ -5,6 +5,8 @@ import getDraftOrders from '@/src/lib/orders/getDraftOrders';
 import { Producto, Quote, Service } from '@/src/schemas';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
+import ButtonBack from '@/components/ui/ButtonBack';
+import { FileText } from 'lucide-react';
 
 type FetchOk<T> = { ok: true; data: T };
 type FetchErr = { ok: false; status: number; error?: unknown };
@@ -33,13 +35,12 @@ async function fetchJSON<T>(url: string, token?: string, init?: RequestInit): Pr
 }
 
 export default async function CatalogIdPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+  const { id } = await params;
   const token = (await cookies()).get('50TA_TOKEN')?.value;
 
   const ordersPromise = getDraftOrders();
   const quotesPromise = fetchJSON<Quote[]>(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, token);
 
-  // Llamamos en paralelo; fetchJSON no lanza, siempre resuelve FetchResult
   const [prodRes, svcRes] = await Promise.all([
     fetchJSON<Producto>(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`, token, { method: 'GET' }),
     fetchJSON<Service>(`${process.env.NEXT_PUBLIC_API_URL}/services/${id}`, token, { method: 'GET' }),
@@ -53,24 +54,63 @@ export default async function CatalogIdPage({ params }: { params: Promise<{ id: 
   // Decide qué vista mostrar
   if (isOk(prodRes)) {
     return (
-      <ProductDetail
-        producto={prodRes.data}
-        drafts={quotesDraft}
-        orders={orders}
-        getProductImageDataUrl={getProductImageDataUrl}
-      />
+      <div className="p-6 bg-[#f8fafc] min-h-screen">
+        {/* Header con título y botón de regresar */}
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3 w-full md:w-auto md:flex-1">
+            <FileText className="h-6 w-6 text-[#63B23D]" />
+            <h1 className="text-xl md:text-2xl font-bold text-[#0F332D]">Detalles del producto</h1>
+
+            {/* Botón en móviles */}
+            <div className="md:hidden ml-auto">
+              <ButtonBack href="/catalog" />
+            </div>
+          </div>
+
+          {/* Botón en pantallas grandes */}
+          <div className="hidden md:block">
+            <ButtonBack href="/catalog" />
+          </div>
+        </header>
+
+        <ProductDetail
+          producto={prodRes.data}
+          drafts={quotesDraft}
+          orders={orders}
+          getProductImageDataUrl={getProductImageDataUrl}
+        />
+      </div>
     );
   }
 
   if (isOk(svcRes)) {
     return (
-      <ServiceDetail
-        service={svcRes.data}
-        drafts={quotesDraft}
-      />
+      <div className="p-6 bg-[#f8fafc] min-h-screen">
+        {/* Header con título y botón de regresar */}
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3 w-full md:w-auto md:flex-1">
+            <FileText className="h-6 w-6 text-[#63B23D]" />
+            <h1 className="text-xl md:text-2xl font-bold text-[#0F332D]">Detalles del servicio</h1>
+
+            {/* Botón en móviles */}
+            <div className="md:hidden ml-auto">
+              <ButtonBack href="/catalog" />
+            </div>
+          </div>
+
+          {/* Botón en pantallas grandes */}
+          <div className="hidden md:block">
+            <ButtonBack href="/catalog" />
+          </div>
+        </header>
+
+        <ServiceDetail
+          service={svcRes.data}
+          drafts={quotesDraft}
+        />
+      </div>
     );
   }
 
-  // Si ambos endpoints devolvieron no-ok
   notFound();
 }

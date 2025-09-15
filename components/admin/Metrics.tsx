@@ -201,7 +201,7 @@ function SectionTitle({ title, label, icon }: { title: string; label: string; ic
     </div>
   );
 }
-function Row({ index, primary, secondary, right, linkHref }: { index: number; primary: string; secondary?: string; right?: string; linkHref?: string }) {
+function Row({ index, primary, secondary, right}: { index: number; primary: string; secondary?: string; right?: string; linkHref?: string }) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -213,7 +213,6 @@ function Row({ index, primary, secondary, right, linkHref }: { index: number; pr
       </div>
       <div className="flex items-center gap-4">
         {right ? <span className="font-semibold text-[#174940]">{right}</span> : null}
-        {linkHref ? <Link href={linkHref} className="text-sm text-[#63B23D] hover:underline">ver</Link> : null}
       </div>
     </div>
   );

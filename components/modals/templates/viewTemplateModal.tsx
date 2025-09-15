@@ -1,9 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/Button'
 
-type Props = { templateId: number, onClose: () => void }
+type Props = { templateId: number; onClose: () => void }
 
 export default function ViewTemplateModal({ templateId, onClose }: Props) {
   const [dataUrl, setDataUrl] = useState<string | null>(null)
@@ -25,11 +24,27 @@ export default function ViewTemplateModal({ templateId, onClose }: Props) {
   }, [templateId])
 
   return (
-    <div className="modal fixed inset-0 flex flex-col bg-white p-4">
-      <h2>Vista previa PDF</h2>
-      {loading && <p>Cargando...</p>}
-      {dataUrl && <iframe title='data' src={dataUrl} className="flex-1 w-full border" />}
-      <Button onClick={onClose} variant="outline">Cerrar</Button>
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl p-6 flex flex-col gap-3 animate-fadeIn">
+        <h2 className="text-2xl font-semibold text-[#0F332D]">Vista previa PDF</h2>
+
+        {loading && <p className="text-gray-500">Cargando...</p>}
+
+        {dataUrl && (
+          <iframe
+            src={dataUrl}
+            title="PDF Preview"
+            className="flex-1 w-full border rounded-md h-[500px] md:h-[700px]"
+          />
+        )}
+
+        <button
+          onClick={onClose}
+          className="mt-2 border border-gray-400 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-100 self-end"
+        >
+          Cerrar
+        </button>
+      </div>
     </div>
   )
 }
