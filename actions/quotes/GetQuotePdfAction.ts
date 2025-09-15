@@ -2,9 +2,6 @@
 
 import { cookies } from 'next/headers'
 
-// Si te preocupa Edge, esto ayuda a que corra en Node:
-// export const dynamic = 'force-dynamic'
-
 export async function getQuotePdfAction(
   quoteId: string,
   empresa: number // 1..7

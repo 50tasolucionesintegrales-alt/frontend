@@ -1,4 +1,3 @@
-// actions/delete/products/DeleteProductAction.ts
 'use server'
 
 import { cookies } from 'next/headers'

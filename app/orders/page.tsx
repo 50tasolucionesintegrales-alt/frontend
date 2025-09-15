@@ -1,4 +1,3 @@
-// app/orders/page.tsx
 import CreateOrderModal from "@/components/modals/orders/CreateOrderModal";
 import { OrderTable } from "@/components/orders/OrderTable";
 import getDraftOrders from "@/src/lib/orders/getDraftOrders";

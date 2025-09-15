@@ -1,4 +1,3 @@
-// /actions/quotes/sendQuoteAction.ts
 'use server'
 
 import normalizeErrors from '@/src/helpers/normalizeError'

@@ -1,11 +1,9 @@
-// components/admin/services/ServiceTable.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 import CrudTable, { Column } from '../crudTable'
 import { toast } from 'react-toastify'
 import EditServiceModal from '@/components/modals/service/EditarModal'
-// actions los creas tú:
 import DeleteServiceAction from '@/actions/add/services/DeleteServiceAction'
 import { Service } from '@/src/schemas'
 

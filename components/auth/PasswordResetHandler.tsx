@@ -42,7 +42,7 @@ export default function PasswordResetHandler() {
       `}</style>
 
       {/* Contenedor principal */}
-      <div className="relative z-10 w-full max-w-6xl flex flex-col lg:flex-row items-stretch rounded-xl overflow-hidden shadow-xl bg-transparent">
+      <div className="relative z-10 mb-10 w-full max-w-6xl flex flex-col lg:flex-row items-stretch rounded-xl overflow-hidden shadow-xl bg-transparent">
         {/* Columna izquierda: branding */}
         <div className="w-full lg:w-1/2 text-white p-6 md:p-10 flex flex-col justify-center items-center space-y-5 text-center bg-transparent">
           <Image

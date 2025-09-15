@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 export default async function OrdersLayout({ children }: { children: React.ReactNode }) {
     const { user } = await verifySession()
     if (user.rol === 'cotizador') {
-        redirect('/erros/403')
+        redirect('/errors/403')
     }
     return (
         <AuthClientProvider initialUser={user}>

@@ -28,7 +28,7 @@ export default function Catalogo({ categorias, productos, servicios, getImageDat
     return filteredBySearch.filter(prod => prod.category.id === categoriaId);
   };
 
-  // 👉 NUEVO: filtro de servicios por búsqueda
+  // filtro de servicios por búsqueda
   const serviciosFiltrados = servicios.filter(svc => {
     const q = searchQuery.toLowerCase();
     return (
