@@ -1,4 +1,3 @@
-// app/admin/cotizaciones/page.tsx  (o donde tengas esta ruta)
 import { cookies } from 'next/headers'
 import QuotesSentTable from '@/components/admin/QuoteSentTable'
 

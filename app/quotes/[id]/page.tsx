@@ -1,5 +1,3 @@
-// app/quotes/[id]/page.tsx
-
 import { getProductImageDataUrl } from "@/actions/add/products/ProductImageAction"
 import AddItemsModal from "@/components/quotes/AddItemsModal"
 import QuoteDetail from "@/components/quotes/QuoteDetail"

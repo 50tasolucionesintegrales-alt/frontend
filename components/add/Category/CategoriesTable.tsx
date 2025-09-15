@@ -1,13 +1,11 @@
-// components/admin/categories/CategoryTable.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 import CrudTable, { Column } from '../crudTable'
 import { toast } from 'react-toastify'
 import EditCategoryModal from '@/components/modals/categories/EditModal'
-// actions los creas tú:
 import DeleteCategoryAction from '@/actions/add/categories/DeleteCategoryAction'
-import { Categoria } from '@/src/schemas' // id, nombre, descripcion
+import { Categoria } from '@/src/schemas'
 
 export default function CategoryTable({ categorias: initial }: { categorias: Categoria[] }) {
   const [items, setItems] = useState<Categoria[]>(initial)

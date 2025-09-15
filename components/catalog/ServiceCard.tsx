@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 type Props = {
   service: Service;
-  onClick?: (service: Service) => void; // opcional (por si luego quieres abrir detalle o disparar un flujo)
+  onClick?: (service: Service) => void; 
 };
 
 function formatMXN(value: string) {

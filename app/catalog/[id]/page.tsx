@@ -1,6 +1,6 @@
 import { getProductImageDataUrl } from '@/actions/add/products/ProductImageAction';
 import ProductDetail from '@/components/catalog/productoDetalle';
-import ServiceDetail from '@/components/catalog/ServicioDetalle'; // ojo con el nombre/ubicación del archivo
+import ServiceDetail from '@/components/catalog/ServicioDetalle';
 import getDraftOrders from '@/src/lib/orders/getDraftOrders';
 import { Producto, Quote, Service } from '@/src/schemas';
 import { cookies } from 'next/headers';

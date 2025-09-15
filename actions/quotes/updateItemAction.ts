@@ -1,4 +1,5 @@
 'use server'
+
 import normalizeErrors from "@/src/helpers/normalizeError"
 import { updateItemSchema } from "@/src/schemas"
 import { revalidatePath } from "next/cache"
@@ -32,7 +33,7 @@ export async function updateItemAction(prev: ActionType, formData: FormData) {
   const json = await res.json()
   if (!res.ok) return { ...normalizeErrors(json), success: '' }
 
-  // 👇 revalida la página de la COTIZACIÓN, no la del ítem
+  // revalida la página de la COTIZACIÓN, no la del ítem
   revalidatePath(`/quotes/${quoteId}`, 'page')
 
   // el service devuelve { message, item }

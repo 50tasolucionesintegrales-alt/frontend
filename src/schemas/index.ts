@@ -273,3 +273,20 @@ export type Categoria = {
         nombre: string,
         descripcion: string | null
 }
+
+export const TemplateSchema = z.object({
+  id: z.number(),
+  nombre: z.string(),
+  descripcion: z.string().nullable(),
+  archivo: z
+    .object({
+      type: z.string(),
+      data: z.array(z.number()),
+    })
+    .optional(),
+});
+
+export const TemplatesSchema = z.array(TemplateSchema);
+
+export type Template = z.infer<typeof TemplateSchema>;
+export type Templates = z.infer<typeof TemplatesSchema>;

@@ -1,4 +1,3 @@
-// context/AuthClientContext.tsx
 "use client";
 import { createContext, useContext, useState } from "react";
 import { User } from "../schemas";

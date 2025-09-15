@@ -1,4 +1,3 @@
-// app/admin/metrics/MetricsClient.tsx
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';

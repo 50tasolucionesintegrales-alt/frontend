@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import ProductServiceManager from '@/components/add/ProductServiceManager'
 import ProductTable from './product/TablaProductos'
-// import ServiceTable from '@/components/admin/services/ServiceTable'
-// import CategoryTable from '@/components/admin/categories/CategoryTable'
 import { Categoria, Producto, Service } from '@/src/schemas'
 import ServiceTable from './service/servicetable'
 import CategoryTable from './Category/CategoriesTable'

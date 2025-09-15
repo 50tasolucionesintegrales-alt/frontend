@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 export default async function PrincipalLayout({ children }: { children: React.ReactNode }) {
     const { user } = await verifySession()
     if (user.rol !== 'admin') {
-        redirect('/erros/403')
+        redirect('/errors/403')
     }
     return (
         <div className="min-h-screen bg-white text-gray-900">
