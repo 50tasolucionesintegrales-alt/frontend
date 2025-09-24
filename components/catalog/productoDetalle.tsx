@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ShoppingCart, Share2, Heart, User, Calendar, X } from 'lucide-react';
+import { ShoppingCart, User, Calendar, X } from 'lucide-react';
 import { Order, Producto, Quote } from '@/src/schemas';
 import { startTransition, useActionState, useCallback, useEffect, useMemo, useState } from 'react';
 import { addItemsAction } from '@/actions/quotes/addItemsAction';
@@ -19,8 +19,6 @@ interface Props {
 }
 
 export default function ProductDetail({ producto, drafts, orders, getProductImageDataUrl }: Props) {
-
-    const router = useRouter()
     
     const [imgSrc, setImgSrc] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -282,7 +280,7 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                             >
                                 <div className="flex items-center justify-between mb-6">
                                     <Dialog.Title className="text-xl font-bold text-[#0F332D]">
-                                        Agregar "{producto.nombre}" a una cotización
+                                        Agregar {producto.nombre} a una cotización
                                     </Dialog.Title>
                                     <button onClick={() => setOpen(false)}
                                         className="text-[#999] hover:text-[#0F332D] rounded-full p-1 transition-colors">
