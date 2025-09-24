@@ -1,8 +1,5 @@
 'use server';
 
-// Archivo: app/admin/users/unassigned/actions.ts
-// Server Action alineada con el formulario de page.tsx y con la firma (prevState, formData)
-
 import { z } from "zod";
 import { assignRoleSchema, errorSchema, successSchema } from "@/src/schemas";
 import { revalidatePath } from "next/cache";

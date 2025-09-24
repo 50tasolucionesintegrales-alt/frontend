@@ -48,7 +48,7 @@ export default function AdminOrderItemsTable({
             </th>
             {hasPending && (
               <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Acción
+                Acciones
               </th>
             )}
           </tr>

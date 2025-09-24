@@ -1,4 +1,5 @@
 'use client'
+
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Item } from '@/src/schemas'

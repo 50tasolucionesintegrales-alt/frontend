@@ -20,10 +20,15 @@ export default async function QuotesPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-10">
-      {/* Título principal */}
-      <div className="flex items-center gap-2">
+      {/* Título principal con icono y descripción */}
+      <div className="flex items-center gap-2 mb-4">
         <FileText className="text-[#63B23D]" size={28} />
-        <h1 className="text-3xl md:text-3xl font-bold text-[#0F332D]">Mis Cotizaciones</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-[#0F332D]">Mis Cotizaciones</h1>
+          <p className="text-gray-600 text-sm mt-1">
+            Gestiona tus cotizaciones, tanto borradores como enviadas
+          </p>
+        </div>
       </div>
 
       {/* Sección borradores */}

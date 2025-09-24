@@ -1,4 +1,3 @@
-// app/errors/403/page.tsx
 import Link from "next/link";
 import { Metadata } from "next";
 import { verifySession } from "@/src/auth/dal";

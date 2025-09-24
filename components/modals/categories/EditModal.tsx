@@ -1,4 +1,3 @@
-// components/admin/modals/categories/EditCategoryModal.tsx
 'use client'
 
 import { Dialog } from '@headlessui/react'

@@ -1,4 +1,3 @@
-// components/admin/QuotesSentTable.tsx
 'use client'
 
 import Link from 'next/link'
@@ -7,18 +6,18 @@ import { Download, FileText, ArrowLeft, Box, Clock } from 'lucide-react'
 import PdfDownloadModal from '../modals/quotes/PDFDownloadModal' // ← reutilizamos el mismo modal
 
 type QuoteRow = {
-  id: string;
-  titulo: string;
-  tipo: 'productos' | 'servicios';
-  sentAt?: string | null;
-  totalMargen1?: number;
-  totalMargen2?: number;
-  totalMargen3?: number;
-  totalMargen4?: number;
-  totalMargen5?: number;
-  totalMargen6?: number;
-  totalMargen7?: number;
-};
+  id: string
+  titulo: string
+  tipo: 'productos' | 'servicios'
+  sentAt?: string | null
+  totalMargen1?: number
+  totalMargen2?: number
+  totalMargen3?: number
+  totalMargen4?: number
+  totalMargen5?: number
+  totalMargen6?: number
+  totalMargen7?: number
+}
 
 function activeMargins(q: QuoteRow): number[] {
   const out: number[] = []
@@ -33,49 +32,51 @@ const fmtMoney = (n: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n)
 
 export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
-  // --- estado del modal compartido ---
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalQuoteId, setModalQuoteId] = useState<string>('')
-  const [modalEmpresa, setModalEmpresa] = useState<number>(1)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
-  const openModalFor = (quoteId: string, empresa: number) => {
-    setModalQuoteId(quoteId)
-    setModalEmpresa(empresa)
-    setModalOpen(true)
+  const handleDownload = (quoteId: string, empresa: number) => {
+    const key = `${quoteId}-${empresa}`
+    setBusy(key)
+    const downloadQuote = async () => {
+      const { dataUrl, filename, error } = await getQuotePdfAction(quoteId, empresa)
+      setBusy(null)
+      if (error || !dataUrl) return toast.error(error ?? 'No se pudo descargar el PDF')
+
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = filename || `quote_${quoteId}_m${empresa}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    }
+      startTransition(() => {
+      void downloadQuote() // el "void" ignora el Promise
+    })
   }
 
   return (
-    <div className="p-6 bg-[#f8fafc] min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-[#0F332D] flex items-center">
-            <FileText className="h-8 w-8 mr-2 text-[#63B23D]" />
-            Cotizaciones Enviadas
-          </h1>
-          <Link
-            href="/admin"
-            className="flex items-center text-[#174940] hover:text-[#0F332D] transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 mr-1" />
-            Volver al dashboard
-          </Link>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg border border-[#e5e7eb] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#174940]">
-                <tr>
-                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">Título</th>
-                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">Tipo</th>
-                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
-                    <div className="flex items-center"><Clock className="h-4 w-4 mr-1" />Enviada</div>
-                  </th>
-                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
-                    Totales / Descargas
-                  </th>
-                </tr>
-              </thead>
+    <div className="bg-white rounded-xl shadow-lg border border-[#e5e7eb] overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-[#174940]">
+            <tr>
+              <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
+                Título
+              </th>
+              <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
+                Tipo
+              </th>
+              <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" /> Enviada
+                </div>
+              </th>
+              <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
+                Totales / Descargas
+              </th>
+            </tr>
+          </thead>
 
               <tbody className="divide-y divide-[#e5e7eb]">
                 {quotes.map((q) => {
@@ -129,13 +130,24 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
                         <p className="text-lg font-medium text-[#174940]">No hay cotizaciones enviadas</p>
                         <p className="mt-1 max-w-md">Todas las cotizaciones que envíes aparecerán aquí</p>
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+
+            {quotes.length === 0 && (
+              <tr>
+                <td colSpan={4} className="py-12 text-center">
+                  <div className="flex flex-col items-center justify-center text-[#999999]">
+                    <p className="text-lg font-medium text-[#174940]">No hay cotizaciones enviadas</p>
+                    <p className="mt-1 max-w-md text-sm">Todas las cotizaciones que envíes aparecerán aquí</p>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Modal único, reutilizando tu componente actual */}

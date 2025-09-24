@@ -1,4 +1,3 @@
-// components/ui/button.tsx
 import React from 'react'
 import { cva, VariantProps } from 'class-variance-authority'
 import { cn } from '@/src/lib/utils'

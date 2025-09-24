@@ -53,6 +53,5 @@ export default async function rejectItemsAction(prevState: ActionType, formData:
         errors: [],
         success: message,
         item: json.item
-    }
-    
+    } 
 }

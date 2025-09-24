@@ -1,4 +1,3 @@
-// components/admin/modals/services/EditServiceModal.tsx
 'use client'
 
 import { Dialog } from '@headlessui/react'

@@ -1,4 +1,3 @@
-// components/admin/products/EditProductModal.tsx
 'use client'
 
 import { Dialog } from '@headlessui/react'

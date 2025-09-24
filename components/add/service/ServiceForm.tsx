@@ -33,6 +33,7 @@ export default function ServiceForm() {
             Nombre del Servicio
           </label>
           <input
+            title='nombre'
             name="nombre"
             type="text"
             value={nombre}
@@ -47,6 +48,7 @@ export default function ServiceForm() {
             Descripción
           </label>
           <textarea
+            title='descripcion'
             name="descripcion"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
@@ -62,6 +64,7 @@ export default function ServiceForm() {
           <div className="relative">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
             <input
+              title='precioBase'
               name="precioBase"
               type="number"
               value={precioBase}

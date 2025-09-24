@@ -86,7 +86,7 @@ export default function LoginPage() {
       `}</style>
 
       {/* Contenedor principal */}
-      <div className="relative z-10 w-full max-w-6xl flex flex-col lg:flex-row items-stretch rounded-xl overflow-hidden shadow-xl bg-transparent">
+      <div className="relative z-10 mb-10 w-full max-w-6xl flex flex-col lg:flex-row items-stretch rounded-xl overflow-hidden shadow-xl bg-transparent">
         {/* Información de la empresa */}
         <div className="w-full lg:w-1/2 text-white p-6 md:p-10 flex flex-col justify-center items-center space-y-5 text-center bg-transparent">
           <Image
@@ -164,7 +164,7 @@ export default function LoginPage() {
                 onClick={togglePwd}
                 className="absolute right-3 bottom-2 text-gray-400 focus:outline-none select-none"
               >
-                {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 
