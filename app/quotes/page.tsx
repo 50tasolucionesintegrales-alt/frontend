@@ -29,7 +29,7 @@ export default async function QuotesPage() {
       {/* Sección borradores */}
       <section>
         <h2 className="text-lg md:text-xl font-semibold mb-3 text-[#0F332D]">Borradores</h2>
-        <div className="bg-white shadow-md rounded-xl overflow-hidden">
+        <div>
           <QuotesTable quotes={quotesDraft} type="drafts" />
         </div>
       </section>
@@ -37,7 +37,7 @@ export default async function QuotesPage() {
       {/* Sección enviadas */}
       <section>
         <h2 className="text-lg md:text-xl font-semibold mb-3 text-[#0F332D]">Enviadas</h2>
-        <div className="bg-white shadow-md rounded-xl overflow-hidden">
+        <div>
           <QuotesTable quotes={quotesSend} type="sent" />
         </div>
       </section>
