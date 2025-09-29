@@ -1,6 +1,6 @@
 'use client';
 
-import { ShoppingCart, Share2, Heart, User, Calendar } from 'lucide-react';
+import { ShoppingCart, User, Calendar, X } from 'lucide-react';
 import { Order, Producto, Quote } from '@/src/schemas';
 import { startTransition, useActionState, useCallback, useEffect, useMemo, useState } from 'react';
 import { addItemsAction } from '@/actions/quotes/addItemsAction';
@@ -9,6 +9,7 @@ import { Dialog } from '@headlessui/react';
 import { createDraftAndAddItemAction } from '@/actions/quotes/createAndAddAction';
 import AddToOrderModal from '../modals/catalog/AddToOrderModal';
 import Image from 'next/image';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface Props {
     producto: Producto
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function ProductDetail({ producto, drafts, orders, getProductImageDataUrl }: Props) {
+    
     const [imgSrc, setImgSrc] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [loaded, setLoaded] = useState(false);
@@ -210,7 +212,7 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                                     </div>
                                     <div>
                                         <p className="text-sm text-[#999999]">Agregado por:</p>
-                                        <p className="font-medium text-[#0F332D]">{producto.createdBy?.nombre || 'Usuario desconocido'}</p>
+                                        <p className="font-medium text-[#0F332D]">{producto.createdBy?.nombre}</p>
                                         <p className="text-xs text-[#999999] flex items-center gap-1">
                                             <Calendar size={12} />
                                             {new Date(producto.createdAt).toLocaleDateString()}
@@ -260,105 +262,131 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
             </div>
 
             {/* Modal de selección de cotización */}
-            <Dialog open={open} onClose={() => setOpen(false)} className="relative z-50">
-                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
-                <div className="fixed inset-0 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl w-full max-w-2xl p-6 shadow-xl">
-                        <Dialog.Title className="text-lg font-semibold mb-4">
-                            Agregar “{producto.nombre}” a una cotización
-                        </Dialog.Title>
+            <AnimatePresence>
+                {open && (
+                    <Dialog open={open} onClose={() => setOpen(false)} className="relative z-50">
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true"
+                        />
+                        <div className="fixed inset-0 flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                                className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl mx-2"
+                            >
+                                <div className="flex items-center justify-between mb-6">
+                                    <Dialog.Title className="text-xl font-bold text-[#0F332D]">
+                                        Agregar {producto.nombre} a una cotización
+                                    </Dialog.Title>
+                                    <button onClick={() => setOpen(false)}
+                                        className="text-[#999] hover:text-[#0F332D] rounded-full p-1 transition-colors">
+                                        <X size={20} />
+                                    </button>
+                                </div>
 
-                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-[#174940]">Cantidad</span>
-                                <input
-                                    title='cantidad'
-                                    type="number"
-                                    min={1}
-                                    value={qty}
-                                    onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
-                                    className="w-24 px-3 py-1.5 border rounded-lg"
-                                />
-                            </div>
-                            <div className="text-sm text-[#999]">
-                                Costo unitario base: ${producto.precio}
-                            </div>
-                            <div className="flex-1 w-full sm:w-auto">
-                                <input
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Buscar cotización..."
-                                    className="w-full sm:w-64 px-3 py-2 border rounded-lg"
-                                />
-                            </div>
-                        </div>
+                                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-6">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium text-[#0F332D]">Cantidad</span>
+                                        <input
+                                            title='cantidad'
+                                            type="number"
+                                            min={1}
+                                            value={qty}
+                                            onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
+                                            className="w-24 px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
+                                        />
+                                    </div>
+                                    <div className="text-sm text-[#999]">
+                                        Costo unitario base: ${producto.precio}
+                                    </div>
+                                    <div className="flex-1 w-full sm:w-auto">
+                                        <input
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            placeholder="Buscar cotización..."
+                                            className="w-full sm:w-64 px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
+                                        />
+                                    </div>
+                                </div>
 
-                        <ul className="max-h-72 overflow-auto divide-y divide-[#e5e7eb] rounded-lg border border-[#e5e7eb]">
-                            {availableQuotes
-                                .filter(q => q.titulo.toLowerCase().includes(search.toLowerCase()))
-                                .map(q => (
-                                    <li key={q.id} className="flex items-center justify-between p-3">
-                                        <div>
-                                            <div className="font-medium text-[#0F332D]">{q.titulo}</div>
-                                            <div className="text-xs text-[#999]">ID: {q.id}</div>
-                                        </div>
+                                <ul className="max-h-72 overflow-auto divide-y divide-gray-200 rounded-lg border border-gray-200">
+                                    {availableQuotes
+                                        .filter(q => q.titulo.toLowerCase().includes(search.toLowerCase()))
+                                        .map(q => (
+                                            <li key={q.id} className="flex items-center justify-between p-4">
+                                                <div>
+                                                    <div className="font-medium text-[#0F332D]">{q.titulo}</div>
+                                                    <div className="text-xs text-[#999]">ID: {q.id}</div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleAddToQuote(q.id)}
+                                                    disabled={aiPending}
+                                                    className={`px-4 py-2.5 rounded-lg font-medium transition-colors ${aiPending
+                                                            ? 'bg-[#63B23D]/70 cursor-not-allowed text-white'
+                                                            : 'bg-[#174940] hover:bg-[#0F332D] text-white shadow-sm'
+                                                        }`}
+                                                >
+                                                    {aiPending ? 'Agregando…' : 'Agregar'}
+                                                </button>
+                                            </li>
+                                        ))}
+
+                                    {availableQuotes.length === 0 && (
+                                        <li className="py-10 text-center text-[#999]">
+                                            No hay cotizaciones disponibles (o ya está agregado en todas).
+                                        </li>
+                                    )}
+                                </ul>
+
+                                <div className="mt-6 border-t border-gray-200 pt-6">
+                                    <h3 className="text-lg font-semibold text-[#0F332D] mb-4">
+                                        o crear una nueva cotización
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <input
+                                            value={newTitle}
+                                            onChange={(e) => setNewTitle(e.target.value)}
+                                            placeholder="Título de la cotización"
+                                            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
+                                        />
+                                        <textarea
+                                            value={newDesc}
+                                            onChange={(e) => setNewDesc(e.target.value)}
+                                            placeholder="Descripción (opcional)"
+                                            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition min-h-[80px]"
+                                        />
                                         <button
                                             type="button"
-                                            onClick={() => handleAddToQuote(q.id)}
-                                            disabled={aiPending}
-                                            className="px-3 py-2 bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] disabled:opacity-50"
+                                            onClick={handleCreateAndAdd}
+                                            disabled={newPending || !newTitle.trim()}
+                                            className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${newPending || !newTitle.trim()
+                                                    ? 'bg-[#63B23D]/70 cursor-not-allowed text-white'
+                                                    : 'bg-[#174940] hover:bg-[#0F332D] text-white shadow-sm'
+                                                }`}
                                         >
-                                            {aiPending ? 'Agregando…' : 'Agregar'}
+                                            {newPending ? 'Creando…' : 'Crear y agregar producto'}
                                         </button>
-                                    </li>
-                                ))}
+                                    </div>
+                                </div>
 
-                            {availableQuotes.length === 0 && (
-                                <li className="py-10 text-center text-[#999]">
-                                    No hay cotizaciones disponibles (o ya está agregado en todas).
-                                </li>
-                            )}
-                        </ul>
-                        <div className="mt-6 border-t border-[#e5e7eb] pt-6">
-                            <h3 className="text-base font-semibold text-[#0F332D] mb-3">
-                                o crear una nueva cotización
-                            </h3>
-                            <div className="grid gap-3">
-                                <input
-                                    value={newTitle}
-                                    onChange={(e) => setNewTitle(e.target.value)}
-                                    placeholder="Título de la cotización"
-                                    className="w-full px-3 py-2 border rounded-lg"
-                                />
-                                <textarea
-                                    value={newDesc}
-                                    onChange={(e) => setNewDesc(e.target.value)}
-                                    placeholder="Descripción (opcional)"
-                                    className="w-full px-3 py-2 border rounded-lg min-h-[80px]"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleCreateAndAdd}
-                                    disabled={newPending || !newTitle.trim()}
-                                    className="px-4 py-2 bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] disabled:opacity-50"
-                                >
-                                    {newPending ? 'Creando…' : 'Crear y agregar producto'}
-                                </button>
-                            </div>
+                                <div className="mt-6 flex justify-end">
+                                    <button
+                                        onClick={() => setOpen(false)}
+                                        className="px-6 py-2.5 rounded-lg font-medium text-[#0F332D] hover:bg-gray-100 transition-colors"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </motion.div>
                         </div>
-
-
-                        <div className="mt-6 flex justify-end">
-                            <button
-                                onClick={() => setOpen(false)}
-                                className="px-4 py-2 border border-[#e5e7eb] rounded-lg hover:bg-gray-50"
-                            >
-                                Cerrar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </Dialog>
+                    </Dialog>
+                )}
+            </AnimatePresence>
             <AddToOrderModal
                 open={orderOpen}
                 onOpenChange={setOrderOpen}

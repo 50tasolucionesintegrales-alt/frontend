@@ -1,36 +1,46 @@
 'use server'
 
+import normalizeErrors from '@/src/helpers/normalizeError'
 import { cookies } from 'next/headers'
 
-export async function getQuotePdfAction(
-  quoteId: string,
-  empresa: number // 1..7
-): Promise<{ dataUrl?: string; filename?: string; error?: string }> {
+type State = { dataUrl?: string; filename?: string; error?: string }
+
+export async function downloadQuotePdfAction(_prev: State, formData: FormData): Promise<State> {
   const token = (await cookies()).get('50TA_TOKEN')?.value
+  const quoteId = String(formData.get('quoteId') ?? '')
+  const empresa = Number(formData.get('empresa') ?? 1)
+  const destinatario = String(formData.get('destinatario') ?? '').trim()
+  const descripcion = String(formData.get('descripcion') ?? '').trim()
+  const fecha = String(formData.get('fecha') ?? '').trim() // YYYY-MM-DD
+
   if (!token) return { error: 'No autenticado' }
+  if (!quoteId) return { error: 'Falta quoteId' }
+  if (!empresa) return { error: 'Selecciona empresa (1–7)' }
 
-  // clamp 1..7
-  const m = Math.max(1, Math.min(7, Number(empresa) || 1))
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/quotes/${quoteId}/pdf?empresa=${m}`,
-    {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store',
-    }
-  )
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${quoteId}/pdf`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/pdf',
+    },
+    body: JSON.stringify({ empresa, destinatario, descripcion, fecha }),
+  })
 
   if (!res.ok) {
-    const msg = await res.text().catch(() => '')
-    return { error: `No se pudo obtener el PDF (${res.status}). ${msg}` }
+    try {
+      const j = await res.json()
+      return { error: normalizeErrors(j).errors?.[0] ?? 'No se pudo generar el PDF' }
+    } catch {
+      return { error: 'No se pudo generar el PDF' }
+    }
   }
 
-  // Leemos binario y convertimos a base64 -> Data URL
-  const ab = await res.arrayBuffer()
-  // Usamos Buffer (Node). Si algún día lo mueves a Edge, cambio menor.
-  const base64 = Buffer.from(ab).toString('base64')
+  const buf = await res.arrayBuffer()
+  // @ts-ignore Buffer está en runtime de Node
+  const base64 = Buffer.from(buf).toString('base64')
   const dataUrl = `data:application/pdf;base64,${base64}`
-  const filename = `quote_${quoteId}_m${m}.pdf`
+  const filename = `quote_${quoteId}_m${empresa}.pdf`
+
   return { dataUrl, filename }
 }

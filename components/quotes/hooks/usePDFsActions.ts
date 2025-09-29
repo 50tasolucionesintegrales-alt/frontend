@@ -1,7 +1,7 @@
 'use client'
 import { useTransition, useState } from 'react'
 import { toast } from 'react-toastify'
-import { getQuotePdfAction } from '@/actions/quotes/GetQuotePdfAction'
+import { getQuotePdfAction } from '@/actions/admin/quotes/getPDFAction'
 
 export function usePdfActions(quoteId: string) {
   const [busy, setBusy] = useState<number | null>(null)

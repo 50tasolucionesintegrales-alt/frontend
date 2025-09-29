@@ -7,6 +7,8 @@ import { toast } from 'react-toastify'
 import { addOrderItemsAction } from '@/actions/orders/addOrderItemsAction'
 import { createOrderAndAddItemAction } from '@/actions/orders/createOrderAndAddAction'
 import { Order } from '@/src/schemas'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X } from 'lucide-react'
 
 export default function AddToOrderModal({
   open,
@@ -78,100 +80,189 @@ export default function AddToOrderModal({
     }
   }, [newState, router, setOpen])
 
+  const handleClose = () => {
+    setOpen(false)
+  }
+
   return (
-    <Dialog open={_open} onClose={setOpen} className="relative z-50">
-      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl w-full max-w-2xl p-6 shadow-xl">
-          <Dialog.Title className="text-lg font-semibold mb-4">
-            Agregar a una orden
-          </Dialog.Title>
+    <AnimatePresence>
+      {_open && (
+        <Dialog open={_open} onClose={handleClose} className="relative z-50">
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true"
+          />
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl mx-2"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <Dialog.Title className="text-xl font-bold text-gray-900">
+                  Agregar a una orden
+                </Dialog.Title>
+                <button onClick={handleClose}
+                  className="text-gray-500 hover:text-gray-700 rounded-full p-1 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
 
-          <Tab.Group selectedIndex={tab === 'existente' ? 0 : 1} onChange={(i)=>setTab(i===0?'existente':'nueva')}>
-            <Tab.List className="flex gap-2 mb-4">
-              <Tab className={({selected})=>`px-3 py-1.5 rounded-lg text-sm ${selected?'bg-[#174940] text-white':'bg-gray-100 text-[#174940]'}`}>Usar existente</Tab>
-              <Tab className={({selected})=>`px-3 py-1.5 rounded-lg text-sm ${selected?'bg-[#174940] text-white':'bg-gray-100 text-[#174940]'}`}>Crear nueva</Tab>
-            </Tab.List>
+              <Tab.Group selectedIndex={tab === 'existente' ? 0 : 1} onChange={(i)=>setTab(i===0?'existente':'nueva')}>
+                <Tab.List className="flex gap-2 mb-6">
+                  <Tab className={({selected})=>`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selected?'bg-[#174940] text-white':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                    Usar existente
+                  </Tab>
+                  <Tab className={({selected})=>`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selected?'bg-[#174940] text-white':'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                    Crear nueva
+                  </Tab>
+                </Tab.List>
 
-            <Tab.Panels>
-              {/* EXISTENTE */}
-              <Tab.Panel className="space-y-4">
-                <div>
-                  <label className="block text-sm mb-1 text-[#0F332D]">Orden</label>
-                  <select className="w-full border rounded-lg px-3 py-2"
-                    title='orden'
-                    value={selectedOrderId}
-                    onChange={e=>setSelectedOrderId(e.target.value)}>
-                    <option value="">Selecciona una orden…</option>
-                    {orders.map(o=>{
-                      const already = productInOrder(o)
-                      return (
-                        <option key={o.id} value={o.id} disabled={already}>
-                          {o.titulo}{already?' (ya contiene este producto)':''}
-                        </option>
-                      )
-                    })}
-                  </select>
-                </div>
+                <Tab.Panels>
+                  {/* EXISTENTE */}
+                  <Tab.Panel className="space-y-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Orden</label>
+                      <select 
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                        title='orden'
+                        value={selectedOrderId}
+                        onChange={e=>setSelectedOrderId(e.target.value)}
+                      >
+                        <option value="">Selecciona una orden…</option>
+                        {orders.map(o=>{
+                          const already = productInOrder(o)
+                          return (
+                            <option key={o.id} value={o.id} disabled={already}>
+                              {o.titulo}{already?' (ya contiene este producto)':''}
+                            </option>
+                          )
+                        })}
+                      </select>
+                    </div>
 
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1 text-[#0F332D]">Cantidad</label>
-                    <input title='cantidad' type="number" min={1} value={qty} onChange={e=>setQty(Math.max(1, Number(e.target.value)||1))}
-                      className="w-full border rounded-lg px-3 py-2" />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1 text-[#0F332D]">Costo unitario</label>
-                    <input type="number" step="0.01" value={unitPrice} readOnly className="w-full border rounded-lg px-3 py-2 bg-gray-50" />
-                  </div>
-                </div>
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                        <input 
+                          title='cantidad' 
+                          type="number" 
+                          min={1} 
+                          value={qty} 
+                          onChange={e=>setQty(Math.max(1, Number(e.target.value)||1))}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition" 
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Costo unitario</label>
+                        <input 
+                          type="number" 
+                          step="0.01" 
+                          value={unitPrice} 
+                          readOnly 
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 bg-gray-50" 
+                        />
+                      </div>
+                    </div>
 
-                <div className="flex justify-end gap-2">
-                  <button onClick={()=>setOpen(false)} className="px-4 py-2 rounded-lg border">Cancelar</button>
-                  <button onClick={handleAddToExisting} disabled={!selectedOrderId || addPending}
-                    className="px-4 py-2 rounded-lg bg-[#174940] text-white disabled:opacity-50">
-                    {addPending ? 'Agregando…' : 'Agregar a orden'}
-                  </button>
-                </div>
-              </Tab.Panel>
+                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t mt-6">
+                      <button 
+                        onClick={handleClose} 
+                        className="px-6 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                      <button 
+                        onClick={handleAddToExisting} 
+                        disabled={!selectedOrderId || addPending}
+                        className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${
+                          !selectedOrderId || addPending 
+                            ? 'bg-[#63B23D]/70 cursor-not-allowed text-white' 
+                            : 'bg-[#174940] hover:bg-[#0F332D] text-white shadow-sm'
+                        }`}
+                      >
+                        {addPending ? 'Agregando…' : 'Agregar a orden'}
+                      </button>
+                    </div>
+                  </Tab.Panel>
 
-              {/* NUEVA */}
-              <Tab.Panel className="space-y-4">
-                <div className="grid gap-4">
-                  <div>
-                    <label className="block text-sm mb-1 text-[#0F332D]">Título</label>
-                    <input className="w-full border rounded-lg px-3 py-2" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Orden rápida" />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1 text-[#0F332D]">Descripción (opcional)</label>
-                    <textarea title='descripcion' rows={3} className="w-full border rounded-lg px-3 py-2" value={desc} onChange={e=>setDesc(e.target.value)} />
-                  </div>
-                </div>
+                  {/* NUEVA */}
+                  <Tab.Panel className="space-y-5">
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                        <input 
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition" 
+                          value={title} 
+                          onChange={e=>setTitle(e.target.value)} 
+                          placeholder="Orden rápida" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Descripción (opcional)</label>
+                        <textarea 
+                          title='descripcion' 
+                          rows={3} 
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition" 
+                          value={desc} 
+                          onChange={e=>setDesc(e.target.value)} 
+                        />
+                      </div>
+                    </div>
 
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1 text-[#0F332D]">Cantidad</label>
-                    <input title='cantidad' type="number" min={1} value={qty} onChange={e=>setQty(Math.max(1, Number(e.target.value)||1))}
-                      className="w-full border rounded-lg px-3 py-2" />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1 text-[#0F332D]">Costo unitario</label>
-                    <input type="number" step="0.01" value={unitPrice} readOnly className="w-full border rounded-lg px-3 py-2 bg-gray-50" />
-                  </div>
-                </div>
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                        <input 
+                          title='cantidad' 
+                          type="number" 
+                          min={1} 
+                          value={qty} 
+                          onChange={e=>setQty(Math.max(1, Number(e.target.value)||1))}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition" 
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Costo unitario</label>
+                        <input 
+                          type="number" 
+                          step="0.01" 
+                          value={unitPrice} 
+                          readOnly 
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 bg-gray-50" 
+                        />
+                      </div>
+                    </div>
 
-                <div className="flex justify-end gap-2">
-                  <button onClick={()=>setOpen(false)} className="px-4 py-2 rounded-lg border">Cancelar</button>
-                  <button onClick={handleCreateAndAdd} disabled={newPending}
-                    className="px-4 py-2 rounded-lg bg-[#174940] text-white disabled:opacity-50">
-                    {newPending ? 'Creando…' : 'Crear y agregar'}
-                  </button>
-                </div>
-              </Tab.Panel>
-            </Tab.Panels>
-          </Tab.Group>
-        </div>
-      </div>
-    </Dialog>
+                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t mt-6">
+                      <button 
+                        onClick={handleClose} 
+                        className="px-6 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                      <button 
+                        onClick={handleCreateAndAdd} 
+                        disabled={newPending}
+                        className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${
+                          newPending 
+                            ? 'bg-green-400 cursor-not-allowed' 
+                            : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
+                        }`}
+                      >
+                        {newPending ? 'Creando…' : 'Crear y agregar'}
+                      </button>
+                    </div>
+                  </Tab.Panel>
+                </Tab.Panels>
+              </Tab.Group>
+            </motion.div>
+          </div>
+        </Dialog>
+      )}
+    </AnimatePresence>
   )
 }
