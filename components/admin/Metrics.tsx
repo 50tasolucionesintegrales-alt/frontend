@@ -20,7 +20,6 @@ type Props = {
   compradores: Array<{ userId: string; nombre: string; email: string; cantidad: number }>;
   productos: Array<{ productId: string; nombre: string; vecesCotizado: number; cantidadTotal: number }>;
   topLogins: Array<{ userId: string; nombre: string; email: string; logins: number }>;
-  loginActivity: Array<{ day: string; logins: number }>;
   // opcionales:
   quotesByUser?: unknown;
   ordersByUser?: unknown;
