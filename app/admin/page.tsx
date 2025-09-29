@@ -18,7 +18,6 @@ const params = await searchParams;
     compradores,
     productos,
     topLogins,
-    loginActivity,
     quotesByUser,
     ordersByUser,
     userLoginActivity,
@@ -44,7 +43,6 @@ const params = await searchParams;
       compradores={compradores}
       productos={productos}
       topLogins={topLogins}
-      loginActivity={loginActivity}
 
       quotesByUser={quotesByUser}
       ordersByUser={ordersByUser}
