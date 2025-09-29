@@ -37,6 +37,14 @@ const MENU_BY_ROL: Record<Rol, string[]> = {
   unassigned:['/catalog'],
 };
 
+// ✅ Helper para determinar si una ruta está activa correctamente
+function isPathActive(pathname: string, href: string) {
+  if (pathname === href) return true;
+  // Evita que /admin quede activo en subrutas como /admin/templates
+  if (href === '/admin') return pathname === '/admin';
+  return pathname.startsWith(href + '/');
+}
+
 export default function Sidebar({ user }: { user: User }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -62,7 +70,7 @@ export default function Sidebar({ user }: { user: User }) {
 
   return (
     <>
-      {/* Mobile Menu Button */}
+      {/* Botón menú móvil */}
       <button
         onClick={toggleSidebar}
         className="md:hidden fixed top-4 left-4 z-50 bg-[#174940] text-white p-2 rounded-lg shadow-lg hover:bg-[#0F332D] transition-colors"
@@ -70,7 +78,7 @@ export default function Sidebar({ user }: { user: User }) {
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Overlay */}
+      {/* Overlay móvil */}
       {isOpen && isMobile && (
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={toggleSidebar} />
       )}
@@ -81,25 +89,27 @@ export default function Sidebar({ user }: { user: User }) {
         md:translate-x-0 transform transition-transform duration-300 ease-in-out
         w-64 min-h-screen fixed md:relative z-40 border-r border-[#0F332D] bg-[#174940] shadow-xl`}
       >
+        {/* Logo */}
         <div className="p-6 text-center text-2xl font-bold text-white border-b border-[#63B23D]/30">
           <Image src={LOGOSINCUENTAB} alt="Logo" width={250} height={250} className="mx-auto mb-2" />
         </div>
 
+        {/* Menú */}
         <nav className="px-4 py-6 space-y-3">
           {menuItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            const active = isPathActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => isMobile && setIsOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                  isActive
+                  active
                     ? 'bg-[#63B23D] text-white shadow-md hover:bg-[#63B23D]/90'
                     : 'text-white/90 hover:bg-[#0F332D] hover:text-white'
                 }`}
               >
-                <span className={`${isActive ? 'text-white' : 'text-[#63B23D]'}`}>
+                <span className={`${active ? 'text-white' : 'text-[#63B23D]'}`}>
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
