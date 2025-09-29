@@ -1,9 +1,8 @@
 // components/admin/QuotesSentTable.tsx
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
-import { Download, FileText, ArrowLeft, Box, Clock } from 'lucide-react'
+import { Download, Box, Clock } from 'lucide-react'
 import PdfDownloadModal from '../modals/quotes/PDFDownloadModal' // ← reutilizamos el mismo modal
 
 type QuoteRow = {
@@ -47,19 +46,6 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
   return (
     <div className="p-6 bg-[#f8fafc] min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-[#0F332D] flex items-center">
-            <FileText className="h-8 w-8 mr-2 text-[#63B23D]" />
-            Cotizaciones Enviadas
-          </h1>
-          <Link
-            href="/admin"
-            className="flex items-center text-[#174940] hover:text-[#0F332D] transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 mr-1" />
-            Volver al dashboard
-          </Link>
-        </div>
 
         <div className="bg-white rounded-xl shadow-lg border border-[#e5e7eb] overflow-hidden">
           <div className="overflow-x-auto">
