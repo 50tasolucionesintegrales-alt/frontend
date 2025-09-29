@@ -150,10 +150,7 @@ export default function MetricsClient(props: Props) {
         {/* Actividad de logins + top logins */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <SectionTitle title="Actividad de inicio de sesión" label={label} icon={<BarChart2 size={20} className="text-[#63B23D]" />} />
-          <div className="text-sm text-gray-500 mb-4">
-            Puntos: {loginActivity?.length ?? 0}
-          </div>
-
+          
           <h3 className="text-lg font-semibold text-[#174940] mb-4">Usuarios con más logins</h3>
           {topLogins?.length ? topLogins.map((u, i) => (
             <Row key={u.userId} index={i+1} primary={u.nombre} secondary={u.email} right={`${u.logins} logins`}
