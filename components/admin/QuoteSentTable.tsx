@@ -1,9 +1,8 @@
 // components/admin/QuotesSentTable.tsx
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
-import { Download, FileText, ArrowLeft, Box, Clock } from 'lucide-react'
+import { Download, FileText, Box, Clock } from 'lucide-react'
 import PdfDownloadModal from '../modals/quotes/PDFDownloadModal' // ← reutilizamos el mismo modal
 
 type QuoteRow = {
