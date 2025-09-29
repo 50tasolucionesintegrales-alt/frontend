@@ -253,12 +253,6 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                                 >
                                     Agregar a orden
                                 </button>
-                                <button title='corazon' className="p-3 border border-[#999999]/30 hover:bg-gray-50 rounded-lg transition">
-                                    <Heart size={18} className="text-[#0F332D]" />
-                                </button>
-                                <button title='share' className="p-3 border border-[#999999]/30 hover:bg-gray-50 rounded-lg transition">
-                                    <Share2 size={18} className="text-[#0F332D]" />
-                                </button>
                             </div>
                         </div>
                     </div>
