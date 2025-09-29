@@ -46,7 +46,6 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
   return (
     <div className="p-6 bg-[#f8fafc] min-h-screen">
       <div className="max-w-7xl mx-auto">
-
         <div className="bg-white rounded-xl shadow-lg border border-[#e5e7eb] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
