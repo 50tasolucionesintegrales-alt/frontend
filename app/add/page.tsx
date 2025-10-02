@@ -41,7 +41,6 @@ export default async function page() {
                 services={servicios} 
                 getProductImageDataUrl={getProductImageDataUrl} 
             />
-            <ProductAddAndManage categorias={categories} products={products} services={servicios} getProductImageDataUrl={getProductImageDataUrl} />
         </div>
     )
 }
