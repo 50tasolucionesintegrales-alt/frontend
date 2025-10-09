@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { Download, Box, Clock } from 'lucide-react'
 import PdfDownloadModal from '../modals/quotes/PDFDownloadModal' // ← reutilizamos el mismo modal
+import DeleteQuoteButton from './quotes/DeleteQuoteButton';
 
 type QuoteRow = {
   id: string;
@@ -32,7 +33,6 @@ const fmtMoney = (n: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n)
 
 export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
-  // --- estado del modal compartido ---
   const [modalOpen, setModalOpen] = useState(false)
   const [modalQuoteId, setModalQuoteId] = useState<string>('')
   const [modalEmpresa, setModalEmpresa] = useState<number>(1)
@@ -58,6 +58,9 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
                   </th>
                   <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
                     Totales / Descargas
+                  </th>
+                  <th className="py-4 px-6 text-right text-sm font-medium text-white uppercase tracking-wider">
+                    Acciones
                   </th>
                 </tr>
               </thead>
@@ -87,14 +90,12 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
                                 <button
                                   key={n}
                                   type="button"
-                                  onClick={() => openModalFor(q.id, n)}  // ← abre el modal
+                                  onClick={() => openModalFor(q.id, n)}
                                   className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#e5e7eb] bg-[#63B23D]/10 hover:bg-[#63B23D]/20 transition-colors"
                                   title={`Descargar PDF Formato ${n}`}
                                 >
                                   <span className="text-xs font-semibold text-[#174940]">M{n}</span>
-                                  <span className="text-sm font-medium text-[#0F332D]">
-                                    {fmtMoney(total)}
-                                  </span>
+                                  <span className="text-sm font-medium text-[#0F332D]">{fmtMoney(total)}</span>
                                   <Download className="h-4 w-4 text-[#63B23D]" />
                                 </button>
                               )
@@ -102,13 +103,16 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
                           </div>
                         )}
                       </td>
+                      <td className="py-4 px-6 text-right">
+                        <DeleteQuoteButton quoteId={q.id} />
+                      </td>
                     </tr>
                   )
                 })}
 
                 {quotes.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-12 text-center">
+                    <td colSpan={5} className="py-12 text-center">
                       <div className="flex flex-col items-center justify-center text-[#999999]">
                         <Box className="h-12 w-12 mb-3 text-[#e5e7eb]" />
                         <p className="text-lg font-medium text-[#174940]">No hay cotizaciones enviadas</p>
@@ -123,7 +127,6 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
         </div>
       </div>
 
-      {/* Modal único, reutilizando tu componente actual */}
       <PdfDownloadModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

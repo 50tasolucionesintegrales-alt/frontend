@@ -157,6 +157,8 @@ export default function OrderItemRow({
   const canUpload = item.status !== 'approved' && ['draft', 'partially_approved'].includes(orderStatus)
   const canEditQty = ['draft', 'partially_approved'].includes(orderStatus) && item.status !== 'approved'
 
+  const estado = item.status === 'approved' ? 'Aprobado' : item.status === 'rejected' ? 'Rechazado' : 'Pendiente'
+
   const statusBadge = {
     approved: 'bg-[#63B23D]/10 text-[#63B23D]',
     rejected: 'bg-red-100 text-red-600',
@@ -314,7 +316,7 @@ export default function OrderItemRow({
       <td className="px-6 py-4">
         <div className="flex items-center gap-2">
           <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${statusBadge}`}>
-            {item.status}
+            {estado}
           </span>
           {item.status === 'rejected' && item.rejectReason && (
             <RejectReasonModal reason={item.rejectReason} />

@@ -66,14 +66,14 @@ export default function AdminOrderItemRow({
 
   const canAct = showActions && status === 'pending'
   const statusColor = {
-    Aprovado: 'text-[#63B23D] bg-[#63B23D]/10',
+    Aprobado: 'text-[#63B23D] bg-[#63B23D]/10',
     Rechazado: 'text-red-600 bg-red-100',
     Pendiente: 'text-yellow-600 bg-yellow-100'
   }
 
-  const statusItem = status === 'approved' ? 'Aprovado'
-    : status === 'rejected' ? 'Rechazado'
-      : 'Pendiente';
+  const statusItem =
+    status === 'approved' ? 'Aprobado' :
+      status === 'rejected' ? 'Rechazado' : 'Pendiente'
 
   //Fetch Imagenes de productos
   const [imgSrc, setImgSrc] = useState<string | null>(null);
@@ -283,15 +283,21 @@ export default function AdminOrderItemRow({
           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
             {canAct ? (
               <div className="flex items-center space-x-2">
+                {/* Aprobar (ya funcionaba) */}
                 <form action={dispatch} className="inline-flex">
                   <input type="hidden" name="itemId" value={item.id} />
                   <input type="hidden" name="status" value="approved" />
                   <SubmitBtn label="Aprobar" />
                 </form>
 
+                {/* Rechazar con onSuccess para actualizar fila al instante */}
                 <RechazarModal
                   itemId={item.id}
                   disabled={false}
+                  onSuccess={(updated) => {
+                    setStatus(updated.status)     // 👈 actualiza el estado local
+                    onItemUpdate(updated)         // 👈 notifica al contenedor (si guarda la lista)
+                  }}
                 />
               </div>
             ) : (

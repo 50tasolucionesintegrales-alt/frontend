@@ -19,9 +19,9 @@ import AddItemsModal from '../modals/orders/AddItemsModal'
 import sendOrderAction from '@/actions/orders/sendOrderAction'
 import { reopenOrderAction } from '@/actions/orders/reOpenAction'
 
-type Props = { 
-  order: Order; productos: 
-  Producto[], 
+type Props = {
+  order: Order; productos:
+  Producto[],
   getProductImageDataUrl: (imageId: string) => Promise<string | null>,
   getEvidenceImageDataUrl: (imageId: string) => Promise<string | null>
 }
@@ -40,7 +40,7 @@ export default function OrderDetailTable({ order, productos, getProductImageData
     [items]
   );
 
-  const canResend = status === 'partially_approved'
+  const canResend = status === 'partially_approved' || status === 'rejected'
 
   /* ------------- enviar orden -------------- */
   const [state, dispatch, pending] = useActionState(sendOrderAction, {
@@ -49,17 +49,17 @@ export default function OrderDetailTable({ order, productos, getProductImageData
   })
 
   /* ------------- reabrir orden -------------- */
-  const [reopenState, reopenDispatch, reopenPending] = useActionState(reopenOrderAction,{ 
-    errors: [], 
-    success: '', 
-    order: undefined 
+  const [reopenState, reopenDispatch, reopenPending] = useActionState(reopenOrderAction, {
+    errors: [],
+    success: '',
+    order: undefined
   })
 
   useEffect(() => {
     state.errors.forEach(e => toast.error(e))
     if (state.success) {
       toast.success(state.success)
-      setStatus(canResend ? 'partially_approved' : 'sent') // 👈 en vez de mutar prop;
+      setStatus(canResend ? 'partially_approved' : 'sent')
     }
   }, [state.errors, state.success, canResend]);
 
@@ -71,7 +71,7 @@ export default function OrderDetailTable({ order, productos, getProductImageData
       setStatus(reopenState.order.status); // 👈 en vez de mutar prop
     }
   }, [reopenState]);
-  
+
   const handleItemUpdate = useCallback(
     (updated: PurchaseOrderItem) => {
       setItems(prev => prev.map(it => (it.id === updated.id ? updated : it)))
@@ -163,71 +163,56 @@ export default function OrderDetailTable({ order, productos, getProductImageData
       </div>
 
       {(status === 'draft' || status === 'partially_approved') && items.length !== 0 && (
+        <>
         <form action={dispatch} className="mt-6">
           <input type="hidden" name="orderId" value={order.id} />
 
           <button
             type="submit"
-            disabled={
-              (order.status === 'draft' && !allWithEvidence) || pending
-            }
+            disabled={(status === 'draft' && !allWithEvidence) || pending}
             className={`px-6 py-2 rounded-lg font-medium flex items-center
-        ${status === 'draft'
+              ${status === 'draft'
                 ? allWithEvidence
                   ? 'bg-[#63B23D] text-white hover:bg-[#529e33]'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-[#174940] text-white hover:bg-[#0F332D]'
-              }`}
+                : 'bg-[#174940] text-white hover:bg-[#0F332D]'}
+            `}
           >
-            {/* icono */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
+            {/* ícono */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             {status === 'draft' ? 'Enviar orden' : 'Reenviar orden'}
           </button>
 
-          {/* mensaje sólo para draft */}
           {status === 'draft' && !allWithEvidence && (
             <p className="text-xs text-red-500 mt-2">
               Todos los ítems deben tener evidencia antes de enviar.
             </p>
           )}
         </form>
+
+        <span className="text-xs text-red-500 mt-2">Si la orden acaba de ser creada y ya agrego su evidencia debe hacer click en recargar para que pueda enviarla</span>
+        <button onClick={() => window.location.reload()} className="px-6 py-2 rounded-lg font-medium flex items-center bg-[#63B23D] text-white hover:bg-[#529e33]">Recargar</button>
+
+      </>
       )}
 
-      {status === 'sent' && (
+      {status === 'rejected' && (
+        <span className="text-xs text-red-500 mt-2">Si la orden esta rechazada debe reabrir orden para editarla</span>
+      )}
+
+      {(status === 'sent' || status === 'rejected') && (
         <form action={reopenDispatch} className="mt-6">
           <input type="hidden" name="orderId" value={order.id} />
-
           <button
             type="submit"
             disabled={reopenPending}
             className="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 flex items-center"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.276 0H20V4m0 0l-3.178 3.178M4 9l3.178-3.178M20 20v-5h-.582M4.582 15H4v5m0 0l3.178-3.178M20 20l-3.178-3.178"
-              />
+            {/* ícono */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.276 0H20V4m0 0l-3.178 3.178M4 9l3.178-3.178M20 20v-5h-.582M4.582 15H4v5m0 0l3.178-3.178M20 20l-3.178-3.178" />
             </svg>
             Reabrir orden
           </button>

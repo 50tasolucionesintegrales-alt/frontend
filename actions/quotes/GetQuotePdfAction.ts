@@ -9,13 +9,23 @@ export async function downloadQuotePdfAction(_prev: State, formData: FormData): 
   const token = (await cookies()).get('50TA_TOKEN')?.value
   const quoteId = String(formData.get('quoteId') ?? '')
   const empresa = Number(formData.get('empresa') ?? 1)
-  const destinatario = String(formData.get('destinatario') ?? '').trim()
-  const descripcion = String(formData.get('descripcion') ?? '').trim()
-  const fecha = String(formData.get('fecha') ?? '').trim() // YYYY-MM-DD
 
-  if (!token) return { error: 'No autenticado' }
-  if (!quoteId) return { error: 'Falta quoteId' }
-  if (!empresa) return { error: 'Selecciona empresa (1–7)' }
+  if (!token)    return { error: 'No autenticado' }
+  if (!quoteId)  return { error: 'Falta quoteId' }
+  if (!empresa)  return { error: 'Selecciona empresa (1–7)' }
+
+  // Solo enviamos lo que NO provee ya el backend
+  const payload = {
+    empresa,
+    destinatario: String(formData.get('destinatario') ?? '').trim(),
+    presente:     String(formData.get('presente') ?? '').trim(),
+    descripcion:  String(formData.get('descripcion') ?? '').trim(),
+    condiciones:  String(formData.get('condiciones') ?? '').trim(),
+    folio:        String(formData.get('folio') ?? '').trim(),
+    lugar:        String(formData.get('lugar') ?? '').trim(),
+    fecha:        String(formData.get('fecha') ?? '').trim(), // YYYY-MM-DD
+    incluirFirma: String(formData.get('incluirFirma') ?? 'false') === 'true',
+  }
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${quoteId}/pdf`, {
     method: 'POST',
@@ -24,7 +34,7 @@ export async function downloadQuotePdfAction(_prev: State, formData: FormData): 
       'Content-Type': 'application/json',
       Accept: 'application/pdf',
     },
-    body: JSON.stringify({ empresa, destinatario, descripcion, fecha }),
+    body: JSON.stringify(payload),
   })
 
   if (!res.ok) {
@@ -37,7 +47,7 @@ export async function downloadQuotePdfAction(_prev: State, formData: FormData): 
   }
 
   const buf = await res.arrayBuffer()
-  // @ts-ignore Buffer está en runtime de Node
+  // @ts-ignore Buffer existe en runtime de Node
   const base64 = Buffer.from(buf).toString('base64')
   const dataUrl = `data:application/pdf;base64,${base64}`
   const filename = `quote_${quoteId}_m${empresa}.pdf`
