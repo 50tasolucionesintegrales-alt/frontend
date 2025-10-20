@@ -203,7 +203,7 @@ function Row({ index, primary, secondary, right}: { index: number; primary: stri
         <span className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">{index}</span>
         <div>
           <p className="font-medium">{primary}</p>
-          {secondary ? <p className="text-xs text-gray-500">{secondary}</p> : null}
+          {secondary ? <p className="text-xs text-gray-500 hidden md:block">{secondary}</p> : null}
         </div>
       </div>
       <div className="flex items-center gap-4">
