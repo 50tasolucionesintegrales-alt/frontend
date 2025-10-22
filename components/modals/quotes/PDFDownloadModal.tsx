@@ -16,6 +16,9 @@ type Persisted = {
   lugar?: string
   fecha?: string
   incluirFirma?: boolean
+  // firma (se guardan por separado, se envían juntos con <br>)
+  firmanteNombre?: string
+  firmanteCargo?: string
   // constructor de condiciones
   condicionesItems?: string[]
   condicionesText?: string
@@ -44,6 +47,10 @@ export default function PdfDownloadModal({
   const [lugar, setLugar] = useState('')
   const [fecha, setFecha] = useState(today)
   const [incluirFirma, setIncluirFirma] = useState(false)
+
+  // ---- Firma (se envía como un solo string con <br>)
+  const [firmanteNombre, setFirmanteNombre] = useState('')
+  const [firmanteCargo, setFirmanteCargo] = useState('')
 
   // ---- Condiciones (constructor)
   const [condicionesItems, setCondicionesItems] = useState<string[]>([])
@@ -88,10 +95,12 @@ export default function PdfDownloadModal({
     setLugar('')
     setFecha(today)
     setIncluirFirma(false)
+    setFirmanteNombre('')
+    setFirmanteCargo('')
     setCondicionesItems([])
     setCondicionesText('')
     setCondicionesMode('list')
-    try { localStorage.removeItem(LS_KEY) } catch {}
+    try { localStorage.removeItem(LS_KEY) } catch { }
   }
   const handleClose = () => { resetForm(); onClose() }
 
@@ -109,6 +118,8 @@ export default function PdfDownloadModal({
         setLugar(j.lugar ?? '')
         setFecha(j.fecha ?? today)
         setIncluirFirma(!!j.incluirFirma)
+        setFirmanteNombre(j.firmanteNombre ?? '')
+        setFirmanteCargo(j.firmanteCargo ?? '')
         setCondicionesItems(j.condicionesItems ?? [])
         setCondicionesText(j.condicionesText ?? '')
         setCondicionesMode(j.condicionesMode ?? 'list')
@@ -124,10 +135,16 @@ export default function PdfDownloadModal({
     if (!open) return
     const payload: Persisted = {
       destinatario, presente, descripcion, folio, lugar, fecha, incluirFirma,
+      firmanteNombre, firmanteCargo,
       condicionesItems, condicionesText, condicionesMode,
     }
-    try { localStorage.setItem(LS_KEY, JSON.stringify(payload)) } catch {}
-  }, [open, LS_KEY, destinatario, presente, descripcion, folio, lugar, fecha, incluirFirma, condicionesItems, condicionesText, condicionesMode])
+    try { localStorage.setItem(LS_KEY, JSON.stringify(payload)) } catch { }
+  }, [
+    open, LS_KEY,
+    destinatario, presente, descripcion, folio, lugar, fecha, incluirFirma,
+    firmanteNombre, firmanteCargo,
+    condicionesItems, condicionesText, condicionesMode
+  ])
 
   // Respuesta del action
   useEffect(() => {
@@ -178,14 +195,18 @@ export default function PdfDownloadModal({
 
               <form
                 action={(fd) => {
-                  // Construye el HTML de condiciones en el submit
+                  // 1) Condiciones -> HTML
                   const items =
-                    condicionesItems.length
-                      ? condicionesItems
-                      : fromTextToItems(condicionesText)
-
+                    condicionesItems.length ? condicionesItems : fromTextToItems(condicionesText)
                   const condicionesHtml = items.length ? buildCondHtml(items) : ''
 
+                  // 2) firmanteNombre SIEMPRE (aunque incluirFirma sea false)
+                  const name = firmanteNombre.trim()
+                  const role = firmanteCargo.trim()
+                  const combinedFirmante = role ? `${name}<br>${role}` : name
+                  fd.append('firmanteNombre', combinedFirmante) // 👈 siempre
+
+                  // 3) Campos habituales
                   fd.append('quoteId', quoteId)
                   fd.append('empresa', String(empresa))
                   fd.append('destinatario', destinatario)
@@ -195,12 +216,13 @@ export default function PdfDownloadModal({
                   fd.append('lugar', lugar)
                   fd.append('fecha', fecha)
                   fd.append('incluirFirma', incluirFirma ? 'true' : 'false')
-                  fd.append('condiciones', condicionesHtml) // 👈 ya en <ul><li>…</li></ul>
+                  fd.append('condiciones', condicionesHtml)
 
                   return formAction(fd)
                 }}
                 className="space-y-6"
               >
+
                 {/* Datos generales */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
@@ -275,26 +297,24 @@ export default function PdfDownloadModal({
                       <button
                         type="button"
                         onClick={() => setCondicionesMode('list')}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm ${
-                          condicionesMode === 'list'
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm ${condicionesMode === 'list'
                             ? 'bg-green-600 text-white'
                             : 'bg-gray-100 text-gray-700'
-                        }`}
+                          }`}
                         title="Constructor de lista"
                       >
-                        <List size={16}/> Lista
+                        <List size={16} /> Lista
                       </button>
                       <button
                         type="button"
                         onClick={() => setCondicionesMode('text')}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm ${
-                          condicionesMode === 'text'
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm ${condicionesMode === 'text'
                             ? 'bg-green-600 text-white'
                             : 'bg-gray-100 text-gray-700'
-                        }`}
+                          }`}
                         title="Pegar texto y convertir"
                       >
-                        <Text size={16}/> Texto
+                        <Text size={16} /> Texto
                       </button>
                     </div>
                   </div>
@@ -335,12 +355,12 @@ export default function PdfDownloadModal({
                           onClick={() => setCondicionesItems([...condicionesItems, ''])}
                           className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm"
                         >
-                          <Plus size={16}/> Agregar condición
+                          <Plus size={16} /> Agregar condición
                         </button>
                         <button
                           type="button"
                           onClick={() => {
-                            setCondicionesItems(['Precios en MXN','Entrega: 7 días','Garantía: 12 meses'])
+                            setCondicionesItems(['Precios en MXN', 'Entrega: 7 días', 'Garantía: 12 meses'])
                           }}
                           className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm"
                         >
@@ -370,6 +390,7 @@ export default function PdfDownloadModal({
                   )}
                 </div>
 
+                {/* Firma */}
                 <div className="flex items-center gap-3">
                   <input
                     id="incluirFirma"
@@ -381,6 +402,34 @@ export default function PdfDownloadModal({
                   <label htmlFor="incluirFirma" className="text-sm font-medium text-gray-700">
                     Incluir firma
                   </label>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4 -mt-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nombre del firmante
+                    </label>
+                    <input
+                      value={firmanteNombre}
+                      onChange={(e) => setFirmanteNombre(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                      placeholder="Ej. Ing. Laura Gómez"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cargo
+                    </label>
+                    <input
+                      value={firmanteCargo}
+                      onChange={(e) => setFirmanteCargo(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                      placeholder="Ej. Directora de ventas"
+                    />
+                  </div>
+                  <p className="sm:col-span-2 text-xs text-gray-500 -mt-2">
+                    Se enviará como un solo campo usando un salto de línea (&lt;br&gt;) entre nombre y cargo.
+                  </p>
                 </div>
 
                 {/* Botones */}
@@ -398,11 +447,10 @@ export default function PdfDownloadModal({
                     type="submit"
                     disabled={pending || !isValid}
                     aria-disabled={pending || !isValid}
-                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors ${
-                      pending || !isValid
-                        ? 'bg-green-400 cursor-not-allowed' 
+                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors ${pending || !isValid
+                        ? 'bg-green-400 cursor-not-allowed'
                         : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
-                    }`}
+                      }`}
                   >
                     {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                     {pending ? 'Generando…' : 'Generar PDF'}

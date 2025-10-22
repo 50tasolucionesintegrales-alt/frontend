@@ -18,8 +18,8 @@ import { PdfButtons } from './PDFButtons'
 export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: Quote, getProductImageDataUrl: (id: string) => Promise<string | null> }) {
   const router = useRouter()
   const { items, setItems } = useStableItems(String(quote.id), quote.items as Item[])
-  const { selected, toggle, selectAll, clearAll } =
-    useSelectedFormats(`quote:${quote.id}:formats`, [1,2,3])
+  const { selected, toggle, selectAll, clearAll, hydrated } =
+    useSelectedFormats(`quote:${quote.id}:formats`, [1,2,3]);
 
   const isSent = quote.status === 'sent'
   const isProductQuote = quote.tipo === 'productos'
@@ -60,6 +60,7 @@ export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: 
           toggle={toggle}
           selectAll={selectAll}
           clearAll={clearAll}
+          hydrated={hydrated}              // ← pásalo al picker
         />
       )}
 

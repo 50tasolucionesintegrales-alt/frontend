@@ -3,7 +3,7 @@
 
 import { useState } from 'react'
 import { Download, Box, Clock } from 'lucide-react'
-import PdfDownloadModal from '../modals/quotes/PDFDownloadModal' // ← reutilizamos el mismo modal
+import PdfDownloadModal from '../modals/quotes/PDFDownloadModal'
 import DeleteQuoteButton from './quotes/DeleteQuoteButton';
 
 type QuoteRow = {
@@ -18,19 +18,37 @@ type QuoteRow = {
   totalMargen5?: number;
   totalMargen6?: number;
   totalMargen7?: number;
+  totalMargen8?: number;
+  totalMargen9?: number;
+  totalMargen10?: number;
 };
+
+const MAX_FORMATS = 10;
 
 function activeMargins(q: QuoteRow): number[] {
   const out: number[] = []
-  for (let i = 1; i <= 7; i++) {
-    const v = Number((q[`totalMargen${i}` as keyof QuoteRow] as number | undefined) ?? 0)
-    if (v > 0) out.push(i)
+  for (let i = 1; i <= MAX_FORMATS; i++) {
+    const key = `totalMargen${i}` as keyof QuoteRow
+    const v = Number((q[key] as number | undefined) ?? 0)
+    if (!Number.isNaN(v) && v > 0) out.push(i)
   }
   return out
 }
 
 const fmtMoney = (n: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n)
+
+// Evita hydration mismatch fijando timeZone
+const fmtDate = (iso?: string | null) => {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return new Intl.DateTimeFormat('es-MX', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(d)
+}
 
 export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
   const [modalOpen, setModalOpen] = useState(false)
@@ -75,9 +93,7 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
                         <span className="px-2 py-1 bg-[#174940]/10 rounded-full text-xs">{q.tipo}</span>
                       </td>
                       <td className="py-4 px-6 text-[#174940]">
-                        {q.sentAt
-                          ? new Date(q.sentAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
-                          : '—'}
+                        {fmtDate(q.sentAt)}
                       </td>
                       <td className="py-4 px-6">
                         {margins.length === 0 ? (
@@ -85,7 +101,8 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
                         ) : (
                           <div className="flex flex-wrap gap-2">
                             {margins.map((n) => {
-                              const total = Number((q[`totalMargen${n}` as keyof QuoteRow] as number | undefined) || 0)
+                              const key = `totalMargen${n}` as keyof QuoteRow
+                              const total = Number((q[key] as number | undefined) || 0)
                               return (
                                 <button
                                   key={n}

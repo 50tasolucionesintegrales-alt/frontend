@@ -22,6 +22,7 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
     }).then((res) => res.json())
 
     const quote = await resQuote.json()
+    console.log(quote)
 
     const usedProductIds = new Set(
         quote.items

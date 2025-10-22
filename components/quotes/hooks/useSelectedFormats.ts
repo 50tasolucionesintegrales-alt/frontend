@@ -1,33 +1,29 @@
-'use client'
-import { useEffect, useState } from 'react'
+// hooks/useSelectedFormats.ts
+import { useEffect, useState } from 'react';
 
-const clampFormats = (arr: number[]) =>
-  Array.from(new Set(arr.map(n => Math.max(1, Math.min(7, Number(n)||0)))))
-    .filter(Boolean)
-    .sort((a,b)=>a-b)
-
-export function useSelectedFormats(storageKey: string, initial: number[] = [1,2,3]) {
-  const [selected, setSelected] = useState<number[]>(initial)
+export function useSelectedFormats(key: string, initial: number[]) {
+  const [selected, setSelected] = useState<number[]>([]);   // SSR/1er paint: vacío
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(storageKey)
-      if (raw) {
-        const parsed = clampFormats(JSON.parse(raw))
-        if (parsed.length) setSelected(parsed)
-      }
-    } catch {}
-  }, [storageKey])
+      const saved = JSON.parse(localStorage.getItem(key) || 'null');
+      setSelected(Array.isArray(saved) ? saved : initial);
+    } catch {
+      setSelected(initial);
+    }
+    setHydrated(true);
+  }, [key]);
 
   useEffect(() => {
-    try { localStorage.setItem(storageKey, JSON.stringify(selected)) } catch {}
-  }, [storageKey, selected])
+    if (!hydrated) return;
+    localStorage.setItem(key, JSON.stringify(selected));
+  }, [hydrated, key, selected]);
 
-  const toggle = (n: number) =>
-    setSelected(prev => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n].sort((a,b)=>a-b))
+  const selectAll = () => setSelected([1,2,3,4,5,6,7,8,9,10]);
+  const clearAll  = () => setSelected([]);
+  const toggle    = (n: number) =>
+    setSelected(prev => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n]);
 
-  const selectAll = () => setSelected([1,2,3,4,5,6,7])
-  const clearAll  = () => setSelected([])
-
-  return { selected, toggle, selectAll, clearAll, setSelected }
+  return { selected, toggle, selectAll, clearAll, hydrated };
 }
