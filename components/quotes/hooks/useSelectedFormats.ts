@@ -1,19 +1,32 @@
 // hooks/useSelectedFormats.ts
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+function parseSaved(raw: string | null): number[] | null {
+  try {
+    const v = JSON.parse(raw ?? 'null');
+    return Array.isArray(v) && v.every(n => typeof n === 'number') ? v : null;
+  } catch {
+    return null;
+  }
+}
 
 export function useSelectedFormats(key: string, initial: number[]) {
-  const [selected, setSelected] = useState<number[]>([]);   // SSR/1er paint: vacío
+  // Si no quieres parpadeo inicial, puedes usar (() => initial)
+  const [selected, setSelected] = useState<number[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
+  // Evita re-ini repetida para la misma key aunque 'initial' cambie luego
+  const initializedKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(key) || 'null');
-      setSelected(Array.isArray(saved) ? saved : initial);
-    } catch {
-      setSelected(initial);
-    }
+    // Sólo inicializa si es la primera vez o si la key cambió
+    if (initializedKeyRef.current === key) return;
+
+    const saved = parseSaved(typeof window !== 'undefined' ? localStorage.getItem(key) : null);
+    setSelected(saved ?? initial);
     setHydrated(true);
-  }, [key]);
+    initializedKeyRef.current = key;
+  }, [key, initial]); // ✅ incluye initial (lint feliz)
 
   useEffect(() => {
     if (!hydrated) return;

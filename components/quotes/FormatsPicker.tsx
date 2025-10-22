@@ -28,8 +28,6 @@ export function FormatsPicker({
     { id: 10, label: 'Jessica Rabadán' },
   ];
 
-  const ALL_IDS = FORMATS.map(f => f.id)
-
   return (
     <div className="mb-4 mt-1 p-4 bg-white rounded-xl border border-[#e5e7eb] flex flex-col gap-3">
       <div className="flex flex-col gap-3">
