@@ -8,6 +8,7 @@ export default async function AdminMetricsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  // Esperar a que la promesa de searchParams se resuelva
   const params = await searchParams;
 
   const preset = (params?.preset as DtoPreset) || "last_30d";
@@ -15,8 +16,8 @@ export default async function AdminMetricsPage({
 
   const q: RangeQuery = { preset, limit };
 
-  // Función genérica para obtener métricas de forma segura
-  async function safeFetch<T>(fn: () => Promise<T>): Promise<T | []> {
+  // Función genérica segura para obtener métricas
+  async function safeFetch<T>(fn: () => Promise<T | null | undefined>): Promise<T | []> {
     try {
       const res = await fn();
       return res ?? [];
@@ -26,7 +27,7 @@ export default async function AdminMetricsPage({
     }
   }
 
-  // Obtener todas las métricas en paralelo
+  // Ejecutar todas las consultas en paralelo
   const [
     cotizadores,
     compradores,
