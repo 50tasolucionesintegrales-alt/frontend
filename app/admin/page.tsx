@@ -13,6 +13,16 @@ const params = await searchParams;
 
   const q: RangeQuery = { preset, limit };
 
+  const safeFetch = async (fn: () => Promise<any>) => {
+    try {
+      const res = await fn();
+      return res ?? [];
+    } catch (err) {
+      console.error("Error fetching metric:", err);
+      return [];
+    }
+  };
+
   const [
     cotizadores,
     compradores,
@@ -23,16 +33,15 @@ const params = await searchParams;
     userLoginActivity,
     userLoginCount,
   ] = await Promise.all([
-    MetricsAPI.topCotizadores(q),
-    MetricsAPI.topCompradores(q),
-    MetricsAPI.topProductos(q),
-    MetricsAPI.topLogins(q),
-    MetricsAPI.loginActivity(q),
-
-    MetricsAPI.quotesByUser(1, q).catch(() => null),
-    MetricsAPI.ordersByUser(1, q).catch(() => null),
-    MetricsAPI.userLoginActivity(1, q).catch(() => null),
-    MetricsAPI.userLoginCount(1, q).catch(() => null),
+    safeFetch(() => MetricsAPI.topCotizadores(q)),
+    safeFetch(() => MetricsAPI.topCompradores(q)),
+    safeFetch(() => MetricsAPI.topProductos(q)),
+    safeFetch(() => MetricsAPI.topLogins(q)),
+    safeFetch(() => MetricsAPI.loginActivity(q)),
+    safeFetch(() => MetricsAPI.quotesByUser(1, q)),
+    safeFetch(() => MetricsAPI.ordersByUser(1, q)),
+    safeFetch(() => MetricsAPI.userLoginActivity(1, q)),
+    safeFetch(() => MetricsAPI.userLoginCount(1, q)),
   ]);
 
   return (
