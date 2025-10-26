@@ -62,7 +62,8 @@ export function QuoteTable({
       try {
         const res = await updateItemAction({ errors: [], success: '' }, fd)
         if (res?.error) toast.error(res.error)
-      } catch (e) {
+      } catch (err) {
+        console.error(err)
         toast.error('Error actualizando margen')
       }
     }
@@ -210,12 +211,8 @@ export function QuoteTable({
 
 // ---------------- Mobile card ----------------
 function MobileQuoteCard({
-  quoteId,
   item,
   isProductQuote,
-  selectedFormats,
-  isSent,
-  onSubmit,
   getProductImageDataUrl,
 }: {
   quoteId: string

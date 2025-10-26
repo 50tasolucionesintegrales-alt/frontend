@@ -24,7 +24,7 @@ export default async function ServicePage({ params }: { params: { id: string } }
   const { id } = params;
   const token = (await cookies()).get('50TA_TOKEN')?.value;
 
-  const [service, drafts, orders] = await Promise.all([
+  const [service, drafts] = await Promise.all([
     fetchJSON<Service>(`${process.env.NEXT_PUBLIC_API_URL}/services/${id}`, token),
     fetchJSON<Quote[]>(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, token),
     getDraftOrders(),
