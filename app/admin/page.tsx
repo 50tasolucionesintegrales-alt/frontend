@@ -20,7 +20,9 @@ export default async function AdminMetricsPage({
   async function safeFetch<T>(fn: () => Promise<T | null | undefined>): Promise<T | []> {
     try {
       const res = await fn();
-      return res ?? [];
+      if (!res) return [];
+      if (typeof res === "string" && res.startsWith("<")) return []; // Evita HTML
+      return res;
     } catch (err) {
       console.error("Error fetching metric:", err);
       return [];
