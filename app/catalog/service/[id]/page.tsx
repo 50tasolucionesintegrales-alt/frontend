@@ -46,7 +46,7 @@ export default async function ServicePage({ params }: { params: Promise<{ id: st
 
   if (!isOk(serviceRes)) notFound();
 
-  const [orders, draftsResult] = await Promise.all([
+  const [draftsResult] = await Promise.all([
     ordersPromise,
     draftsPromise.then(r => (isOk(r) ? r.data : []))
   ]);
