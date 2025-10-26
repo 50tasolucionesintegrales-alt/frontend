@@ -1,19 +1,22 @@
 import { MetricsAPI, type RangeQuery, type DtoPreset } from "@/src/lib/metrics";
 import MetricsClient from "@/components/admin/Metrics";
 
+type SearchParams = Record<string, string | string[] | undefined>;
+
 export default async function AdminMetricsPage({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
+  searchParams: Promise<SearchParams>;
 }) {
-const params = await searchParams;
+  const params = await searchParams;
 
   const preset = (params?.preset as DtoPreset) || "last_30d";
-  const limit  = Number(params?.limit ?? 10);
+  const limit = Number(params?.limit ?? 10);
 
   const q: RangeQuery = { preset, limit };
 
-  const safeFetch = async (fn: () => Promise<any>) => {
+  // Función genérica para obtener métricas de forma segura
+  async function safeFetch<T>(fn: () => Promise<T>): Promise<T | []> {
     try {
       const res = await fn();
       return res ?? [];
@@ -21,8 +24,9 @@ const params = await searchParams;
       console.error("Error fetching metric:", err);
       return [];
     }
-  };
+  }
 
+  // Obtener todas las métricas en paralelo
   const [
     cotizadores,
     compradores,
@@ -52,7 +56,6 @@ const params = await searchParams;
       compradores={compradores}
       productos={productos}
       topLogins={topLogins}
-
       quotesByUser={quotesByUser}
       ordersByUser={ordersByUser}
       userLoginActivity={userLoginActivity}
