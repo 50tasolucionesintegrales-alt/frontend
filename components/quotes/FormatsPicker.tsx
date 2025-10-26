@@ -7,6 +7,7 @@ type Props = {
   toggle: (n: number) => void
   selectAll: () => void
   clearAll: () => void
+  hydrated: boolean
   disabled?: boolean
 }
 
