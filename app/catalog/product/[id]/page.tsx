@@ -21,8 +21,11 @@ async function fetchJSON<T>(url: string, token?: string): Promise<T | null> {
   }
 }
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+type PageParams = { id: string };
+
+export default async function ProductPage({ params }: { params: Promise<PageParams> }) {
+  const { id } = await params; // <-- aquí se hace await
+
   const token = (await cookies()).get('50TA_TOKEN')?.value;
 
   const [producto, drafts, orders] = await Promise.all([

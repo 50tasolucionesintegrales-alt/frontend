@@ -6,31 +6,50 @@ import ButtonBack from '@/components/ui/ButtonBack';
 import { FileText } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
-async function fetchJSON<T>(url: string, token?: string): Promise<T | null> {
+type FetchOk<T> = { ok: true; data: T };
+type FetchErr = { ok: false; status: number; error?: unknown };
+type FetchResult<T> = FetchOk<T> | FetchErr;
+
+function isOk<T>(x: FetchResult<T>): x is FetchOk<T> {
+  return x.ok === true;
+}
+
+async function fetchJSON<T>(
+  url: string,
+  token?: string,
+  init?: RequestInit
+): Promise<FetchResult<T>> {
   try {
     const res = await fetch(url, {
-      method: 'GET',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      ...init,
+      headers: { ...(init?.headers || {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       cache: 'no-store',
     });
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    return null;
+
+    if (!res.ok) return { ok: false, status: res.status };
+    const data = (await res.json()) as T;
+    return { ok: true, data };
+  } catch (error) {
+    return { ok: false, status: 0, error };
   }
 }
 
-export default async function ServicePage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function ServicePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params; // <-- ahora await
+
   const token = (await cookies()).get('50TA_TOKEN')?.value;
 
-  const [service, drafts] = await Promise.all([
-    fetchJSON<Service>(`${process.env.NEXT_PUBLIC_API_URL}/services/${id}`, token),
-    fetchJSON<Quote[]>(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, token),
-    getDraftOrders(),
-  ]);
+  const ordersPromise = getDraftOrders();
+  const draftsPromise = fetchJSON<Quote[]>(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, token);
 
-  if (!service) notFound();
+  const serviceRes = await fetchJSON<Service>(`${process.env.NEXT_PUBLIC_API_URL}/services/${id}`, token);
+
+  if (!isOk(serviceRes)) notFound();
+
+  const [orders, draftsResult] = await Promise.all([
+    ordersPromise,
+    draftsPromise.then(r => (isOk(r) ? r.data : []))
+  ]);
 
   return (
     <div className="p-6 bg-[#f8fafc] min-h-screen">
@@ -43,10 +62,7 @@ export default async function ServicePage({ params }: { params: { id: string } }
         <div className="hidden md:block"><ButtonBack href="/catalog" /></div>
       </header>
 
-      <ServiceDetail
-        service={service}
-        drafts={drafts ?? []}
-      />
+      <ServiceDetail service={serviceRes.data} drafts={draftsResult} />
     </div>
   );
 }
