@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { CheckSquare, XSquare } from 'lucide-react'
 
 type Props = {
@@ -7,14 +8,22 @@ type Props = {
   selectAll: () => void
   clearAll: () => void
   disabled?: boolean
-  hydrated?: boolean
 }
 
 export function FormatsPicker({
-  selected, toggle, selectAll, clearAll, disabled = false, hydrated = false
+  selected,
+  toggle,
+  selectAll,
+  clearAll,
+  disabled = false,
 }: Props) {
+  // Estado interno para saber si ya se hidrató el componente (solo en cliente)
+  const [hydrated, setHydrated] = useState(false)
 
-  // 🔟 Formatos disponibles (1..10)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+
   const FORMATS: { id: number; label: string }[] = [
     { id: 1, label: 'Goltech' },
     { id: 2, label: 'Juan Ángel Bazán' },
@@ -26,14 +35,22 @@ export function FormatsPicker({
     { id: 8, label: 'LEyses Soluciones' },
     { id: 9, label: 'Eduardo Suárez (ES)' },
     { id: 10, label: 'Jessica Rabadán' },
-  ];
+  ]
+
+  if (!hydrated) {
+    // Mientras no se hidrate, no renderizamos los inputs para evitar inconsistencias
+    return (
+      <div className="mb-4 mt-1 p-4 bg-white rounded-xl border border-[#e5e7eb] text-sm text-gray-400">
+        Cargando formatos...
+      </div>
+    )
+  }
 
   return (
     <div className="mb-4 mt-1 p-4 bg-white rounded-xl border border-[#e5e7eb] flex flex-col gap-3">
       <div className="flex flex-col gap-3">
         <span className="text-sm font-medium text-[#0F332D]">Formatos a usar:</span>
 
-        {/* Contenedor con scroll horizontal en móviles y wrap en pantallas grandes */}
         <div className="overflow-x-auto sm:overflow-visible">
           <div
             className="
@@ -50,35 +67,22 @@ export function FormatsPicker({
               return (
                 <label
                   key={id}
-                  className={
-                    `shrink-0 px-3 py-1.5 rounded-lg border text-sm cursor-pointer select-none transition-colors
-                    ${isActive
-                      ? 'bg-[#174940] text-white border-[#174940]'
-                      : 'bg-white text-[#174940] border-[#e5e7eb] hover:bg-[#f0f7f5]'}`
-                  }
+                  className={`shrink-0 px-3 py-1.5 rounded-lg border text-sm cursor-pointer select-none transition-colors
+                    ${
+                      isActive
+                        ? 'bg-[#174940] text-white border-[#174940]'
+                        : 'bg-white text-[#174940] border-[#e5e7eb] hover:bg-[#f0f7f5]'
+                    }`}
                   title={`Formato ${id}: ${label}`}
                 >
-                  {/* Antes de hidratar: NO controlado para evitar mismatch; después: controlado */}
-                  {hydrated ? (
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      disabled={disabled}
-                      checked={isActive}
-                      onChange={() => toggle(id)}
-                      aria-label={`Seleccionar formato ${id}: ${label}`}
-                    />
-                  ) : (
-                    <input
-                      type="checkbox"
-                      className="sr-only"
-                      disabled={disabled}
-                      defaultChecked={isActive}
-                      readOnly
-                      aria-label={`Seleccionar formato ${id}: ${label}`}
-                      suppressHydrationWarning
-                    />
-                  )}
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    disabled={disabled}
+                    checked={isActive}
+                    onChange={() => toggle(id)}
+                    aria-label={`Seleccionar formato ${id}: ${label}`}
+                  />
                   {label}
                 </label>
               )
@@ -90,7 +94,7 @@ export function FormatsPicker({
       <div className="flex gap-2 sm:justify-end">
         <button
           type="button"
-          onClick={selectAll}   // ← usa el setter atómico
+          onClick={selectAll}
           disabled={disabled}
           className="px-3 py-2 text-sm bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] flex items-center gap-2"
         >

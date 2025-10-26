@@ -4,22 +4,22 @@ import { Categoria, Producto, Service } from '@/src/schemas';
 import { ChevronRight, ChevronLeft, Search } from 'lucide-react';
 import { useState, useRef } from 'react';
 import ProductCard from './ProductCard';
-import ServiceCard from './ServiceCard'; // 👉 NUEVO
+import ServiceCard from './ServiceCard';
 
-type props = {
-  categorias: Categoria[]
-  productos: Producto[]
-  servicios: Service[]
-  getImageDataUrl: (id: string) => Promise<string | null>; // ← action
-}
+type Props = {
+  categorias: Categoria[];
+  productos: Producto[];
+  servicios: Service[];
+  getImageDataUrl: (id: string) => Promise<string | null>;
+};
 
-export default function Catalogo({ categorias, productos, servicios, getImageDataUrl }: props) {
+export default function Catalogo({ categorias, productos, servicios, getImageDataUrl }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<string>('todos'); // 'todos' será nuestro tab principal
+  const [activeTab, setActiveTab] = useState<string>('todos');
   const scrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const LIMITE_PRODUCTOS_SCROLL = 4;
 
-  // Función para filtrar productos según búsqueda y categoría
+  // Filtra productos según búsqueda y categoría
   const productosFiltrados = (categoriaId: string) => {
     const filteredBySearch = productos.filter(prod =>
       prod.nombre.toLowerCase().includes(searchQuery.toLowerCase())
@@ -28,7 +28,7 @@ export default function Catalogo({ categorias, productos, servicios, getImageDat
     return filteredBySearch.filter(prod => prod.category.id === categoriaId);
   };
 
-  // filtro de servicios por búsqueda
+  // Filtra servicios según búsqueda
   const serviciosFiltrados = servicios.filter(svc => {
     const q = searchQuery.toLowerCase();
     return (
@@ -70,7 +70,7 @@ export default function Catalogo({ categorias, productos, servicios, getImageDat
       {/* Pestañas de categorías */}
       <div className="mb-6 overflow-x-auto">
         <div className="flex space-x-2 min-w-max pb-2">
-          {/* Pestaña "Todos" */}
+          {/* Todos */}
           <button
             onClick={() => setActiveTab('todos')}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
@@ -82,7 +82,7 @@ export default function Catalogo({ categorias, productos, servicios, getImageDat
             Todos los productos ({productosFiltrados('todos').length})
           </button>
 
-          {/* 👉 NUEVO: pestaña "Servicios" */}
+          {/* Servicios */}
           <button
             onClick={() => setActiveTab('servicios')}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
@@ -94,7 +94,7 @@ export default function Catalogo({ categorias, productos, servicios, getImageDat
             Servicios ({serviciosFiltrados.length})
           </button>
 
-          {/* Pestañas de categorías */}
+          {/* Categorías */}
           {categorias.map((categoria) => (
             <button
               key={categoria.id}
@@ -111,60 +111,64 @@ export default function Catalogo({ categorias, productos, servicios, getImageDat
         </div>
       </div>
 
-      {/* Contenido de la pestaña activa */}
+      {/* Contenido de la pestaña */}
       <div className="mb-12">
+        {/* 🟢 TAB: Todos los productos */}
         {activeTab === 'todos' ? (
           <>
             {productosFiltrados('todos').length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-gray-500 italic text-lg">
-                  {searchQuery
-                    ? `No se encontraron productos para "${searchQuery}"`
-                    : 'No hay productos disponibles'}
-                </div>
+              <div className="text-center py-12 text-gray-500 italic text-lg">
+                {searchQuery
+                  ? `No se encontraron productos para "${searchQuery}"`
+                  : 'No hay productos disponibles'}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {productosFiltrados('todos').map((producto) => (
-                  <ProductCard key={producto.id} producto={producto} getImageDataUrl={getImageDataUrl} />
+                  <ProductCard
+                    key={producto.id}
+                    producto={producto}
+                    getImageDataUrl={getImageDataUrl}
+                  />
                 ))}
               </div>
             )}
           </>
-        ) : activeTab === 'servicios' ? ( // 👉 NUEVO: render de servicios
+        ) : activeTab === 'servicios' ? (
+          /* 🔵 TAB: Servicios */
           <>
             {serviciosFiltrados.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-gray-500 italic text-lg">
-                  {searchQuery
-                    ? `No se encontraron servicios para "${searchQuery}"`
-                    : 'No hay servicios disponibles'}
-                </div>
+              <div className="text-center py-12 text-gray-500 italic text-lg">
+                {searchQuery
+                  ? `No se encontraron servicios para "${searchQuery}"`
+                  : 'No hay servicios disponibles'}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {serviciosFiltrados.map((svc) => (
-                  <ServiceCard key={svc.id} service={svc} />
+                  <ServiceCard
+                    key={svc.id}
+                    service={svc}
+                  />
                 ))}
               </div>
             )}
           </>
         ) : (
-          // Contenido para categorías específicas
+          /* 🟠 TAB: Categorías específicas */
           categorias.map((categoria) => {
             if (categoria.id !== activeTab) return null;
 
             const productosCategoria = productosFiltrados(categoria.id);
 
             return (
-              <div key={categoria.id} className="mb-12">
+              <div key={categoria.id} className="mb-12 relative">
                 {productosCategoria.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-gray-500 italic text-lg">No hay productos en esta categoría.</div>
-                    <p className="text-gray-400 mt-2">Intenta con otra búsqueda o categoría.</p>
+                  <div className="text-center py-12 text-gray-500 italic text-lg">
+                    No hay productos en esta categoría.
                   </div>
                 ) : (
-                  <div className="relative">
+                  <>
                     {productosCategoria.length > LIMITE_PRODUCTOS_SCROLL && (
                       <button
                         title='categoria'
@@ -176,11 +180,17 @@ export default function Catalogo({ categorias, productos, servicios, getImageDat
                     )}
 
                     <div
-                      ref={(el) => { scrollRefs.current[categoria.id] = el; }}
+                      ref={(el) => {
+                        scrollRefs.current[categoria.id] = el;
+                      }}
                       className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
                     >
                       {productosCategoria.map((producto) => (
-                        <ProductCard key={producto.id} producto={producto} getImageDataUrl={getImageDataUrl} />
+                        <ProductCard
+                          key={producto.id}
+                          producto={producto}
+                          getImageDataUrl={getImageDataUrl}
+                        />
                       ))}
                     </div>
 
@@ -193,7 +203,7 @@ export default function Catalogo({ categorias, productos, servicios, getImageDat
                         <ChevronRight size={24} />
                       </button>
                     )}
-                  </div>
+                  </>
                 )}
               </div>
             );

@@ -5,14 +5,11 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Item } from '@/src/schemas'
 import { QuoteRow } from './QuoteRow'
 import Image from 'next/image'
+import { updateItemAction } from '@/actions/quotes/updateItemAction'
+import { toast } from 'react-toastify'
 
-type MarginKey =
-  | `margenPct${number}`
-  | `precioFinal${number}`
-  | `subtotal${number}`;
-
-type ItemWithMargins = Item & Partial<Record<MarginKey, number>>;
-
+type MarginKey = `margenPct${number}` | `precioFinal${number}` | `subtotal${number}`
+type ItemWithMargins = Item & Partial<Record<MarginKey, number>>
 
 export function QuoteTable({
   quoteId,
@@ -34,12 +31,42 @@ export function QuoteTable({
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [atStart, setAtStart] = useState(true)
   const [atEnd, setAtEnd] = useState(false)
+  const [localItems, setLocalItems] = useState<ItemWithMargins[]>(items)
+  const [columnCheckboxes, setColumnCheckboxes] = useState<Record<number, boolean>>(
+    selectedFormats.reduce((acc, n) => ({ ...acc, [n]: false }), {})
+  )
 
   const minWidth = useMemo(() => {
     const base = isProductQuote ? 880 : 760
     const perMargin = 220
     return base + selectedFormats.length * perMargin
   }, [isProductQuote, selectedFormats])
+
+  // Aplica o borra márgenes de una columna
+  const toggleColumnMargin = async (column: number, checked: boolean) => {
+    setColumnCheckboxes((prev) => ({ ...prev, [column]: checked }))
+    const updatedItems = localItems.map((item) => {
+      const newItem = { ...item }
+      if (checked) newItem[`margenPct${column}`] = column * 5
+      else newItem[`margenPct${column}`] = undefined
+      return newItem
+    })
+    setLocalItems(updatedItems)
+
+    // Actualiza cada fila en el servidor
+    for (const item of updatedItems) {
+      const fd = new FormData()
+      fd.append('itemId', item.id)
+      fd.append('quoteId', quoteId)
+      fd.append(`margenPct${column}`, String(item[`margenPct${column}`] ?? ''))
+      try {
+        const res = await updateItemAction({ errors: [], success: '' }, fd)
+        if (res?.error) toast.error(res.error)
+      } catch (e) {
+        toast.error('Error actualizando margen')
+      }
+    }
+  }
 
   const handleScrollState = () => {
     const el = scrollerRef.current
@@ -87,13 +114,6 @@ export function QuoteTable({
           </button>
         )}
 
-        {!atStart && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-white to-transparent z-10" />
-        )}
-        {!atEnd && (
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-white to-transparent z-10" />
-        )}
-
         <div
           ref={scrollerRef}
           className="bg-white rounded-2xl shadow-lg border border-[#e5e7eb] overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
@@ -130,10 +150,29 @@ export function QuoteTable({
                   </th>
                 )}
               </tr>
+
+              {/* Checkbox debajo de cada columna */}
+              <tr className="bg-[#f0f7f5]">
+                <td colSpan={isProductQuote ? 3 : 2}></td>
+                {selectedFormats.map((n) => (
+                  <td key={`chk-${n}`} className="text-center py-2">
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        title='checkbox'
+                        type="checkbox"
+                        checked={!!columnCheckboxes[n]}
+                        onChange={(e) => toggleColumnMargin(n, e.target.checked)}
+                        className="w-4 h-4 accent-[#174940]"
+                      />
+                    </label>
+                  </td>
+                ))}
+                { !isSent && <td></td> }
+              </tr>
             </thead>
 
             <tbody className="bg-white divide-y divide-[#e5e7eb]">
-              {items.map((item) => (
+              {localItems.map((item) => (
                 <QuoteRow
                   key={item.id}
                   item={item}
@@ -150,8 +189,9 @@ export function QuoteTable({
         </div>
       </div>
 
+      {/* Mobile cards */}
       <div className="md:hidden space-y-3">
-        {items.map((item) => (
+        {localItems.map((item) => (
           <MobileQuoteCard
             key={item.id}
             quoteId={quoteId}
@@ -168,6 +208,7 @@ export function QuoteTable({
   )
 }
 
+// ---------------- Mobile card ----------------
 function MobileQuoteCard({
   quoteId,
   item,
@@ -228,74 +269,6 @@ function MobileQuoteCard({
             <div className="text-xs text-gray-500 mt-1 line-clamp-2">
               {entity.descripcion ?? '—'}
             </div>
-          )}
-
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {isProductQuote && (
-              <label className="block">
-                <span className="text-xs text-gray-500">Cantidad</span>
-                <input
-                  type="number"
-                  name="cantidad"
-                  defaultValue={item.cantidad}
-                  min={1}
-                  disabled={isSent}
-                  form={`m-form-${item.id}`}
-                  className="mt-1 w-full border border-[#e5e7eb] rounded-lg px-2 py-1.5 text-sm"
-                />
-              </label>
-            )}
-
-            <label className="block">
-              <span className="text-xs text-gray-500">Costo unitario</span>
-              <div className="mt-1 font-medium text-[#174940]">
-                ${item.costo_unitario.toFixed(2)}
-              </div>
-            </label>
-          </div>
-
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            {selectedFormats.map((n) => {
-              const it = item as ItemWithMargins;
-              const pct = it[`margenPct${n}`];
-              const precio = it[`precioFinal${n}`];
-              const subtotal = it[`subtotal${n}`];
-              return (
-                <div key={n} className="border border-[#e5e7eb] rounded-lg p-2">
-                  <div className="text-[10px] text-gray-500">Margen {n}</div>
-                  <input
-                    title='margen'
-                    type="number"
-                    step="0.01"
-                    name={`margenPct${n}`}
-                    defaultValue={pct}
-                    disabled={isSent}
-                    form={`m-form-${item.id}`}
-                    className="mt-1 w-full border border-[#e5e7eb] rounded px-2 py-1 text-sm"
-                  />
-                  <div className="mt-2 text-[11px] text-gray-500">Precio final</div>
-                  <div className="text-sm font-semibold">${precio?.toFixed(2) ?? '—'}</div>
-                  <div className="mt-1 text-[11px] text-gray-500">Subtotal</div>
-                  <div className="text-sm font-semibold">${subtotal?.toFixed(2) ?? '—'}</div>
-                </div>
-              )
-            })}
-          </div>
-
-          {!isSent && (
-            <form id={`m-form-${item.id}`} action={onSubmit} className="mt-3">
-              <input type="hidden" name="itemId" value={item.id} />
-              <input type="hidden" name="quoteId" value={quoteId} />
-              {!isProductQuote && (
-                <input type="hidden" name="cantidad" value={item.cantidad} />
-              )}
-              <button
-                type="submit"
-                className="w-full mt-2 px-3 py-2 bg-[#63B23D] text-white rounded-lg text-sm"
-              >
-                Calcular
-              </button>
-            </form>
           )}
         </div>
       </div>

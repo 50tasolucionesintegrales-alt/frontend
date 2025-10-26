@@ -183,7 +183,7 @@ export default function PdfDownloadModal({
                 <Dialog.Title className="text-xl font-bold text-gray-900">
                   Descargar PDF — Formato {empresa}
                 </Dialog.Title>
-                <button onClick={handleClose}
+                <button onClick={handleClose} title='formato'
                   className="text-gray-500 hover:text-gray-700 rounded-full p-1 transition-colors">
                   <X size={20} />
                 </button>
@@ -259,6 +259,7 @@ export default function PdfDownloadModal({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
                     <input
+                      title='fecha'
                       type="date"
                       value={fecha}
                       onChange={(e) => setFecha(e.target.value)}
