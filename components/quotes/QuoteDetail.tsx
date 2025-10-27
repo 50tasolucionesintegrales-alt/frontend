@@ -1,12 +1,11 @@
 'use client'
 
-import { startTransition, useActionState, useEffect } from 'react'
+import { useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 import type { Quote, Item } from '@/src/schemas'
 import sendQuoteAction from '@/actions/quotes/sendQuoteAction'
 import reOpenQuoteAction from '@/actions/quotes/reOpenQuoteAction'
-import { updateItemAction } from '@/actions/quotes/updateItemAction'
 import { FileText } from 'lucide-react'
 
 import { useSelectedFormats } from './hooks/useSelectedFormats'
@@ -17,7 +16,7 @@ import { PdfButtons } from './PDFButtons'
 
 export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: Quote, getProductImageDataUrl: (id: string) => Promise<string | null> }) {
   const router = useRouter()
-  const { items, setItems } = useStableItems(String(quote.id), quote.items as Item[])
+  const { items} = useStableItems(String(quote.id), quote.items as Item[])
   const { selected, toggle, selectAll, clearAll, hydrated } =
     useSelectedFormats(`quote:${quote.id}:formats`, [1,2,3]);
 
@@ -38,20 +37,6 @@ export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: 
     if (stateReopen.success) { toast.success(stateReopen.success); router.refresh() }
   }, [stateReopen, router])
 
-  // update item (server action)
-  const handleUpdateItem = (fd: FormData) => {
-    startTransition(() => {
-      updateItemAction({ errors: [], success: '' }, fd).then(res => {
-        if (res?.error) return toast.error(res.error)
-        if (res?.item) {
-          setItems(prev => prev.map(i => (i.id === res.item.id ? res.item : i)))
-          toast.success('Ítem actualizado')
-          router.refresh()
-        }
-      })
-    })
-  }
-
   return (
     <section className="mb-12">
       {!isSent && (
@@ -60,7 +45,7 @@ export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: 
           toggle={toggle}
           selectAll={selectAll}
           clearAll={clearAll}
-          hydrated={hydrated}              // ← pásalo al picker
+          hydrated={hydrated}    
         />
       )}
 
@@ -70,7 +55,6 @@ export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: 
         isProductQuote={isProductQuote}
         selectedFormats={selected}
         isSent={isSent}
-        onSubmit={handleUpdateItem}
         getProductImageDataUrl={getProductImageDataUrl}
       />
 

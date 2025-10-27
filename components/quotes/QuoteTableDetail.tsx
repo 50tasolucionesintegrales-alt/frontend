@@ -4,20 +4,32 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Item } from '@/src/schemas'
 import { QuoteRow } from './QuoteRow'
-import Image from 'next/image'
-import { updateItemAction } from '@/actions/quotes/updateItemAction'
 import { toast } from 'react-toastify'
 
-type MarginKey = `margenPct${number}` | `precioFinal${number}` | `subtotal${number}`
+type MarginKey = `margenPct${number}` | `precioFinal${number}` | `subtotal${number}` | `ganancia${number}`
 type ItemWithMargins = Item & Partial<Record<MarginKey, number>>
 
+const PRESET_PCT = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+
+const formatToEmpresaMap: Record<number, string> = {
+    1: 'Goltech',
+    2: 'Juan Ángel Bazán',
+    3: 'Alejandra G. Hernández',
+    4: 'Adrián Orihuela',
+    5: 'Mariana Loeza',
+    6: 'Michelle',
+    7: 'Chalor',
+    8: 'Leyses Soluciones',
+    9: 'Eduardo Suárez (ES)',
+    10: 'Jessica Rabadán',
+}
+
+
 export function QuoteTable({
-  quoteId,
   items,
   isProductQuote,
   selectedFormats,
   isSent,
-  onSubmit,
   getProductImageDataUrl,
 }: {
   quoteId: string
@@ -25,7 +37,6 @@ export function QuoteTable({
   isProductQuote: boolean
   selectedFormats: number[]
   isSent: boolean
-  onSubmit: (fd: FormData) => void
   getProductImageDataUrl: (id: string) => Promise<string | null>
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null)
@@ -37,36 +48,50 @@ export function QuoteTable({
   )
 
   const minWidth = useMemo(() => {
-    const base = isProductQuote ? 880 : 760
-    const perMargin = 220
+    const base = isProductQuote ? 480 : 380
+    const perMargin = 140
     return base + selectedFormats.length * perMargin
   }, [isProductQuote, selectedFormats])
 
-  // Aplica o borra márgenes de una columna
-  const toggleColumnMargin = async (column: number, checked: boolean) => {
-    setColumnCheckboxes((prev) => ({ ...prev, [column]: checked }))
-    const updatedItems = localItems.map((item) => {
+  const calcularMargenes = (item: ItemWithMargins, format: number) => {
+    const pct = item[`margenPct${format}`] ?? 0
+    const subtotal = item.cantidad * item.costo_unitario
+    const precioFinal = subtotal + subtotal * (pct / 100)
+    const ganancia = precioFinal - subtotal
+    return { subtotal, precioFinal, ganancia }
+  }
+
+  const calcularTodo = () => {
+    const updated = localItems.map((item) => {
       const newItem = { ...item }
-      if (checked) newItem[`margenPct${column}`] = column * 5
-      else newItem[`margenPct${column}`] = undefined
+      selectedFormats.forEach((format) => {
+        const res = calcularMargenes(newItem, format)
+        newItem[`subtotal${format}`] = res.subtotal
+        newItem[`precioFinal${format}`] = res.precioFinal
+        newItem[`ganancia${format}`] = res.ganancia
+      })
       return newItem
     })
-    setLocalItems(updatedItems)
+    setLocalItems(updated)
+    toast.success('Todos los márgenes recalculados')
+  }
 
-    // Actualiza cada fila en el servidor
-    for (const item of updatedItems) {
-      const fd = new FormData()
-      fd.append('itemId', item.id)
-      fd.append('quoteId', quoteId)
-      fd.append(`margenPct${column}`, String(item[`margenPct${column}`] ?? ''))
-      try {
-        const res = await updateItemAction({ errors: [], success: '' }, fd)
-        if (res?.error) toast.error(res.error)
-      } catch (err) {
-        console.error(err)
-        toast.error('Error actualizando margen')
-      }
-    }
+  const toggleColumnMargin = (format: number, checked: boolean) => {
+    setColumnCheckboxes((prev) => ({ ...prev, [format]: checked }))
+    const formatIndex = selectedFormats.indexOf(format)
+    const pctDefault = checked ? PRESET_PCT[formatIndex] ?? 0 : 0
+    setLocalItems((prev) =>
+      prev.map((item) => {
+        const { subtotal } = calcularMargenes(item, format)
+        return {
+          ...item,
+          [`margenPct${format}`]: pctDefault,
+          [`subtotal${format}`]: subtotal,
+          [`precioFinal${format}`]: subtotal + subtotal * (pctDefault / 100),
+          [`ganancia${format}`]: subtotal * (pctDefault / 100),
+        }
+      })
+    )
   }
 
   const handleScrollState = () => {
@@ -95,6 +120,17 @@ export function QuoteTable({
 
   return (
     <div className="relative">
+      <div className="flex justify-end mb-2">
+        {!isSent && (
+          <button
+            onClick={calcularTodo}
+            className="px-4 py-2 bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] transition-colors"
+          >
+            Calcular todo
+          </button>
+        )}
+      </div>
+
       <div className="hidden md:block relative">
         {!atStart && (
           <button
@@ -120,153 +156,65 @@ export function QuoteTable({
           className="bg-white rounded-2xl shadow-lg border border-[#e5e7eb] overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
         >
           <table className="w-full divide-y divide-[#e5e7eb]" style={{ minWidth }}>
-            <thead className="bg-[#174940]">
-              <tr>
-                <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider sticky left-0 bg-[#174940] z-20">
-                  {isProductQuote ? 'Producto' : 'Servicio'}
-                </th>
-
-                {isProductQuote && (
-                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
-                    Cantidad
+           <thead className="bg-[#174940] text-white text-sm uppercase tracking-wider">
+            <tr>
+              <th className="py-4 px-4 sticky left-0 bg-[#174940] z-20 w-[180px]">
+                {isProductQuote ? 'Producto' : 'Servicio'}
+              </th>
+              {isProductQuote && <th className="py-4 px-4">Cantidad</th>}
+              <th className="py-4 px-4">Costo Unitario</th>
+              {selectedFormats.map((format) => {
+                // Mapeo de formato → empresa
+                const empresaNombre = formatToEmpresaMap[format] ?? `Formato ${format}`
+                return (
+                  <th key={format} className="py-4 px-4 text-center">
+                    Margen {empresaNombre}
                   </th>
-                )}
+                )
+              })}
+            </tr>
 
-                <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
-                  Costo Unitario
-                </th>
-
-                {selectedFormats.map((n) => (
-                  <th
-                    key={n}
-                    className="py-4 px-6 text-center text-sm font-medium text-white uppercase tracking-wider"
-                  >
-                    Margen {n}
-                  </th>
-                ))}
-
-                {!isSent && (
-                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider sticky right-0 bg-[#174940] z-20">
-                    Acción
-                  </th>
-                )}
-              </tr>
-
-              {/* Checkbox debajo de cada columna */}
+            {/* Checkbox debajo de cada columna */}
+            {!isSent && (
               <tr className="bg-[#f0f7f5]">
                 <td colSpan={isProductQuote ? 3 : 2}></td>
-                {selectedFormats.map((n) => (
-                  <td key={`chk-${n}`} className="text-center py-2">
-                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                {selectedFormats.map((format) => (
+                  <td key={`chk-${format}`} className="text-center py-2">
+                    <label className="inline-flex items-center gap-2 cursor-pointer text-[#63B23D]">
                       <input
-                        title='checkbox'
+                        title="checkbox"
                         type="checkbox"
-                        checked={!!columnCheckboxes[n]}
-                        onChange={(e) => toggleColumnMargin(n, e.target.checked)}
+                        checked={!!columnCheckboxes[format]}
+                        onChange={(e) => toggleColumnMargin(format, e.target.checked)}
                         className="w-4 h-4 accent-[#174940]"
                       />
+                      PREDET.
                     </label>
                   </td>
                 ))}
-                { !isSent && <td></td> }
               </tr>
-            </thead>
+            )}
+          </thead>
+
 
             <tbody className="bg-white divide-y divide-[#e5e7eb]">
-              {localItems.map((item) => (
+              {localItems.map((item, idx) => (
                 <QuoteRow
                   key={item.id}
                   item={item}
+                  setItem={(newItem) =>
+                    setLocalItems((prev) =>
+                      prev.map((it, i) => (i === idx ? newItem : it))
+                    )
+                  }
                   isProductQuote={isProductQuote}
                   selectedFormats={selectedFormats}
                   isSent={isSent}
-                  onSubmit={onSubmit}
-                  quoteId={quoteId}
                   getProductImageDataUrl={getProductImageDataUrl}
                 />
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* Mobile cards */}
-      <div className="md:hidden space-y-3">
-        {localItems.map((item) => (
-          <MobileQuoteCard
-            key={item.id}
-            quoteId={quoteId}
-            item={item}
-            isProductQuote={isProductQuote}
-            selectedFormats={selectedFormats}
-            isSent={isSent}
-            onSubmit={onSubmit}
-            getProductImageDataUrl={getProductImageDataUrl}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ---------------- Mobile card ----------------
-function MobileQuoteCard({
-  item,
-  isProductQuote,
-  getProductImageDataUrl,
-}: {
-  quoteId: string
-  item: Item
-  isProductQuote: boolean
-  selectedFormats: number[]
-  isSent: boolean
-  onSubmit: (fd: FormData) => void
-  getProductImageDataUrl: (id: string) => Promise<string | null>
-}) {
-  const entity = isProductQuote ? item.product! : item.service!
-  const [img, setImg] = useState<string | null>(null)
-
-  useEffect(() => {
-    let active = true
-    if (isProductQuote && item.product?.id) {
-      getProductImageDataUrl(String(item.product.id))
-        .then((u) => active && setImg(u ?? null))
-        .catch(() => active && setImg(null))
-    } else {
-      setImg(null)
-    }
-    return () => {
-      active = false
-    }
-  }, [isProductQuote, item.product?.id, getProductImageDataUrl])
-
-  return (
-    <div className="border border-[#e5e7eb] rounded-xl p-3 bg-white">
-      <div className="flex items-start gap-3">
-        {isProductQuote && (
-          <div className="h-14 w-14 rounded-lg border border-[#e5e7eb] overflow-hidden bg-gray-50 flex items-center justify-center">
-            {img ? (
-              <Image
-                src={img ?? "/placeholder.png"}
-                alt={entity.nombre}
-                width={400}
-                height={400}
-                className="h-full w-full object-cover"
-                unoptimized
-              />
-            ) : (
-              <div className="text-xs text-gray-400">Sin img</div>
-            )}
-          </div>
-        )}
-
-        <div className="flex-1">
-          <div className="font-medium text-[#0F332D]">{entity.nombre}</div>
-          {!isProductQuote && (
-            <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-              {entity.descripcion ?? '—'}
-            </div>
-          )}
         </div>
       </div>
     </div>
