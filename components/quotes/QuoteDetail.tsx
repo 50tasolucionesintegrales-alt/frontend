@@ -14,7 +14,7 @@ import { FormatsPicker } from './FormatsPicker'
 import { QuoteTable } from './QuoteTableDetail'
 import { PdfButtons } from './PDFButtons'
 
-export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: Quote, getProductImageDataUrl: (id: string) => Promise<string | null> }) {
+export default function QuoteDetail(quote : Quote) {
   const router = useRouter()
   const { items} = useStableItems(String(quote.id), quote.items as Item[])
   const { selected, toggle, selectAll, clearAll, hydrated } =
@@ -23,8 +23,8 @@ export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: 
   const isSent = quote.status === 'sent'
   const isProductQuote = quote.tipo === 'productos'
 
-  const [stateSend, dispatchSend]   = useActionState(sendQuoteAction, { errors: [], success: '' })
-  const [stateReopen, dispatchReopen] = useActionState(reOpenQuoteAction, { errors: [], success: '' })
+  const [stateSend, dispatchSend, pendingSend]   = useActionState(sendQuoteAction, { errors: [], success: '' })
+  const [stateReopen, dispatchReopen, pendingReopen] = useActionState(reOpenQuoteAction, { errors: [], success: '' })
 
   // toasts + refresh
   useEffect(() => {
@@ -55,7 +55,6 @@ export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: 
         isProductQuote={isProductQuote}
         selectedFormats={selected}
         isSent={isSent}
-        getProductImageDataUrl={getProductImageDataUrl}
       />
 
       <div className="mt-8">
@@ -66,7 +65,9 @@ export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: 
             <button type="submit" disabled={selected.length === 0}
               className="px-6 py-3 bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] transition-colors flex items-center gap-2 font-medium disabled:opacity-50">
               <FileText className="h-5 w-5" />
-              <span>Enviar / Generar</span>
+              <span>
+                {pendingSend ? 'Enviando...' : 'Enviar cotización'}
+              </span>
             </button>
             {selected.length > 0 && (
               <div className="text-sm text-[#174940]">Seleccionados: {selected.join(', ')}</div>
@@ -82,7 +83,7 @@ export default function QuoteDetail({ quote, getProductImageDataUrl }: { quote: 
                 <button type="submit"
                   className="px-6 py-3 bg-white border border-[#e5e7eB] text-[#0F332D] rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center gap-2">
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3v18" stroke="currentColor" strokeWidth="2"/></svg>
-                  Reabrir cotización
+                  {pendingReopen ? 'Reabriendo...' : 'Reabrir cotización'}
                 </button>
               </form>
             }

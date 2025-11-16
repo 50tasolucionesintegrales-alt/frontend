@@ -123,7 +123,6 @@ export const ProductSchema = z.object({
         createdAt: z.string().datetime(),
 });
 
-
 export const ServiceSchema = z.object({
         id: z.string(),
         createdBy: userSchema,
@@ -144,6 +143,7 @@ export const ItemSchema = z.object({
         service: ServiceSchema.optional().nullable(),
         cantidad: z.number(),
         costo_unitario: z.number(),
+        imageUrl: z.string().url().nullable().optional(),
         margenPct1: z.number(),
         margenPct2: z.number(),
         margenPct3: z.number(),

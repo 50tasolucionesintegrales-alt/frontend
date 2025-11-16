@@ -5,18 +5,21 @@ import { FileText } from "lucide-react"
 export default async function QuotesPage() {
   const token = (await cookies()).get("50TA_TOKEN")?.value
 
-  const resDraft = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  })
+  const fetchOptions = {
+    headers: { Authorization: `Bearer ${token}` }
+  }
 
-  const resSend = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/sent`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  })
+  const resDraftPromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, {
+    ...fetchOptions, 
+    next: { revalidate: 60, tags: ['quotes-drafts'] }
+  }).then((res) => res.json())
 
-  const quotesDraft = await resDraft.json()
-  const quotesSend = await resSend.json()
+  const resSendPromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/sent`, {
+    ...fetchOptions,
+    next: { revalidate: 60, tags: ['quotes-sent'] }
+  }).then((res) => res.json())
+
+  const [quotesDraft, quotesSend] = await Promise.all([resDraftPromise, resSendPromise])
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-10">

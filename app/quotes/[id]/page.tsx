@@ -8,21 +8,41 @@ import ButtonBack from "@/components/ui/ButtonBack"
 export default async function QuotePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const token = (await cookies()).get('50TA_TOKEN')?.value
-    const resQuote = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: 'no-store'
-    })
 
-    const productos = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+    const fetchOptions = {
         headers: { Authorization: `Bearer ${token}` },
+    }
+
+    const quotePromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${id}`, {
+        ...fetchOptions,
+        next: { revalidate: 60, tags: [`quote-${id}`] },
     }).then((res) => res.json())
 
-    const servicios = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`, {
-        headers: { Authorization: `Bearer ${token}` },
+    const productsPromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+        ...fetchOptions,
+        next: { revalidate: 60 },
     }).then((res) => res.json())
 
-    const quote = await resQuote.json()
-    console.log(quote)
+    const servicesPromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`, {
+        ...fetchOptions,
+        next: { revalidate: 60 },
+    }).then((res) => res.json())
+
+    const [quote, productos, servicios] = await Promise.all([
+        quotePromise,
+        productsPromise,
+        servicesPromise,
+    ])
+
+    const itemsWithImages = await Promise.all(
+        quote.items.map(async (item: Item) => {
+            if (item.product?.id) {
+                const imageUrl = await getProductImageDataUrl(String(item.product.id))
+                return { ...item, imageUrl }
+            }
+            return item
+        })
+    ) 
 
     const usedProductIds = new Set(
         quote.items
@@ -42,6 +62,11 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
     const disponibles =
         quote.tipo === 'productos' ? productosFiltrados : serviciosFiltrados
 
+    const quoteWithImages = {
+    ...quote,
+    items: itemsWithImages, // <-- USAMOS LOS ITEMS MODIFICADOS
+    }       
+
     return (
         <div className="p-6">
             {/* Header con título y botón de volver */}
@@ -56,7 +81,7 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
                 <AddItemsModal quoteId={id} quoteType={quote.tipo} availableItems={disponibles} />
             )}
 
-            <QuoteDetail quote={quote} getProductImageDataUrl={getProductImageDataUrl} />
+            <QuoteDetail {...quoteWithImages} />
         </div>
     )
 }

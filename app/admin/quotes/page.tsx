@@ -3,13 +3,13 @@ import QuotesSentTable from '@/components/admin/QuoteSentTable'
 import { FileText } from 'lucide-react'
 import ButtonBack from '@/components/ui/ButtonBack'
 
-export default async function OrdersQuotesPage() {
+export default async function QuotesAdminPage() {
   const token = (await cookies()).get('50TA_TOKEN')?.value
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/sent`, {
     method: 'GET',
     headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store',
+    next: { revalidate: 60 },
   })
 
   const quotes = await res.json()

@@ -1,6 +1,7 @@
 'use client'
 
 import { Template } from '@/actions/admin/templates/actions'
+import Image from 'next/image'
 
 type Props = { 
   template: Template
@@ -12,10 +13,12 @@ export default function TemplateCard({ template, onView }: Props) {
     <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition p-4 flex flex-col gap-3">
       <div className="flex flex-col items-center">
         {/* Miniatura */}
-        <img
+        <Image
           src={template.data}
           alt={template.name}
-          className="w-24 h-32 object-contain rounded border"
+          width={96}   // equivalente a w-24
+          height={128} // equivalente a h-32
+          className="object-contain rounded border"
         />
         <div className="mt-2 text-sm text-gray-700">{template.name}</div>
       </div>

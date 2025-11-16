@@ -2,6 +2,7 @@
 
 import { Template } from '@/actions/admin/templates/actions'
 import { X } from 'lucide-react'
+import Image from 'next/image'
 
 type Props = {
   template: Template
@@ -30,10 +31,12 @@ export default function ViewTemplateModal({ template, onClose }: Props) {
           </button>
         </div>
 
-        <img
+        <Image
           src={template.data}
           alt={template.name}
-          className="w-full h-auto object-contain rounded"
+          width={96}   // equivalente a w-24
+          height={128} // equivalente a h-32
+          className="object-contain rounded border"
         />
       </div>
     </div>

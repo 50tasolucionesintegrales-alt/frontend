@@ -2,6 +2,7 @@
 
 import normalizeErrors from '@/src/helpers/normalizeError'
 import { successSchema } from '@/src/schemas'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 
 type ActionType = {
@@ -33,6 +34,8 @@ export async function createDraft(prevState: ActionType, formData: FormData) {
         success: ''
     }
   }
+
+  revalidateTag('quotes-drafts')
 
   return {
     errors: [],

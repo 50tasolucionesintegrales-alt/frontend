@@ -6,15 +6,19 @@ import ButtonBack from "@/components/ui/ButtonBack";
 export default async function OrdersAdminPage() {
   const token = (await cookies()).get("50TA_TOKEN")?.value;
 
-  const OrdersPend = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/pending`, {
+  const resOrdersPend = fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/pending`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
+    next: { revalidate: 10 },
   }).then((res) => res.json());
 
-  const OrdersRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/resolved`, {
+  const resOrdersRes = fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/resolved`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
+    next: { revalidate: 10 },
   }).then((res) => res.json());
+
+  const [OrdersPend, OrdersRes] = await Promise.all([resOrdersPend, resOrdersRes]);
 
   return (
     <div className="flex-1 p-6 md:p-8 bg-gray-50 min-h-screen">

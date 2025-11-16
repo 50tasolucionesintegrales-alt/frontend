@@ -3,6 +3,7 @@
 import normalizeErrors from "@/src/helpers/normalizeError"
 import { successSchema } from "@/src/schemas"
 import { method } from "lodash"
+import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 
 type ActionType = {
@@ -23,8 +24,6 @@ export default async function reOpenQuoteAction(prevState: ActionType, formData:
     })
 
     const json = await res.json()
-    console.log(res)
-    console.log(json)
     if(!res.ok) {
         return {
             ...normalizeErrors(json),
@@ -32,6 +31,7 @@ export default async function reOpenQuoteAction(prevState: ActionType, formData:
         }
     }
 
+    revalidatePath(`/quotes/${quoteId}`)
     return {
         errors: [],
         success: 'La cotización se reabrio correctamente'

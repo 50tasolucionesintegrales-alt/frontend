@@ -2,7 +2,6 @@
 
 import { Box, Percent } from 'lucide-react'
 import type { Item } from '@/src/schemas'
-import { useEffect, useState } from 'react'
 import Image from 'next/image'
 
 type MarginKey = `margenPct${number}` | `precioFinal${number}` | `subtotal${number}` | `ganancia${number}`
@@ -14,43 +13,38 @@ export function QuoteRow({
   isProductQuote,
   selectedFormats,
   isSent,
-  getProductImageDataUrl,
 }: {
   item: ItemWithMargins
   setItem: (newItem: ItemWithMargins) => void
   isProductQuote: boolean
   selectedFormats: number[]
   isSent: boolean
-  getProductImageDataUrl: (id: string) => Promise<string | null>
 }) {
   const entity = isProductQuote ? item.product! : item.service!
-  const [imgSrc, setImgSrc] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!isProductQuote || !item.product?.id) {
-      setImgSrc(null)
-      return
-    }
-    let active = true
-    getProductImageDataUrl(String(item.product.id))
-      .then((url) => active && setImgSrc(url))
-      .catch(() => active && setImgSrc(null))
-    return () => {
-      active = false
-    }
-  }, [isProductQuote, item.product?.id, getProductImageDataUrl])
+  const imgSrc = isProductQuote && item.product?.id
+    ? (item as Item).imageUrl
+    : null
 
-  const calcularMargen = (formatIndex: number, pct: number) => {
-    const subtotal = item.cantidad * item.costo_unitario
-    const precioFinal = subtotal + (subtotal * pct / 100)
-    const ganancia = precioFinal - subtotal
+  // Al cambiar un porcentaje, actualizamos el margen localmente (y calculamos valores temporales de UX)
+  const calcularMargen = (format: number, pct: number) => {
+    const key = `margenPct${format}` as keyof ItemWithMargins
+    // actualizamos solo el porcentaje; los precios finales y subtotales los calculará el backend
+    // pero podemos mostrar un cálculo temporal para buena UX
+    const cantidad = Number(item.cantidad) || 0
+    const costo = Number(item.costo_unitario) || 0
+    const subtotal = +(cantidad * costo).toFixed(2)
+    const precioFinal = +(subtotal * (1 + (pct || 0) / 100)).toFixed(2)
+    const ganancia = +(precioFinal - subtotal).toFixed(2)
+
     setItem({
       ...item,
-      [`margenPct${formatIndex}`]: pct,
-      [`precioFinal${formatIndex}`]: precioFinal,
-      [`subtotal${formatIndex}`]: subtotal,
-      [`ganancia${formatIndex}`]: ganancia,
-    })
+      [key]: pct,
+      // también dejamos estos valores temporales para mostrar inmediatamente
+      [`subtotal${format}`]: subtotal,
+      [`precioFinal${format}`]: precioFinal,
+      [`ganancia${format}`]: ganancia,
+    } as ItemWithMargins)
   }
 
   return (
@@ -87,21 +81,25 @@ export function QuoteRow({
             min={0}
             value={item.cantidad}
             className="w-16 text-center border border-[#e5e7eb] rounded-lg px-1 py-1 bg-gray-100 cursor-not-allowed"
-            disabled={true} 
+            disabled={true}
           />
         </td>
       )}
 
-
       <td className="py-4 px-4 text-center font-medium text-[#174940] w-[100px]">
-        ${item.costo_unitario.toFixed(2)}
+        ${Number(item.costo_unitario).toFixed(2)}
       </td>
 
       {selectedFormats.map((format) => {
-        const pct = item[`margenPct${format}`] ?? 0
-        const subtotal = item[`subtotal${format}`] ?? item.cantidad * item.costo_unitario
-        const precioFinal = item[`precioFinal${format}`] ?? subtotal + subtotal * (pct / 100)
-        const ganancia = item[`ganancia${format}`] ?? precioFinal - subtotal
+        const keyPct = `margenPct${format}` as keyof ItemWithMargins
+        const keySub = `subtotal${format}` as keyof ItemWithMargins
+        const keyPrecio = `precioFinal${format}` as keyof ItemWithMargins
+        const keyGan = `ganancia${format}` as keyof ItemWithMargins
+
+        const pct = Number(item[keyPct]) || 0
+        const subtotal = Number(item[keySub]) || (Number(item.cantidad) * Number(item.costo_unitario))
+        const precioFinal = Number(item[keyPrecio]) || (subtotal * (1 + (pct / 100)))
+        const ganancia = Number(item[keyGan]) || (precioFinal - subtotal)
 
         return (
           <td key={format} className="py-4 px-4 text-center min-w-[120px]">
@@ -122,13 +120,13 @@ export function QuoteRow({
               </div>
               <div className="bg-[#f8fafc] p-1 rounded-lg w-full text-center border border-[#e5e7eb] text-xs">
                 <div>Precio Final</div>
-                <div className="font-bold">${precioFinal.toFixed(2)}</div>
+                <div className="font-bold">${Number(precioFinal).toFixed(2)}</div>
                 <div className="border-t border-[#e5e7eb] my-0.5" />
                 <div>Subtotal</div>
-                <div className="font-bold">${subtotal.toFixed(2)}</div>
+                <div className="font-bold">${Number(subtotal).toFixed(2)}</div>
                 <div className="border-t border-[#e5e7eb] my-0.5" />
                 <div>Ganancia</div>
-                <div className="font-bold">${ganancia.toFixed(2)}</div>
+                <div className="font-bold">${Number(ganancia).toFixed(2)}</div>
               </div>
             </div>
           </td>

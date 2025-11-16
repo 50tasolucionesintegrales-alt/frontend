@@ -1,6 +1,7 @@
 'use server';
 
 import normalizeErrors from '@/src/helpers/normalizeError';
+import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
 type ActionType = { errors: string[]; success: string };
@@ -130,7 +131,6 @@ export async function addItemsAction(prevState: ActionType, formData: FormData) 
     return { errors: [normalized.error], success: '' };
   }
 
-  console.log('Agregar items a cotización', quoteId, normalized);
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${quoteId}/items`, {
     method: 'POST',
     headers: {
@@ -147,5 +147,6 @@ export async function addItemsAction(prevState: ActionType, formData: FormData) 
     return { ...normalizeErrors(json), success: '' };
   }
 
+  revalidatePath(`/quotes/${quoteId}`);
   return { errors: [], success: 'Ítems agregados correctamente' };
 }

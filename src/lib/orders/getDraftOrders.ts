@@ -7,7 +7,8 @@ export default async function getDraftOrders() {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`
-        }
+        },
+        next: { revalidate: 10 }
     }).then((res) => res.json())
 
     return draftOrders
