@@ -62,12 +62,10 @@ export function QuoteTable({
     selectedFormats.reduce((acc, n) => ({ ...acc, [n]: false }), {})
   )
 
-  // 'localItems' guarda los cambios temporales
   const [localItems, setLocalItems] = useState<ItemWithMargins[]>(items)
   const [isSaving, setIsSaving] = useState(false)
   const router = useRouter()
 
-  // Sincroniza el estado local si las props (datos del servidor) cambian
   useEffect(() => {
     setLocalItems(items)
   }, [items])
@@ -81,7 +79,6 @@ export function QuoteTable({
   const handleSaveAll = async () => {
     setIsSaving(true)
 
-    // 1. Mapear el estado local al DTO del backend
     const dtos: BatchUpdateItemDto[] = localItems.map(item => ({
       id: item.id,
       cantidad: item.cantidad,
@@ -98,17 +95,14 @@ export function QuoteTable({
       margenPct10: (item as Item).margenPct10 ?? null,
     }))
 
-    // 2. Llamar a la Server Action con el array de DTOs
     const result = await updateQuoteItemsAction(quoteId, dtos)
 
     if (result.success) {
       toast.success('¡Cambios guardados con éxito!')
-      // Si el backend devolvió los items actualizados, actualizamos el estado local
       const returnedItems = (result).items
       if (Array.isArray(returnedItems) && returnedItems.length > 0) {
         setLocalItems(returnedItems as ItemWithMargins[])
       } else {
-        // Si no devolvió items, forzamos refresco para obtener los datos recalculados
         router.refresh()
       }
     } else {
@@ -141,14 +135,12 @@ export function QuoteTable({
 
   const scrollByX = (dx: number) => scrollerRef.current?.scrollBy({ left: dx, behavior: 'smooth' })
 
-  // Aplica/quita el preset a toda la columna (no guarda en backend automáticamente)
   const toggleColumnMargin = (format: number, checked: boolean) => {
     setColumnCheckboxes(prev => ({ ...prev, [format]: checked }))
     const preset = PRESET_PCT[format - 1] ?? PRESET_PCT[0]
     setLocalItems(prev =>
       prev.map(it => ({
         ...it,
-        // si se activa, aplicamos el preset; si se desactiva, lo dejamos null (para que backend lo interprete)
         [`margenPct${format}`]: checked ? preset : null,
       }))
     )
@@ -156,32 +148,40 @@ export function QuoteTable({
 
   return (
     <div className="relative">
-      <div className="flex justify-end mb-2">
-        {!isSent && (
-          <button
-            onClick={handleSaveAll}
-            className="px-4 py-2 bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] transition-colors"
-          >
-            {isSaving ? 'Calculando...' : 'Calcular todos los cambios'}
-          </button>
-        )}
-      </div>
 
-      <div className="hidden md:block relative">
+      {!isSent && (
+        <div className="flex flex-col justify-end mb-4">
+          <div className="flex justify-end">
+            <button
+              onClick={handleSaveAll}
+              className="px-4 py-2 bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] transition-colors"
+            >
+              {isSaving ? 'Calculando...' : 'Calcular todos los cambios'}
+            </button>
+          </div>
+
+          <p className="text-sm text-gray-600 mt-1 pr-2 text-right">
+            Antes de enviar la cotización, asegúrate de calcular todos los precios para que se guarden correctamente.
+          </p>
+        </div>
+      )}
+
+      <div className="relative">
+
         {!atStart && (
           <button
+            title='start'
             onClick={() => scrollByX(-320)}
-            className="hidden lg:flex items-center justify-center absolute top-1/2 -translate-y-1/2 left-2 z-20 bg-white text-[#174940] p-2 rounded-full shadow-md hover:bg-[#f0f7f5]"
-            aria-label="Scroll izquierdo"
+            className="hidden lg:flex items-center justify-center absolute top-1/2 -translate-y-1/2 left-2 z-30 bg-white text-[#174940] p-2 rounded-full shadow-md hover:bg-[#f0f7f5]"
           >
             <ChevronLeft size={22} />
           </button>
         )}
         {!atEnd && (
           <button
+            title='end'
             onClick={() => scrollByX(320)}
-            className="hidden lg:flex items-center justify-center absolute top-1/2 -translate-y-1/2 right-2 z-20 bg-white text-[#174940] p-2 rounded-full shadow-md hover:bg-[#f0f7f5]"
-            aria-label="Scroll derecho"
+            className="hidden lg:flex items-center justify-center absolute top-1/2 -translate-y-1/2 right-2 z-30 bg-white text-[#174940] p-2 rounded-full shadow-md hover:bg-[#f0f7f5]"
           >
             <ChevronRight size={22} />
           </button>
@@ -189,16 +189,28 @@ export function QuoteTable({
 
         <div
           ref={scrollerRef}
-          className="bg-white rounded-2xl shadow-lg border border-[#e5e7eb] overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+          className="bg-white rounded-2xl shadow-lg border border-[#e5e7eb] overflow-x-auto"
         >
-          <table className="w-full divide-y divide-[#e5e7eb]" style={{ minWidth }}>
+          <table className="divide-y divide-[#e5e7eb]" style={{ minWidth }}>
             <thead className="bg-[#174940] text-white text-sm uppercase tracking-wider">
               <tr>
-                <th className="py-4 px-4 sticky left-0 bg-[#174940] z-20 w-[180px]">
+                <th
+                  className="
+                    py-4 px-4 w-[180px]
+                    sticky left-0 z-20 bg-[#174940]
+                  "
+                >
                   {isProductQuote ? 'Producto' : 'Servicio'}
                 </th>
-                {isProductQuote && <th className="py-4 px-4">Cantidad</th>}
+
+                {isProductQuote && (
+                  <th className="py-4 px-4">
+                    Cantidad
+                  </th>
+                )}
+
                 <th className="py-4 px-4">Costo Unitario</th>
+
                 {selectedFormats.map((format) => {
                   const empresaNombre = formatToEmpresaMap[format] ?? `Formato ${format}`
                   return (
@@ -209,10 +221,15 @@ export function QuoteTable({
                 })}
               </tr>
 
-              {/* Checkbox debajo de cada columna */}
               {!isSent && (
                 <tr className="bg-[#f0f7f5]">
-                  <td colSpan={isProductQuote ? 3 : 2}></td>
+                  <td
+                    className="sticky left-0 bg-[#f0f7f5] z-20"
+                  ></td>
+
+                  {isProductQuote && <td></td>}
+                  <td></td>
+
                   {selectedFormats.map((format) => (
                     <td key={`chk-${format}`} className="text-center py-2">
                       <label className="inline-flex items-center gap-2 cursor-pointer text-[#63B23D]">

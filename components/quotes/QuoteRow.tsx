@@ -26,11 +26,9 @@ export function QuoteRow({
     ? (item as Item).imageUrl
     : null
 
-  // Al cambiar un porcentaje, actualizamos el margen localmente (y calculamos valores temporales de UX)
   const calcularMargen = (format: number, pct: number) => {
     const key = `margenPct${format}` as keyof ItemWithMargins
-    // actualizamos solo el porcentaje; los precios finales y subtotales los calculará el backend
-    // pero podemos mostrar un cálculo temporal para buena UX
+
     const cantidad = Number(item.cantidad) || 0
     const costo = Number(item.costo_unitario) || 0
     const subtotal = +(cantidad * costo).toFixed(2)
@@ -40,7 +38,6 @@ export function QuoteRow({
     setItem({
       ...item,
       [key]: pct,
-      // también dejamos estos valores temporales para mostrar inmediatamente
       [`subtotal${format}`]: subtotal,
       [`precioFinal${format}`]: precioFinal,
       [`ganancia${format}`]: ganancia,
@@ -49,10 +46,25 @@ export function QuoteRow({
 
   return (
     <tr className="hover:bg-[#f0f7f5] transition-colors">
-      <td className="py-4 px-4 sticky left-0 bg-white z-10 w-[180px]">
-        <div className="flex items-center gap-2">
+
+      {/* COLUMNA PRODUCTO — RESPONSIVA Y STICKY */}
+      <td
+        className="
+          py-4 px-4 sticky left-0 bg-white z-20 
+          w-[200px] min-w-[200px]
+
+          sm:w-[180px] sm:min-w-[180px]
+          xs:w-[140px] xs:min-w-[140px]
+          max-w-[140px]
+
+          whitespace-normal break-words leading-tight
+          border-r border-[#e5e7eb] shadow-md
+        "
+      >
+        <div className="flex items-start gap-2">
+
           {isProductQuote ? (
-            <div className="h-10 w-10 rounded-lg overflow-hidden border border-[#e5e7eb]">
+            <div className="h-10 w-10 rounded-lg overflow-hidden border border-[#e5e7eb] flex-shrink-0">
               {imgSrc ? (
                 <Image
                   src={imgSrc}
@@ -69,7 +81,10 @@ export function QuoteRow({
               )}
             </div>
           ) : null}
-          <div className="truncate">{entity.nombre}</div>
+
+          <div className="whitespace-normal break-words leading-tight text-[15px]">
+            {entity.nombre}
+          </div>
         </div>
       </td>
 
@@ -104,6 +119,7 @@ export function QuoteRow({
         return (
           <td key={format} className="py-4 px-4 text-center min-w-[120px]">
             <div className="flex flex-col items-center gap-1">
+
               <div className="relative">
                 <input
                   title='porcentaje'
@@ -113,25 +129,28 @@ export function QuoteRow({
                   onChange={(e) =>
                     calcularMargen(format, parseFloat(e.target.value) || 0)
                   }
-                  className="w-20 text-center px-3 py-1.5 pl-7 border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none"
+                  className="w-20 text-center px-3 py-1.5 pl-7 border border-[#e5e7eb] rounded-lg
+                              focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none"
                   disabled={isSent}
                 />
                 <Percent className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
+
               <div className="bg-[#f8fafc] p-1 rounded-lg w-full text-center border border-[#e5e7eb] text-xs">
                 <div>Precio Final</div>
-                <div className="font-bold">${Number(precioFinal).toFixed(2)}</div>
+                <div className="font-bold">${precioFinal.toFixed(2)}</div>
                 <div className="border-t border-[#e5e7eb] my-0.5" />
                 <div>Subtotal</div>
-                <div className="font-bold">${Number(subtotal).toFixed(2)}</div>
+                <div className="font-bold">${subtotal.toFixed(2)}</div>
                 <div className="border-t border-[#e5e7eb] my-0.5" />
                 <div>Ganancia</div>
-                <div className="font-bold">${Number(ganancia).toFixed(2)}</div>
+                <div className="font-bold">${ganancia.toFixed(2)}</div>
               </div>
             </div>
           </td>
         )
       })}
+
     </tr>
   )
 }
