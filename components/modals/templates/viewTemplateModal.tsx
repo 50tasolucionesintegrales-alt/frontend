@@ -18,7 +18,7 @@ export default function ViewTemplateModal({ template, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-lg p-4 max-w-3xl w-full flex flex-col relative"
+        className="bg-white rounded-lg shadow-lg p-4 max-w-5xl w-full flex flex-col relative"
         onClick={handleContentClick}
       >
         <div className="flex justify-between items-center mb-4">
@@ -31,13 +31,17 @@ export default function ViewTemplateModal({ template, onClose }: Props) {
           </button>
         </div>
 
-        <Image
-          src={template.data}
-          alt={template.name}
-          width={96}   // equivalente a w-24
-          height={128} // equivalente a h-32
-          className="object-contain rounded border"
-        />
+        {/* Contenedor de imagen */}
+        <div className="relative w-full h-[70vh]">
+          <Image
+            src={template.data}
+            alt={template.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 80vw"
+            className="object-contain rounded border"
+            priority
+          />
+        </div>
       </div>
     </div>
   )

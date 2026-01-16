@@ -42,7 +42,7 @@ export async function updateQuoteItemsAction(quoteId: string, dtos: BatchUpdateI
     }
 
     // Revalidamos la cotización localmente
-    revalidateTag(`quote-${quoteId}`)
+    revalidateTag(`quote-${quoteId}`, 'page')
 
     // Devolver items si el backend las incluye en la respuesta
     if (Array.isArray(json.items)) {
