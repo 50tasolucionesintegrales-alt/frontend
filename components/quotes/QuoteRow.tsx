@@ -31,15 +31,27 @@ export function QuoteRow({
 
     const cantidad = Number(item.cantidad) || 0
     const costo = Number(item.costo_unitario) || 0
-    const subtotal = +(cantidad * costo).toFixed(2)
-    const precioFinal = +(subtotal * (1 + (pct || 0) / 100)).toFixed(2)
-    const ganancia = +(precioFinal - subtotal).toFixed(2)
+
+    // PRECIO UNITARIO DE VENTA
+    const precioFinal = +(
+      costo * (1 + (pct || 0) / 100)
+    ).toFixed(2)
+
+    // SUBTOTAL = precio final * cantidad
+    const subtotal = +(
+      precioFinal * cantidad
+    ).toFixed(2)
+
+    // GANANCIA REAL
+    const ganancia = +(
+      (precioFinal - costo) * cantidad
+    ).toFixed(2)
 
     setItem({
       ...item,
       [key]: pct,
-      [`subtotal${format}`]: subtotal,
       [`precioFinal${format}`]: precioFinal,
+      [`subtotal${format}`]: subtotal,
       [`ganancia${format}`]: ganancia,
     } as ItemWithMargins)
   }
@@ -107,14 +119,18 @@ export function QuoteRow({
 
       {selectedFormats.map((format) => {
         const keyPct = `margenPct${format}` as keyof ItemWithMargins
-        const keySub = `subtotal${format}` as keyof ItemWithMargins
         const keyPrecio = `precioFinal${format}` as keyof ItemWithMargins
-        const keyGan = `ganancia${format}` as keyof ItemWithMargins
 
         const pct = Number(item[keyPct]) || 0
-        const subtotal = Number(item[keySub]) || (Number(item.cantidad) * Number(item.costo_unitario))
-        const precioFinal = Number(item[keyPrecio]) || (subtotal * (1 + (pct / 100)))
-        const ganancia = Number(item[keyGan]) || (precioFinal - subtotal)
+        const subtotal =
+          (Number(item[keyPrecio]) || 0) * Number(item.cantidad)
+
+        const precioFinal =
+        Number(item[keyPrecio]) ||
+        Number(item.costo_unitario) * (1 + pct / 100)
+
+        const ganancia =
+          (precioFinal - Number(item.costo_unitario)) * Number(item.cantidad)
 
         return (
           <td key={format} className="py-4 px-4 text-center min-w-[120px]">
