@@ -15,11 +15,23 @@ export default async function AddProductAction(
   const token = (await cookies()).get('50TA_TOKEN')?.value
 
   const form = new FormData()
-  form.append('nombre', formData.get('nombre') || '')
-  form.append('descripcion', formData.get('descripcion') || '')
-  form.append('precio', formData.get('precio') || '')
-  form.append('categoryId', formData.get('categoryId') || '')
-  form.append('link_compra', formData.get('link_compra') || '')
+
+  form.append('nombre', String(formData.get('nombre') || '').trim())
+  form.append('descripcion', String(formData.get('descripcion') || '').trim())
+  form.append('precio', String(formData.get('precio') || '').trim())
+  form.append('categoryId', String(formData.get('categoryId') || '').trim())
+
+  const linkCompra = formData.get('link_compra')
+
+  if (typeof linkCompra === 'string' && linkCompra.trim() !== '') {
+    let normalizedLink = linkCompra.trim()
+
+    if (!/^https?:\/\//i.test(normalizedLink)) {
+      normalizedLink = `https://${normalizedLink}`
+    }
+
+    form.append('link_compra', normalizedLink)
+  }
 
   const file = formData.get('file') as File
   if (file && file.size > 0) {
