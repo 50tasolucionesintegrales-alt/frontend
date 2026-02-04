@@ -33,6 +33,7 @@ export default function ServiceForm() {
             Nombre del Servicio
           </label>
           <input
+            placeholder='Nombre del servicio'
             title='nombre'
             name="nombre"
             type="text"
@@ -48,6 +49,7 @@ export default function ServiceForm() {
             Descripción
           </label>
           <textarea
+            placeholder='Descripción del servicio'
             title='descripcion'
             name="descripcion"
             value={descripcion}
@@ -64,6 +66,7 @@ export default function ServiceForm() {
           <div className="relative">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
             <input
+              placeholder='1000.00'
               title='precioBase'
               name="precioBase"
               type="number"

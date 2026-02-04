@@ -7,6 +7,15 @@ import Image from 'next/image'
 type MarginKey = `margenPct${number}` | `precioFinal${number}` | `subtotal${number}` | `ganancia${number}`
 type ItemWithMargins = Item & Partial<Record<MarginKey, number>>
 
+// Función auxiliar para formatear números con comas cada 3 cifras y punto decimal
+const formatNumber = (num: number): string => {
+  // Formato anglosajón: comas para miles, punto para decimales
+  return num.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
+
 export function QuoteRow({
   item,
   setItem,
@@ -114,7 +123,7 @@ export function QuoteRow({
       )}
 
       <td className="py-4 px-4 text-center font-medium text-[#174940] w-[100px]">
-        ${Number(item.costo_unitario).toFixed(2)}
+        ${formatNumber(Number(item.costo_unitario))}
       </td>
 
       {selectedFormats.map((format) => {
@@ -154,13 +163,13 @@ export function QuoteRow({
 
               <div className="bg-[#f8fafc] p-1 rounded-lg w-full text-center border border-[#e5e7eb] text-xs">
                 <div>Precio Final</div>
-                <div className="font-bold">${precioFinal.toFixed(2)}</div>
+                <div className="font-bold">${formatNumber(precioFinal)}</div>
                 <div className="border-t border-[#e5e7eb] my-0.5" />
                 <div>Subtotal</div>
-                <div className="font-bold">${subtotal.toFixed(2)}</div>
+                <div className="font-bold">${formatNumber(subtotal)}</div>
                 <div className="border-t border-[#e5e7eb] my-0.5" />
                 <div>Ganancia</div>
-                <div className="font-bold">${ganancia.toFixed(2)}</div>
+                <div className="font-bold">${formatNumber(ganancia)}</div>
               </div>
             </div>
           </td>

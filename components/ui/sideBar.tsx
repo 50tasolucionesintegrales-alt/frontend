@@ -83,19 +83,26 @@ export default function Sidebar({ user }: { user: User }) {
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={toggleSidebar} />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Altura fija */}
       <aside
         className={`${isOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0 transform transition-transform duration-300 ease-in-out
-        w-64 min-h-screen fixed md:relative z-40 border-r border-[#0F332D] bg-[#174940] shadow-xl`}
+        w-64 h-screen fixed md:sticky top-0 z-40 border-r border-[#0F332D] bg-[#174940] shadow-xl
+        flex flex-col`}
       >
         {/* Logo */}
-        <div className="p-6 text-center text-2xl font-bold text-white border-b border-[#63B23D]/30">
-          <Image src={LOGOSINCUENTAB} alt="Logo" width={250} height={250} className="mx-auto mb-2" />
+        <div className="shrink-0 p-6 text-center text-2xl font-bold text-white border-b border-[#63B23D]/30">
+          <Image 
+            src={LOGOSINCUENTAB} 
+            alt="Logo" 
+            width={250} 
+            height={250} 
+            className="mx-auto mb-2" 
+          />
         </div>
 
-        {/* Menú */}
-        <nav className="px-4 py-6 space-y-3">
+        {/* Menú - Scrollable si es necesario */}
+        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-3">
           {menuItems.map((item) => {
             const active = isPathActive(pathname, item.href);
             return (
@@ -118,15 +125,15 @@ export default function Sidebar({ user }: { user: User }) {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#63B23D]/20 bg-[#174940]">
+        {/* Footer - Siempre al fondo */}
+        <div className="shrink-0 p-4 border-t border-[#63B23D]/20 bg-[#174940]">
           <form
             action={() => {
               startTransition(() => logout());
             }}
             className="flex items-center justify-between"
           >
-            <span className="text-xs text-[#cfe9c6]">v1.0.0 • 50TA</span>
+            <span className="text-xs text-[#cfe9c6]">v1.0.14 • 50TA</span>
             <button
               type="submit"
               disabled={isPending}

@@ -5,27 +5,60 @@ import normalizeErrors from '@/src/helpers/normalizeError'
 import { cookies } from 'next/headers'
 
 type ActionType = {
-    errors: string[]
-    success: string
-    item?: any
+  errors: string[]
+  success: string
+  item?: any
 }
 
-export default async function UpdateProductAction(_prev: ActionType, formData: FormData) {
+export default async function UpdateProductAction(
+  _prev: ActionType,
+  formData: FormData
+) {
   const token = (await cookies()).get('50TA_TOKEN')?.value
   const form = new FormData()
 
-  // mismos nombres que tu API espera
-  const id = formData.get('productId') as string
-  if (!id) return { errors: ['ID del producto es requerido'], success: '' }
+  const id = String(formData.get('productId') || '').trim()
+  if (!id) {
+    return { errors: ['ID del producto es requerido'], success: '' }
+  }
 
-  form.append('nombre', (formData.get('nombre') as string) || '')
-  form.append('descripcion', (formData.get('descripcion') as string) || '')
-  form.append('precio', (formData.get('precio') as string) || '')
-  form.append('categoryId', (formData.get('categoryId') as string) || '')
-  form.append('link_compra', (formData.get('link_compra') as string) || '')
+  // ---- Campos (solo si vienen) ----
+  const nombre = String(formData.get('nombre') || '').trim()
+  const descripcion = String(formData.get('descripcion') || '').trim()
+  const precio = String(formData.get('precio') || '').trim()
+  const categoryId = String(formData.get('categoryId') || '').trim()
 
+  if (nombre) form.append('nombre', nombre)
+
+  if (descripcion) {
+    if (descripcion.length > 128) {
+      return {
+        errors: ['La descripción debe tener máximo 128 caracteres'],
+        success: '',
+      }
+    }
+    form.append('descripcion', descripcion)
+  }
+
+  if (precio) form.append('precio', precio)
+  if (categoryId) form.append('categoryId', categoryId)
+
+  // ---- Link de compra (opcional) ----
+  const linkCompra = formData.get('link_compra')
+
+  if (typeof linkCompra === 'string' && linkCompra.trim() !== '') {
+    let normalizedLink = linkCompra.trim()
+    if (!/^https?:\/\//i.test(normalizedLink)) {
+      normalizedLink = `https://${normalizedLink}`
+    }
+    form.append('link_compra', normalizedLink)
+  }
+
+  // ---- Imagen (opcional) ----
   const file = formData.get('file') as File | null
-  if (file && file.size > 0) form.append('file', file)
+  if (file && file.size > 0) {
+    form.append('file', file)
+  }
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`, {
     method: 'PATCH',
@@ -37,16 +70,16 @@ export default async function UpdateProductAction(_prev: ActionType, formData: F
   const json = await res.json()
 
   if (!res.ok) {
-    return { 
-        ...normalizeErrors(json),
-        success: '',
-        item: null
-     }
+    return {
+      ...normalizeErrors(json),
+      success: '',
+      item: null,
+    }
   }
 
   return {
     errors: [],
     success: 'Producto actualizado correctamente',
-    item: json
+    item: json,
   }
 }
