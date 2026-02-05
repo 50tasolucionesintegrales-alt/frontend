@@ -273,7 +273,7 @@ export function QuoteTable({
           <p className="text-sm text-gray-600 mt-1 pr-2 text-right">
             {isSaving 
               ? 'Calculando precios y guardando cambios...' 
-              : 'Los cambios se guardarán y se calcularán automáticamente los nuevos precios.'
+              : 'Si los cambios no se visualizan, pruebe mandando la cotización.'
             }
           </p>
         </div>
