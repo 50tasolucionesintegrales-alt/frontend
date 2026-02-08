@@ -12,19 +12,18 @@ import { useRouter } from 'next/navigation'
 type MarginKey = `margenPct${number}` | `precioFinal${number}` | `subtotal${number}` | `ganancia${number}`
 type ItemWithMargins = Item & Partial<Record<MarginKey, number>>
 
-const PRESET_PCT = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-
 const formatToEmpresaMap: Record<number, string> = {
   1: 'Goltech',
-  2: 'Juan Ángel Bazán',
-  3: 'Alejandra G. Hernández',
-  4: 'Adrián Orihuela',
-  5: 'Mariana Loeza',
+  2: 'Juan Á.',
+  3: 'Alejandra G.',
+  4: 'Adrián O.',
+  5: 'Mariana L.',
   6: 'Michelle',
   7: 'Chalor',
-  8: 'Leyses Soluciones',
-  9: 'Eduardo Suárez (ES)',
-  10: 'Jessica Rabadán',
+  8: 'Leyses',
+  9: 'Eduardo S.',
+  10: 'Jessica R.',
+  11: 'Grupo Álamo',
 }
 
 export function QuoteTable({
@@ -97,6 +96,7 @@ export function QuoteTable({
         margenPct8: (item as any).margenPct8 ?? null,
         margenPct9: (item as any).margenPct9 ?? null,
         margenPct10: (item as any).margenPct10 ?? null,
+        margenPct11: (item as any).margenPct11 ?? null,
       }))
 
       const result = await updateQuoteItemsAction(quoteId, dtos)
@@ -401,4 +401,5 @@ type BatchUpdateItemDto = {
   margenPct8?: number | null;
   margenPct9?: number | null;
   margenPct10?: number | null;
+  margenPct11?: number | null;
 }

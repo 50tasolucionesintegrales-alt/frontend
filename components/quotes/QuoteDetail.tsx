@@ -69,9 +69,6 @@ export default function QuoteDetail(quote : Quote) {
                 {pendingSend ? 'Enviando...' : 'Enviar cotización'}
               </span>
             </button>
-            {selected.length > 0 && (
-              <div className="text-sm text-[#174940]">Seleccionados: {selected.join(', ')}</div>
-            )}
           </form>
         ) : (
           <PdfButtons

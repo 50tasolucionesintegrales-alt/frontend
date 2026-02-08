@@ -18,6 +18,7 @@ type BatchUpdateItemDto = {
   margenPct8?: number | null;
   margenPct9?: number | null;
   margenPct10?: number | null;
+  margenPct11?: number | null;
 }
 
 export async function updateQuoteItemsAction(quoteId: string, dtos: BatchUpdateItemDto[]) {

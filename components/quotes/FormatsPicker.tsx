@@ -27,15 +27,16 @@ export function FormatsPicker({
 
   const FORMATS: { id: number; label: string }[] = [
     { id: 1, label: 'Goltech' },
-    { id: 2, label: 'Juan Ángel Bazán' },
-    { id: 3, label: 'Alejandra G. Hernández' },
-    { id: 4, label: 'Adrián Orihuela' },
-    { id: 5, label: 'Mariana Loeza' },
+    { id: 2, label: 'Juan Á.' },
+    { id: 3, label: 'Alejandra G.' },
+    { id: 4, label: 'Adrián O.' },
+    { id: 5, label: 'Mariana L.' },
     { id: 6, label: 'Michelle' },
     { id: 7, label: 'Chalor' },
-    { id: 8, label: 'LEyses Soluciones' },
-    { id: 9, label: 'Eduardo Suárez (ES)' },
-    { id: 10, label: 'Jessica Rabadán' },
+    { id: 8, label: 'LEyses' },
+    { id: 9, label: 'Eduardo S.' },
+    { id: 10, label: 'Jessica R.' },
+    { id: 11, label: 'Grupo Álamo'}
   ]
 
   if (!hydrated) {

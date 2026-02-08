@@ -35,15 +35,16 @@ export function QuoteRow({
 
   const formatToEmpresaMap: Record<number, string> = {
     1: 'Goltech',
-    2: 'Juan Ángel Bazán',
-    3: 'Alejandra G. Hernández',
-    4: 'Adrián Orihuela',
-    5: 'Mariana Loeza',
+    2: 'Juan Á.',
+    3: 'Alejandra G.',
+    4: 'Adrián O.',
+    5: 'Mariana L.',
     6: 'Michelle',
     7: 'Chalor',
-    8: 'Leyses Soluciones',
-    9: 'Eduardo Suárez (ES)',
-    10: 'Jessica Rabadán',
+    8: 'Leyses',
+    9: 'Eduardo S.',
+    10: 'Jessica R.',
+    11: 'Grupo Álamo'
   }
 
   const handleQuantityChange = (value: string) => {
