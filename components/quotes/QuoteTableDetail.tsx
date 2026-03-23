@@ -24,6 +24,26 @@ const formatToEmpresaMap: Record<number, string> = {
   9: 'Eduardo S.',
   10: 'Jessica R.',
   11: 'Grupo Álamo',
+  12: 'Hugo R.',
+}
+
+// Definir el tipo correctamente con margenPct12
+type BatchUpdateItemDto = {
+  id: string;
+  cantidad?: number;
+  costo_unitario?: number;
+  margenPct1?: number | null;
+  margenPct2?: number | null;
+  margenPct3?: number | null;
+  margenPct4?: number | null;
+  margenPct5?: number | null;
+  margenPct6?: number | null;
+  margenPct7?: number | null;
+  margenPct8?: number | null;
+  margenPct9?: number | null;
+  margenPct10?: number | null;
+  margenPct11?: number | null;
+  margenPct12?: number | null;  // <-- AGREGADO
 }
 
 export function QuoteTable({
@@ -97,6 +117,7 @@ export function QuoteTable({
         margenPct9: (item as any).margenPct9 ?? null,
         margenPct10: (item as any).margenPct10 ?? null,
         margenPct11: (item as any).margenPct11 ?? null,
+        margenPct12: (item as any).margenPct12 ?? null,  // <-- AGREGADO
       }))
 
       const result = await updateQuoteItemsAction(quoteId, dtos)
@@ -157,9 +178,6 @@ export function QuoteTable({
     } else {
       toast.success(`Margen eliminado para ${formatToEmpresaMap[format] || `Empresa ${format}`}`)
     }
-    
-    // Opcional: guardar automáticamente después de aplicar margen a todos
-    // setTimeout(() => handleSaveAll(), 100)
   }
 
   // Función para eliminar ítem con actualización optimista
@@ -424,21 +442,4 @@ export function QuoteTable({
       </div>
     </div>
   )
-}
-
-type BatchUpdateItemDto = {
-  id: string;
-  cantidad?: number;
-  costo_unitario?: number;
-  margenPct1?: number | null;
-  margenPct2?: number | null;
-  margenPct3?: number | null;
-  margenPct4?: number | null;
-  margenPct5?: number | null;
-  margenPct6?: number | null;
-  margenPct7?: number | null;
-  margenPct8?: number | null;
-  margenPct9?: number | null;
-  margenPct10?: number | null;
-  margenPct11?: number | null;
 }

@@ -16,7 +16,6 @@ export async function updateItemAction(prev: ActionType, formData: FormData) {
 
   const { itemId, quoteId, ...rest } = parsed.data
 
-  // quita undefined/NaN para no sobreescribir con "nada"
   const payload = Object.fromEntries(
     Object.entries(rest).filter(([, v]) =>
       v !== undefined && v !== null && !(typeof v === 'number' && Number.isNaN(v))
@@ -33,9 +32,7 @@ export async function updateItemAction(prev: ActionType, formData: FormData) {
   const json = await res.json()
   if (!res.ok) return { ...normalizeErrors(json), success: '' }
 
-  // revalida la página de la COTIZACIÓN, no la del ítem
   revalidatePath(`/quotes/${quoteId}`, 'page')
 
-  // el service devuelve { message, item }
   return { success: 'Ítem actualizado correctamente.', item: json.item ?? json }
 }

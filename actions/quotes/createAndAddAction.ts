@@ -30,7 +30,7 @@ export async function createDraftAndAddItemAction(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      tipo: 'productos',      // estamos en detalle de producto
+      tipo: 'productos', 
       titulo: title,
       descripcion: description || null,
     }),

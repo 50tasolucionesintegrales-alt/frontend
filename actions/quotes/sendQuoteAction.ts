@@ -29,7 +29,6 @@ export default async function sendQuoteAction(
     return { ...normalizeErrors(json || { message: res.statusText }), success: '' }
   }
 
-  // Para que cambie a "sent" en el UI al refrescar
   revalidatePath(`/quotes/${id}`)
   return { errors: [], success: 'Cotización enviada correctamente' }
 }

@@ -1,10 +1,10 @@
-// components/quotes/PDFButtons.tsx
 'use client'
+
 import { useState } from 'react'
 import { Download } from 'lucide-react'
 import PdfDownloadModal from '../modals/quotes/PDFDownloadModal'
 
-// Mapea formato → nombre de la empresa (ajusta según tus datos reales)
+// Mapea formato → nombre de la empresa
 const formatToEmpresaMap: Record<number, string> = {
     1: 'Goltech',
     2: 'Juan Á.',
@@ -17,6 +17,7 @@ const formatToEmpresaMap: Record<number, string> = {
     9: 'Eduardo S.',
     10: 'Jessica R.',
     11: 'Grupo Álamo',
+    12: 'Hugo R.',
 }
 
 export function PdfButtons({

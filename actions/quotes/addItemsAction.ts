@@ -29,7 +29,7 @@ type ServiceItemOut = {
   serviceId: number;
   cantidad: number;
   costoUnitario: number;
-  unidad: string; // siempre se envía
+  unidad: string; 
 };
 
 type ProductItemOut = {
@@ -37,7 +37,7 @@ type ProductItemOut = {
   productId: number;
   cantidad: number;
   costoUnitario: number;
-  unidad: string; // siempre se envía
+  unidad: string;
 };
 
 type AddItemsDto = { items: Array<ServiceItemOut | ProductItemOut> };

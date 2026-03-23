@@ -1,4 +1,4 @@
-// hooks/useSelectedFormats.ts
+
 import { useEffect, useRef, useState } from 'react';
 
 function parseSaved(raw: string | null): number[] | null {
@@ -26,14 +26,14 @@ export function useSelectedFormats(key: string, initial: number[]) {
     setSelected(saved ?? initial);
     setHydrated(true);
     initializedKeyRef.current = key;
-  }, [key, initial]); // ✅ incluye initial (lint feliz)
+  }, [key, initial]); 
 
   useEffect(() => {
     if (!hydrated) return;
     localStorage.setItem(key, JSON.stringify(selected));
   }, [hydrated, key, selected]);
 
-  const selectAll = () => setSelected([1,2,3,4,5,6,7,8,9,10,11]);
+  const selectAll = () => setSelected([1,2,3,4,5,6,7,8,9,10,11,12]);
   const clearAll  = () => setSelected([]);
   const toggle    = (n: number) =>
     setSelected(prev => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n]);

@@ -1,4 +1,3 @@
-// actions/admin/quotes/deleteQuoteAction.ts
 'use server'
 
 import normalizeErrors from '@/src/helpers/normalizeError'

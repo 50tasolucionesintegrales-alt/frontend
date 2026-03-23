@@ -1,4 +1,5 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import { CheckSquare, XSquare } from 'lucide-react'
 
@@ -36,7 +37,8 @@ export function FormatsPicker({
     { id: 8, label: 'LEyses' },
     { id: 9, label: 'Eduardo S.' },
     { id: 10, label: 'Jessica R.' },
-    { id: 11, label: 'Grupo Álamo'}
+    { id: 11, label: 'Grupo Álamo'},
+    { id: 12, label: 'Hugo R.' },
   ]
 
   if (!hydrated) {

@@ -45,7 +45,8 @@ export function QuoteRow({
     8: 'Leyses',
     9: 'Eduardo S.',
     10: 'Jessica R.',
-    11: 'Grupo Álamo'
+    11: 'Grupo Álamo',
+    12: 'Hugo R.',
   }
 
   const handleQuantityChange = (value: string) => {
@@ -139,7 +140,7 @@ export function QuoteRow({
     } catch (error) {
       toast.error('Error al eliminar el producto')
     } finally {
-      
+
     }
   }
 

@@ -3,7 +3,6 @@ import { cookies } from "next/headers"
 import { FileText } from "lucide-react"
 import { verifySession } from "@/src/auth/dal"
 
-// Forzar que la página siempre sea dinámica y nunca se cachee
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
@@ -22,7 +21,6 @@ export default async function QuotesPage() {
     ? `${process.env.NEXT_PUBLIC_API_URL}/quotes/sent`
     : `${process.env.NEXT_PUBLIC_API_URL}/quotes/sent/mine`
 
-  // Realizar las peticiones sin caché
   const [draftsResponse, sentResponse] = await Promise.all([
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, fetchOptions),
     fetch(sentUrl, fetchOptions)

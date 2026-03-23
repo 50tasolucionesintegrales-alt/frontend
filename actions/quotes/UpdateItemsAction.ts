@@ -3,7 +3,6 @@
 import { cookies } from 'next/headers'
 import { revalidateTag } from 'next/cache'
 
-// DTO (igual que en front)
 type BatchUpdateItemDto = {
   id: string;
   cantidad?: number;
@@ -19,6 +18,7 @@ type BatchUpdateItemDto = {
   margenPct9?: number | null;
   margenPct10?: number | null;
   margenPct11?: number | null;
+  margenPct12?: number | null;
 }
 
 export async function updateQuoteItemsAction(quoteId: string, dtos: BatchUpdateItemDto[]) {

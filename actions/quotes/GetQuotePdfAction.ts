@@ -1,4 +1,3 @@
-// actions/quotes/GetQuotePdfAction.ts
 'use server'
 
 import normalizeErrors from '@/src/helpers/normalizeError'
@@ -13,7 +12,7 @@ export async function downloadQuotePdfAction(_prev: State, formData: FormData): 
 
   if (!token)    return { error: 'No autenticado' }
   if (!quoteId)  return { error: 'Falta quoteId' }
-  if (!empresa)  return { error: 'Selecciona empresa (1–10)' }
+  if (!empresa)  return { error: 'Selecciona empresa (1–12)' }
 
   const payload = {
     empresa,
@@ -25,7 +24,6 @@ export async function downloadQuotePdfAction(_prev: State, formData: FormData): 
     lugar:          String(formData.get('lugar') ?? '').trim(),
     fecha:          String(formData.get('fecha') ?? '').trim(), // YYYY-MM-DD
     incluirFirma:   String(formData.get('incluirFirma') ?? 'false') === 'true',
-    // 👇 nuevo: siempre llega (vacío o con "Nombre<br>Cargo")
     firmanteNombre: String(formData.get('firmanteNombre') ?? '').trim(),
   }
 
