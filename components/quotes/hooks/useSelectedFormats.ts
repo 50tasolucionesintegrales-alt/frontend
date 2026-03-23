@@ -33,7 +33,7 @@ export function useSelectedFormats(key: string, initial: number[]) {
     localStorage.setItem(key, JSON.stringify(selected));
   }, [hydrated, key, selected]);
 
-  const selectAll = () => setSelected([1,2,3,4,5,6,7,8,9,10]);
+  const selectAll = () => setSelected([1,2,3,4,5,6,7,8,9,10,11]);
   const clearAll  = () => setSelected([]);
   const toggle    = (n: number) =>
     setSelected(prev => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n]);

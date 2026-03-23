@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { ChevronLeft, ChevronRight, Settings, Check } from 'lucide-react'
 import type { Item } from '@/src/schemas'
 import { QuoteRow } from './QuoteRow'
@@ -28,7 +28,7 @@ const formatToEmpresaMap: Record<number, string> = {
 
 export function QuoteTable({
   quoteId,
-  items,
+  items: initialItems,
   isProductQuote,
   selectedFormats,
   isSent,
@@ -46,31 +46,31 @@ export function QuoteTable({
   // Estado para modales de margen por empresa
   const [marginModalOpen, setMarginModalOpen] = useState<number | null>(null)
   const [tempMarginValue, setTempMarginValue] = useState<string>('')
-  const [appliedMargins, setAppliedMargins] = useState<Record<number, number | null>>(
-    selectedFormats.reduce((acc, n) => ({ ...acc, [n]: null }), {})
-  )
+  const [appliedMargins, setAppliedMargins] = useState<Record<number, number | null>>({})
 
-  const [localItems, setLocalItems] = useState<ItemWithMargins[]>(items)
+  const [localItems, setLocalItems] = useState<ItemWithMargins[]>(initialItems)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const router = useRouter()
 
-  // Actualizar items locales cuando cambian los props
+  // Sincronizar items locales cuando cambian los props
   useEffect(() => {
-    setLocalItems(items)
+    setLocalItems(initialItems)
     
     // Extraer márgenes actuales de los items para mostrarlos en los botones
-    if (items.length > 0) {
-      const firstItem = items[0]
+    if (initialItems.length > 0) {
+      const firstItem = initialItems[0]
       const currentMargins: Record<number, number | null> = {}
       
       selectedFormats.forEach(format => {
         const marginKey = `margenPct${format}` as keyof ItemWithMargins
-        currentMargins[format] = (firstItem as any)[marginKey] ?? null
+        const marginValue = (firstItem as any)[marginKey]
+        currentMargins[format] = marginValue !== undefined && marginValue !== null ? marginValue : null
       })
       
       setAppliedMargins(currentMargins)
     }
-  }, [items, selectedFormats])
+  }, [initialItems, selectedFormats])
 
   const minWidth = useMemo(() => {
     const base = isProductQuote ? 480 : 380
@@ -103,6 +103,7 @@ export function QuoteTable({
 
       if (result.success) {
         toast.success('¡Cambios guardados con éxito!')
+        // Refrescar la página para obtener los datos actualizados del backend
         router.refresh()
       } else {
         toast.error(result.error || 'Error al guardar los cambios')
@@ -124,11 +125,15 @@ export function QuoteTable({
 
   // Aplicar margen a todos los items de esta empresa
   const applyMarginToAll = (format: number) => {
-    const marginValue = tempMarginValue === '' ? null : parseFloat(tempMarginValue)
+    let marginValue: number | null = null
     
-    if (marginValue !== null && (marginValue < 0 || marginValue > 1000 || isNaN(marginValue))) {
-      toast.error('El margen debe estar entre 0 y 1000%')
-      return
+    if (tempMarginValue.trim() !== '') {
+      const parsed = parseFloat(tempMarginValue)
+      if (isNaN(parsed) || parsed < 0 || parsed > 1000) {
+        toast.error('El margen debe estar entre 0 y 1000%')
+        return
+      }
+      marginValue = parsed
     }
 
     // Actualizar margen aplicado
@@ -137,7 +142,7 @@ export function QuoteTable({
       [format]: marginValue
     }))
 
-    // Aplicar a todos los items
+    // Aplicar a todos los items en el estado local
     setLocalItems(prev =>
       prev.map(item => ({
         ...item,
@@ -146,24 +151,49 @@ export function QuoteTable({
     )
 
     setMarginModalOpen(null)
-    toast.success(`Margen ${formatToEmpresaMap[format] || `Empresa ${format}`} aplicado a todos los productos`)
+    
+    if (marginValue !== null) {
+      toast.success(`Margen ${marginValue}% aplicado a todos los productos para ${formatToEmpresaMap[format] || `Empresa ${format}`}`)
+    } else {
+      toast.success(`Margen eliminado para ${formatToEmpresaMap[format] || `Empresa ${format}`}`)
+    }
+    
+    // Opcional: guardar automáticamente después de aplicar margen a todos
+    // setTimeout(() => handleSaveAll(), 100)
   }
 
-  // Función para eliminar ítem
+  // Función para eliminar ítem con actualización optimista
   const handleDeleteItem = async (itemId: string) => {
+    if (isDeleting === itemId) return
+    
+    setIsDeleting(itemId)
+    
+    // Guardar el estado actual para poder revertir en caso de error
+    const previousItems = [...localItems]
+    
+    // Actualización optimista: eliminar del estado local inmediatamente
+    setLocalItems(prev => prev.filter(item => item.id !== itemId))
+    
     try {
       const result = await deleteItemAction(itemId)
       
       if (result.success) {
-        setLocalItems(prev => prev.filter(item => item.id !== itemId))
+        toast.success('Producto eliminado de la cotización')
+        // Refrescar para asegurar que todo esté sincronizado
         setTimeout(() => {
           router.refresh()
-        }, 500)
+        }, 100)
       } else {
+        // Si hay error, revertir la eliminación optimista
+        setLocalItems(previousItems)
         throw new Error(result.error ?? 'Error al eliminar el ítem')
       }
     } catch (error) {
-      throw error
+      setLocalItems(previousItems)
+      toast.error(error instanceof Error ? error.message : 'Error al eliminar el producto')
+      console.error('Error deleting item:', error)
+    } finally {
+      setIsDeleting(null)
     }
   }
 
@@ -191,19 +221,19 @@ export function QuoteTable({
 
   const scrollByX = (dx: number) => scrollerRef.current?.scrollBy({ left: dx, behavior: 'smooth' })
 
-  const updateItem = (itemId: string, updates: Partial<ItemWithMargins>) => {
+  const updateItem = useCallback((itemId: string, updates: Partial<ItemWithMargins>) => {
     setLocalItems(prev =>
       prev.map(item =>
         item.id === itemId ? { ...item, ...updates } : item
       )
     )
-  }
+  }, [])
 
   return (
     <div className="relative">
       {/* Modal para establecer margen */}
       {marginModalOpen !== null && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold text-[#0F332D] mb-2">
               Establecer margen para {formatToEmpresaMap[marginModalOpen] || `Empresa ${marginModalOpen}`}
@@ -221,7 +251,7 @@ export function QuoteTable({
                 <div className="flex gap-2">
                   <input
                     type="number"
-                    step="0.01"
+                    step="0.1"
                     min="0"
                     max="1000"
                     value={tempMarginValue}
@@ -260,7 +290,7 @@ export function QuoteTable({
 
       {!isSent && (
         <div className="flex flex-col justify-end mb-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
             <button
               onClick={handleSaveAll}
               disabled={isSaving}
@@ -273,7 +303,7 @@ export function QuoteTable({
           <p className="text-sm text-gray-600 mt-1 pr-2 text-right">
             {isSaving 
               ? 'Calculando precios y guardando cambios...' 
-              : 'Si los cambios no se visualizan, pruebe mandando la cotización.'
+              : 'Si los cambios no se visualizan, prueba mandando la cotización.'
             }
           </p>
         </div>
@@ -328,9 +358,9 @@ export function QuoteTable({
 
               {!isSent && (
                 <tr className="bg-[#f0f7f5]">
-                  <td className="sticky left-0 bg-[#f0f7f5] z-20"></td>
-                  {isProductQuote && <td></td>}
-                  <td></td>
+                  <td className="sticky left-0 bg-[#f0f7f5] z-20"> </td>
+                  {isProductQuote && <td> </td>}
+                  <td> </td>
 
                   {selectedFormats.map((format) => {
                     const currentMargin = appliedMargins[format]
@@ -339,7 +369,7 @@ export function QuoteTable({
                         <button
                           onClick={() => openMarginModal(format)}
                           className={`
-                            inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors
+                            inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm
                             ${currentMargin !== null 
                               ? 'bg-[#174940] text-white hover:bg-[#0F332D]' 
                               : 'bg-white text-[#174940] border border-[#174940] hover:bg-[#f0f7f5]'
@@ -367,8 +397,9 @@ export function QuoteTable({
                   selectedFormats={selectedFormats}
                   isSent={isSent}
                   onDelete={!isSent ? handleDeleteItem : undefined}
+                  isDeleting={isDeleting === item.id}
                   onMarginChange={(format, value) => {
-                    // Si el usuario cambia un margen individualmente, actualizar el estado
+                    // Si el usuario cambia un margen individualmente, actualizar el estado local
                     setLocalItems(prev =>
                       prev.map(it =>
                         it.id === item.id 
@@ -379,6 +410,14 @@ export function QuoteTable({
                   }}
                 />
               ))}
+              
+              {localItems.length === 0 && (
+                <tr>
+                  <td colSpan={2 + (isProductQuote ? 1 : 0) + selectedFormats.length} className="py-12 text-center text-gray-500">
+                    No hay {isProductQuote ? 'productos' : 'servicios'} en esta cotización
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

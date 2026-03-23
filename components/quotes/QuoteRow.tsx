@@ -17,7 +17,8 @@ interface QuoteRowProps {
   selectedFormats: number[]
   isSent: boolean
   onDelete?: (itemId: string) => Promise<void>
-  onMarginChange?: (format: number, value: number | null) => void // Nueva prop
+  onMarginChange?: (format: number, value: number | null) => void
+  isDeleting?: boolean 
 }
 
 export function QuoteRow({ 
@@ -27,11 +28,11 @@ export function QuoteRow({
   selectedFormats, 
   isSent,
   onDelete,
-  onMarginChange
+  onMarginChange,
+  isDeleting = false
 }: QuoteRowProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [expanded, setExpanded] = useState(false) // Para expandir detalles en móvil
+  const [expanded, setExpanded] = useState(false)
 
   const formatToEmpresaMap: Record<number, string> = {
     1: 'Goltech',
@@ -132,14 +133,13 @@ export function QuoteRow({
     if (!onDelete) return
     
     try {
-      setIsDeleting(true)
       await onDelete(item.id)
       toast.success('Producto eliminado de la cotización')
       setShowDeleteConfirm(false)
     } catch (error) {
       toast.error('Error al eliminar el producto')
     } finally {
-      setIsDeleting(false)
+      
     }
   }
 
@@ -226,28 +226,19 @@ export function QuoteRow({
               {expanded && (
                 <div className="mt-3 space-y-3 border-t pt-3">
                   {/* Cantidad y costo en móvil */}
-                  {isProductQuote && !isSent && (
+                  {isProductQuote && (
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Cantidad</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={item.cantidad || 1}
-                          onChange={(e) => handleQuantityChange(e.target.value)}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-center"
-                        />
+                        <div className="w-full px-2 py-1 border border-gray-300 rounded text-center bg-gray-50">
+                          {item.cantidad || 1}
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Costo Unit.</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={item.costo_unitario || ''}
-                          onChange={(e) => handleCostChange(e.target.value)}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-right"
-                        />
+                        <div className="w-full px-2 py-1 border border-gray-300 rounded text-right bg-gray-50">
+                          {formatCurrency(item.costo_unitario || 0)}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -372,34 +363,13 @@ export function QuoteRow({
         {/* Cantidad (solo para productos) */}
         {isProductQuote && (
           <td className="py-4 px-4">
-            {isSent ? (
-              <div className="text-center font-medium">{item.cantidad}</div>
-            ) : (
-              <input
-                type="number"
-                min="1"
-                value={item.cantidad || 1}
-                onChange={(e) => handleQuantityChange(e.target.value)}
-                className="w-20 px-2 py-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-[#174940] focus:border-transparent"
-              />
-            )}
+            <div className="text-center font-medium">{item.cantidad}</div>
           </td>
         )}
 
         {/* Costo Unitario */}
         <td className="py-4 px-4">
-          {isSent ? (
-            <div className="font-medium text-right">{formatCurrency(item.costo_unitario || 0)}</div>
-          ) : (
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={item.costo_unitario || ''}
-              onChange={(e) => handleCostChange(e.target.value)}
-              className="w-28 px-2 py-1 border border-gray-300 rounded text-right focus:outline-none focus:ring-2 focus:ring-[#174940] focus:border-transparent"
-            />
-          )}
+          <div className="font-medium text-right">{formatCurrency(item.costo_unitario || 0)}</div>
         </td>
 
         {/* Columnas de márgenes */}

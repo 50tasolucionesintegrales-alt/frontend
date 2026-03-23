@@ -3,36 +3,33 @@ import { cookies } from "next/headers"
 import { FileText } from "lucide-react"
 import { verifySession } from "@/src/auth/dal"
 
+// Forzar que la página siempre sea dinámica y nunca se cachee
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function QuotesPage() {
   const { user } = await verifySession()
   const token = (await cookies()).get("50TA_TOKEN")?.value
 
   const fetchOptions = {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store' as const,
   }
 
-  // pseudo-código, depende de cómo obtengas al usuario
   const isAdmin = user.rol === 'admin'
-
-  console.log('isAdmin:', isAdmin)
 
   const sentUrl = isAdmin
     ? `${process.env.NEXT_PUBLIC_API_URL}/quotes/sent`
     : `${process.env.NEXT_PUBLIC_API_URL}/quotes/sent/mine`
 
-  const resDraftPromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, {
-    ...fetchOptions, 
-    next: { revalidate: 60, tags: ['quotes-drafts'] }
-  }).then((res) => res.json())
+  // Realizar las peticiones sin caché
+  const [draftsResponse, sentResponse] = await Promise.all([
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/drafts`, fetchOptions),
+    fetch(sentUrl, fetchOptions)
+  ])
 
-  const resSendPromise = fetch(sentUrl, {
-    ...fetchOptions,
-    next: { revalidate: 60, tags: ['quotes-sent'] }
-  }).then(res => res.json())
-
-  const [quotesDraft, quotesSend] = await Promise.all([resDraftPromise, resSendPromise])
-  
-  console.log(quotesDraft, quotesSend)
+  const quotesDraft = await draftsResponse.json()
+  const quotesSend = await sentResponse.json()
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-10">

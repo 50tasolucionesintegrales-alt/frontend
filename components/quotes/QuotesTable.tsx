@@ -2,9 +2,10 @@
 
 import { Quotes } from '@/src/schemas'
 import { Clock, Eye } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import CreateQuoteModal from './CreateQuoteModal'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 type props = {
     quotes: Quotes
@@ -13,6 +14,21 @@ type props = {
 
 export default function QuotesTable({ quotes, type }: props) {
     const [open, setOpen] = useState(false)
+    const router = useRouter()
+    const [localQuotes, setLocalQuotes] = useState(quotes)
+
+    // Actualizar quotes locales cuando cambien los props
+    useEffect(() => {
+        setLocalQuotes(quotes)
+    }, [quotes])
+
+    const handleQuoteCreated = () => {
+        // Cerrar el modal
+        setOpen(false)
+        // Refrescar la página para obtener la nueva cotización
+        router.refresh()
+    }
+
     return (
         <>
             {type === 'drafts' && (
@@ -34,12 +50,13 @@ export default function QuotesTable({ quotes, type }: props) {
                                     <div className="flex items-center">
                                         <Clock className="h-4 w-4 mr-1" />
                                         Creado
-                                    </div></th>
+                                    </div>
+                                </th>
                                 <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {quotes.map(q => (
+                            {localQuotes.map(q => (
                                 <tr key={q.id} className="hover:bg-gray-50">
                                     <td className="py-3 px-4 font-medium">{q.titulo}</td>
                                     <td className="py-3 px-4">{q.descripcion ?? '—'}</td>
@@ -58,10 +75,10 @@ export default function QuotesTable({ quotes, type }: props) {
                                     </td>
                                 </tr>
                             ))}
-                            {quotes.length === 0 && (
+                            {localQuotes.length === 0 && (
                                 <tr>
                                     <td colSpan={5} className="py-6 text-center text-gray-500">
-                                        No hay cotizaciones en borrador.
+                                        No hay cotizaciones en {type === 'drafts' ? 'borrador' : 'enviadas'}.
                                     </td>
                                 </tr>
                             )}
@@ -70,7 +87,11 @@ export default function QuotesTable({ quotes, type }: props) {
                 </div>
             </section>
             {open && (
-                <CreateQuoteModal open={open} onClose={() => setOpen(false)} />
+                <CreateQuoteModal 
+                    open={open} 
+                    onClose={() => setOpen(false)} 
+                    onSuccess={handleQuoteCreated}
+                />
             )}
         </>
     )

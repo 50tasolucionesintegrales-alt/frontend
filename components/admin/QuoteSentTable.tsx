@@ -1,9 +1,7 @@
-// components/admin/QuotesSentTable.tsx
 'use client'
 
 import { useState } from 'react'
-import { Download, Box, Clock } from 'lucide-react'
-import PdfDownloadModal from '../modals/quotes/PDFDownloadModal'
+import { Box, Clock } from 'lucide-react'
 import DeleteQuoteButton from './quotes/DeleteQuoteButton';
 
 type QuoteRow = {
@@ -23,21 +21,6 @@ type QuoteRow = {
   totalMargen10?: number;
 };
 
-const MAX_FORMATS = 10;
-
-function activeMargins(q: QuoteRow): number[] {
-  const out: number[] = []
-  for (let i = 1; i <= MAX_FORMATS; i++) {
-    const key = `totalMargen${i}` as keyof QuoteRow
-    const v = Number((q[key] as number | undefined) ?? 0)
-    if (!Number.isNaN(v) && v > 0) out.push(i)
-  }
-  return out
-}
-
-const fmtMoney = (n: number) =>
-  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n)
-
 // Evita hydration mismatch fijando timeZone
 const fmtDate = (iso?: string | null) => {
   if (!iso) return '—'
@@ -51,16 +34,6 @@ const fmtDate = (iso?: string | null) => {
 }
 
 export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalQuoteId, setModalQuoteId] = useState<string>('')
-  const [modalEmpresa, setModalEmpresa] = useState<number>(1)
-
-  const openModalFor = (quoteId: string, empresa: number) => {
-    setModalQuoteId(quoteId)
-    setModalEmpresa(empresa)
-    setModalOpen(true)
-  }
-
   return (
     <div className="p-6 bg-[#f8fafc] min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -74,9 +47,6 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
                   <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
                     <div className="flex items-center"><Clock className="h-4 w-4 mr-1" />Enviada</div>
                   </th>
-                  <th className="py-4 px-6 text-left text-sm font-medium text-white uppercase tracking-wider">
-                    Totales / Descargas
-                  </th>
                   <th className="py-4 px-6 text-right text-sm font-medium text-white uppercase tracking-wider">
                     Acciones
                   </th>
@@ -84,52 +54,24 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
               </thead>
 
               <tbody className="divide-y divide-[#e5e7eb]">
-                {quotes.map((q) => {
-                  const margins = activeMargins(q)
-                  return (
-                    <tr key={q.id} className="hover:bg-[#f0f7f5] transition-colors">
-                      <td className="py-4 px-6 font-medium text-[#0F332D]">{q.titulo}</td>
-                      <td className="py-4 px-6 capitalize text-[#174940]">
-                        <span className="px-2 py-1 bg-[#174940]/10 rounded-full text-xs">{q.tipo}</span>
-                      </td>
-                      <td className="py-4 px-6 text-[#174940]">
-                        {fmtDate(q.sentAt)}
-                      </td>
-                      <td className="py-4 px-6">
-                        {margins.length === 0 ? (
-                          <span className="text-[#999999]">Sin totales</span>
-                        ) : (
-                          <div className="flex flex-wrap gap-2">
-                            {margins.map((n) => {
-                              const key = `totalMargen${n}` as keyof QuoteRow
-                              const total = Number((q[key] as number | undefined) || 0)
-                              return (
-                                <button
-                                  key={n}
-                                  type="button"
-                                  onClick={() => openModalFor(q.id, n)}
-                                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#e5e7eb] bg-[#63B23D]/10 hover:bg-[#63B23D]/20 transition-colors"
-                                  title={`Descargar PDF Formato ${n}`}
-                                >
-                                  <span className="text-xs font-semibold text-[#174940]">M{n}</span>
-                                  <span className="text-sm font-medium text-[#0F332D]">{fmtMoney(total)}</span>
-                                  <Download className="h-4 w-4 text-[#63B23D]" />
-                                </button>
-                              )
-                            })}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <DeleteQuoteButton quoteId={q.id} />
-                      </td>
-                    </tr>
-                  )
-                })}
+                {quotes.map((q) => (
+                  <tr key={q.id} className="hover:bg-[#f0f7f5] transition-colors">
+                    <td className="py-4 px-6 font-medium text-[#0F332D]">{q.titulo}</td>
+                    <td className="py-4 px-6 capitalize text-[#174940]">
+                      <span className="px-2 py-1 bg-[#174940]/10 rounded-full text-xs">{q.tipo}</span>
+                    </td>
+                    <td className="py-4 px-6 text-[#174940]">
+                      {fmtDate(q.sentAt)}
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <DeleteQuoteButton quoteId={q.id} />
+                    </td>
+                  </tr>
+                ))}
 
                 {quotes.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center">
+                    <td colSpan={4} className="py-12 text-center">
                       <div className="flex flex-col items-center justify-center text-[#999999]">
                         <Box className="h-12 w-12 mb-3 text-[#e5e7eb]" />
                         <p className="text-lg font-medium text-[#174940]">No hay cotizaciones enviadas</p>
@@ -143,13 +85,6 @@ export default function QuotesSentTable({ quotes }: { quotes: QuoteRow[] }) {
           </div>
         </div>
       </div>
-
-      <PdfDownloadModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        quoteId={modalQuoteId}
-        empresa={modalEmpresa}
-      />
     </div>
   )
 }

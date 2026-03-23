@@ -9,7 +9,7 @@ export default async function QuotesAdminPage() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/sent`, {
     method: 'GET',
     headers: { Authorization: `Bearer ${token}` },
-    next: { revalidate: 60 },
+    cache: 'no-store' as const
   })
 
   const quotes = await res.json()

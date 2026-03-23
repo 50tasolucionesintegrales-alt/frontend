@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation'
 type Props = {
   open: boolean
   onClose: () => void
+  onSuccess?: () => void  // Nuevo callback opcional
 }
 
 function SubmitButton() {
@@ -31,7 +32,7 @@ function SubmitButton() {
   )
 }
 
-export default function CreateQuoteModal({ open, onClose }: Props) {
+export default function CreateQuoteModal({ open, onClose, onSuccess }: Props) {
   const [state, formAction, pending] = useActionState(createDraft, {
     errors: [],
     success: '',
@@ -46,8 +47,12 @@ export default function CreateQuoteModal({ open, onClose }: Props) {
       toast.success(state.success)
       router.refresh()
       onClose()
+      // Llamar al callback de éxito después de cerrar el modal
+      if (onSuccess) {
+        setTimeout(() => onSuccess(), 100)
+      }
     }
-  }, [state, onClose, router])
+  }, [state, onClose, router, onSuccess])
 
   return (
     <AnimatePresence>

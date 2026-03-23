@@ -5,27 +5,31 @@ import { Item, Producto, Service } from "@/src/schemas"
 import { cookies } from "next/headers"
 import ButtonBack from "@/components/ui/ButtonBack"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function QuotePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const token = (await cookies()).get('50TA_TOKEN')?.value
 
     const fetchOptions = {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store' as const,
     }
 
     const quotePromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${id}`, {
         ...fetchOptions,
-        next: { revalidate: 60, tags: [`quote-${id}`] },
+        cache: 'no-store',
     }).then((res) => res.json())
 
     const productsPromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
         ...fetchOptions,
-        next: { revalidate: 60 },
+        cache: 'no-store',
     }).then((res) => res.json())
 
     const servicesPromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`, {
         ...fetchOptions,
-        next: { revalidate: 60 },
+        cache: 'no-store',
     }).then((res) => res.json())
 
     const [quote, productos, servicios] = await Promise.all([
@@ -63,8 +67,8 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
         quote.tipo === 'productos' ? productosFiltrados : serviciosFiltrados
 
     const quoteWithImages = {
-    ...quote,
-    items: itemsWithImages, // <-- USAMOS LOS ITEMS MODIFICADOS
+        ...quote,
+        items: itemsWithImages,
     }       
 
     return (

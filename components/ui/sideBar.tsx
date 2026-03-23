@@ -27,11 +27,10 @@ const BASE_ITEMS = [
   { label: 'Agregar',           icon: <PlusSquare size={20} />,  href: '/add' },
   { label: 'Cotizaciones',      icon: <FileText size={20} />,    href: '/quotes' },
   { label: 'Ordenes de compra', icon: <ShoppingCart size={20} />,href: '/orders' },
-  { label: 'Machotes',          icon: <FileCog size={20} />,     href: '/admin/templates' },
 ] as const;
 
 const MENU_BY_ROL: Record<Rol, string[]> = {
-  admin:     ['/admin', '/catalog', '/add', '/quotes', '/orders', '/admin/templates'],
+  admin:     ['/admin', '/catalog', '/add', '/quotes', '/orders'],
   cotizador: ['/catalog', '/add', '/quotes'],
   comprador: ['/catalog', '/add', '/orders'],
   unassigned:['/catalog'],
