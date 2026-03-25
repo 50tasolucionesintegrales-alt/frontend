@@ -117,15 +117,17 @@ export default function ProductCard({ producto, getImageDataUrl }: Props) {
       </div>
 
       <div className="p-4">
-        <div className="flex justify-between items-start">
-          <h3 className="font-medium text-[#0F332D] truncate flex-1">
-            {producto.nombre}
-          </h3>
-          <span className="text-xs bg-[#174940]/10 text-[#174940] px-2 py-1 rounded ml-2">
-            {producto.category.nombre}
-          </span>
-        </div>
-        <p className="text-sm text-gray-500 line-clamp-2 h-10 mt-1">
+        {/* Nombre del producto - ahora con wrap completo y sin truncar */}
+        <h3 className="font-medium text-[#0F332D] break-words whitespace-normal">
+          {producto.nombre}
+        </h3>
+        
+        {/* Categoría - ahora debajo del nombre */}
+        <span className="inline-block text-xs bg-[#174940]/10 text-[#174940] px-2 py-1 rounded mt-2">
+          {producto.category.nombre}
+        </span>
+        
+        <p className="text-sm text-gray-500 line-clamp-2 h-10 mt-3">
           {producto.descripcion}
         </p>
         <p className="text-[#63B23D] font-semibold mt-2">${producto.precio}</p>

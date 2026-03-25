@@ -1,6 +1,6 @@
 'use client';
 
-import { ShoppingCart, User, Calendar, X } from 'lucide-react';
+import { ShoppingCart, User, Calendar, X, MapPin, Store, Link as LinkIcon, Package } from 'lucide-react';
 import { Order, Producto, Quote } from '@/src/schemas';
 import { startTransition, useActionState, useCallback, useEffect, useMemo, useState } from 'react';
 import { addItemsAction } from '@/actions/quotes/addItemsAction';
@@ -60,7 +60,6 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
         })();
         return () => { cancelled = true; };
     }, [fetchImage]);
-
 
     const [open, setOpen] = useState(false);
     const [qty, setQty] = useState<number>(1);
@@ -137,6 +136,33 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
         startTransition(() => newDispatch(fd));
     };
 
+    // Función para renderizar especificaciones
+    const renderEspecificaciones = () => {
+        if (!producto.especificaciones) return null;
+        
+        const specs = producto.especificaciones;
+        if (typeof specs === 'object' && Object.keys(specs).length > 0) {
+            return (
+                <div className="mb-6">
+                    <h3 className="font-semibold text-[#0F332D] mb-2 flex items-center gap-2">
+                        <Package size={18} />
+                        Especificaciones
+                    </h3>
+                    <div className="bg-[#f8f9fa] rounded-lg p-4 border border-[#999999]/20">
+                        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {Object.entries(specs).map(([key, value]) => (
+                                <div key={key} className="flex justify-between items-center border-b border-[#e5e7eb] pb-2">
+                                    <dt className="text-sm font-medium text-[#174940]">{key}:</dt>
+                                    <dd className="text-sm text-[#0F332D]">{String(value)}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                    </div>
+                </div>
+            );
+        }
+        return null;
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] p-4 md:p-6">
@@ -144,8 +170,9 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
 
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
+                        {/* Imagen del producto */}
                         <div
-                            className="relative overflow-hidden rounded-t-xl"
+                            className="relative overflow-hidden rounded-t-xl min-h-[300px]"
                             aria-busy={loading ? 'true' : 'false'}
                             aria-live="polite"
                         >
@@ -194,6 +221,7 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                             )}
                         </div>
 
+                        {/* Información del producto */}
                         <div>
                             <div className="mb-4">
                                 <span className="inline-block bg-[#174940]/10 text-[#174940] text-xs px-2 py-1 rounded mb-2">
@@ -205,13 +233,14 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                                 </div>
                             </div>
 
+                            {/* Información del creador */}
                             <div className="bg-[#f8f9fa] rounded-lg p-4 mb-6 border border-[#999999]/20">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-[#174940] flex items-center justify-center text-white">
                                         <User size={18} />
                                     </div>
                                     <div>
-                                        <p className="text-sm text-[#999999]">Agregado por:</p>
+                                        <p className="text-sm text-[#999999]">Agregado:</p>
                                         <p className="font-medium text-[#0F332D]">{producto.createdBy?.nombre}</p>
                                         <p className="text-xs text-[#999999] flex items-center gap-1">
                                             <Calendar size={12} />
@@ -221,25 +250,92 @@ export default function ProductDetail({ producto, drafts, orders, getProductImag
                                 </div>
                             </div>
 
+                            {/* Descripción */}
                             <div className="mb-6">
                                 <h3 className="font-semibold text-[#0F332D] mb-2">Descripción</h3>
                                 <p className="text-[#0F332D]/90">{producto.descripcion || 'Sin descripción'}</p>
                             </div>
 
-                            <div className="flex gap-6 text-sm mb-6">
-                                <div>
-                                    <span className="text-[#999999]">Disponibilidad:</span>
-                                    <span className="ml-2 text-[#63B23D] font-medium">En stock</span>
+                            {/* Tienda física y dirección */}
+                            {(producto.tienda_fisica || producto.direccion) && (
+                                <div className="mb-6">
+                                    {producto.tienda_fisica && (
+                                        <div className="flex items-start gap-2 mb-2">
+                                            <Store size={18} className="text-[#174940] mt-0.5" />
+                                            <div>
+                                                <h3 className="font-semibold text-[#0F332D]">Tienda física</h3>
+                                                <p className="text-[#0F332D]/90">{producto.tienda_fisica}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {producto.direccion && (
+                                        <div className="flex items-start gap-2">
+                                            <MapPin size={18} className="text-[#174940] mt-0.5" />
+                                            <div>
+                                                <h3 className="font-semibold text-[#0F332D]">Dirección</h3>
+                                                <p className="text-[#0F332D]/90">{producto.direccion}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Especificaciones */}
+                            {renderEspecificaciones()}
+
+                            {/* Links de compra */}
+                            <div className="mb-6">
+                                <h3 className="font-semibold text-[#0F332D] mb-2 flex items-center gap-2">
+                                    <LinkIcon size={18} />
+                                    Links de compra
+                                </h3>
+                                <div className="space-y-2">
+                                    {producto.link_compra && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm text-[#999999]">Principal:</span>
+                                            <a 
+                                                href={producto.link_compra} 
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[#63B23D] hover:underline text-sm break-all"
+                                            >
+                                                {producto.link_compra}
+                                            </a>
+                                        </div>
+                                    )}
+                                    {producto.link_compra2 && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm text-[#999999]">Alternativo 1:</span>
+                                            <a 
+                                                href={producto.link_compra2} 
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[#63B23D] hover:underline text-sm break-all"
+                                            >
+                                                {producto.link_compra2}
+                                            </a>
+                                        </div>
+                                    )}
+                                    {producto.link_compra3 && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm text-[#999999]">Alternativo 2:</span>
+                                            <a 
+                                                href={producto.link_compra3} 
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[#63B23D] hover:underline text-sm break-all"
+                                            >
+                                                {producto.link_compra3}
+                                            </a>
+                                        </div>
+                                    )}
+                                    {!producto.link_compra && !producto.link_compra2 && !producto.link_compra3 && (
+                                        <p className="text-sm text-[#999999]">No hay links de compra disponibles</p>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="flex gap-6 text-sm mb-6">
-                                <div>
-                                    <span className="text-[#999999]">Link de compra:</span>
-                                    <a href={producto.link_compra} className="ml-2 text-[#63B23D] font-medium">{producto.link_compra}</a>
-                                </div>
-                            </div>
-
+                            {/* Botones de acción */}
                             <div className="flex flex-wrap gap-3">
                                 <button
                                     type="button"
