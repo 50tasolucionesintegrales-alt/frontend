@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react'
 import CreateQuoteModal from './CreateQuoteModal'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import ExcelQuoteFlow from '@/components/quotes/ExcelQuoteFlow'
 
 type props = {
     quotes: Quotes
@@ -32,10 +33,11 @@ export default function QuotesTable({ quotes, type }: props) {
     return (
         <>
             {type === 'drafts' && (
-                <div className="mb-6">
+                <div className="mb-6  flex gap-3">
                     <button className="btn-primary" onClick={() => setOpen(true)}>
                         Nueva Cotización
                     </button>
+                    <ExcelQuoteFlow />
                 </div>
             )}
             <section className="mb-12">
