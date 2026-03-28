@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 export async function downloadExcelTemplateAction(
   empresaIds: number[],
   numProductos: number = 10,
+  tipo: 'productos' | 'servicios' = 'productos',
 ): Promise<{
   buffer?: string;
   filename?: string;
@@ -17,7 +18,7 @@ export async function downloadExcelTemplateAction(
   const params = empresaIds.join(",");
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/quotes/excel/template?empresas=${params}&numProductos=${numProductos}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/quotes/excel/template?empresas=${params}&numProductos=${numProductos}&tipo=${tipo}`,
     {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
@@ -33,9 +34,9 @@ export async function downloadExcelTemplateAction(
     }
   }
 
-  const buf = await res.arrayBuffer();
-  const base64 = Buffer.from(buf).toString("base64");
-  const filename = `cotizacion_plantilla_${empresaIds.join("-")}.xlsx`;
+  const buf      = await res.arrayBuffer();
+  const base64   = Buffer.from(buf).toString("base64");
+  const filename = `cotizacion_${tipo}_${empresaIds.join("-")}.xlsx`;
 
   return { buffer: base64, filename };
 }

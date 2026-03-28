@@ -25,6 +25,7 @@ export async function importExcelAction(
 
   const file = formData.get("file");
   const empresasRaw = formData.get("empresas")?.toString();
+  const tipoRaw = formData.get("tipo")?.toString() ?? "productos";
 
   if (!file || !(file instanceof Blob)) {
     return { ok: false, error: "El archivo es obligatorio" };
@@ -44,6 +45,7 @@ export async function importExcelAction(
   const fd = new FormData();
   fd.append("file", file);
   fd.append("empresas", empresasRaw);
+  fd.append("tipo", tipoRaw);
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/quotes/import-excel`,

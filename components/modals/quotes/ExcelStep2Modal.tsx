@@ -23,6 +23,7 @@ type Props = {
   onClose: () => void;
   onBack: () => void;
   empresaIds: number[];
+  tipo: "productos" | "servicios";
   onSuccess: (quoteId: string, empresas: number[]) => void;
 };
 
@@ -33,6 +34,7 @@ export default function ExcelStep2Modal({
   onClose,
   onBack,
   empresaIds,
+  tipo,
   onSuccess,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -70,6 +72,7 @@ export default function ExcelStep2Modal({
       const fd = new FormData();
       fd.append("file", file);
       fd.append("empresas", JSON.stringify(empresaIds));
+      fd.append("tipo", tipo);
 
       const result: ImportExcelResult = await importExcelAction(fd);
 

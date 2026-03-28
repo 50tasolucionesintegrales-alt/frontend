@@ -12,14 +12,15 @@ import { downloadExcelTemplateAction } from "@/actions/quotes/downloadExcelTempl
 type Props = {
   open: boolean;
   onClose: () => void;
-  onNext: (empresaIds: number[]) => void;
+  onNext: (empresaIds: number[], tipo: "productos" | "servicios") => void;
 };
 
 export default function ExcelStep1Modal({ open, onClose, onNext }: Props) {
   const { selected, toggle, selectAll, clearAll, hydrated } =
     useSelectedFormats("excel:step1:formats", [1]);
   const [downloading, setDownloading] = useState(false);
-  const [numProductos, setNumProductos] = useState(10);
+  const [numItems, setNumItems] = useState(10);
+  const [tipo, setTipo] = useState<"productos" | "servicios">("productos");
 
   const handleDownload = async () => {
     if (!selected.length) {
@@ -28,7 +29,11 @@ export default function ExcelStep1Modal({ open, onClose, onNext }: Props) {
     }
     setDownloading(true);
     try {
-      const result = await downloadExcelTemplateAction(selected, numProductos);
+      const result = await downloadExcelTemplateAction(
+        selected,
+        numItems,
+        tipo,
+      );
       if (result.error || !result.buffer) {
         toast.error(result.error ?? "Error al generar la plantilla");
         return;
@@ -58,7 +63,7 @@ export default function ExcelStep1Modal({ open, onClose, onNext }: Props) {
       toast.warn("Selecciona al menos una organización");
       return;
     }
-    onNext(selected);
+    onNext(selected, tipo);
   };
 
   return (
@@ -79,10 +84,10 @@ export default function ExcelStep1Modal({ open, onClose, onNext }: Props) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl mx-2"
+              className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl mx-2 max-h-[90vh] overflow-y-auto"
             >
               {/* Header */}
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <FileSpreadsheet className="text-[#63B23D]" size={22} />
                   <Dialog.Title className="text-xl font-bold text-gray-900">
@@ -97,48 +102,73 @@ export default function ExcelStep1Modal({ open, onClose, onNext }: Props) {
                   <X size={20} />
                 </button>
               </div>
-
-              <p className="text-sm text-gray-500 mb-5">
-                Paso 1 de 2 — Selecciona las organizaciones y descarga la plantilla
+              <p className="text-sm text-gray-500 mb-6">
+                Paso 1 de 2 — Configura y descarga tu plantilla
               </p>
 
-              <FormatsPicker
-                selected={selected}
-                toggle={toggle}
-                selectAll={selectAll}
-                clearAll={clearAll}
-                hydrated={hydrated}
-                disabled={downloading}
-              />
+              {/* Organizaciones */}
+              <div className="mb-5">
+                <p className="text-sm font-semibold text-[#0F332D] mb-2">
+                  1. Selecciona las organizaciones
+                </p>
+                <FormatsPicker
+                  selected={selected}
+                  toggle={toggle}
+                  selectAll={selectAll}
+                  clearAll={clearAll}
+                  hydrated={hydrated}
+                  disabled={downloading}
+                />
+              </div>
 
-              {/* Selector de cantidad de productos */}
-              <div className="mt-4 p-4 bg-[#f0f7f5] rounded-lg">
-                <label className="block text-sm font-medium text-[#0F332D] mb-2">
-                  ¿Cuántos productos vas a cotizar?
-                </label>
-                <div className="flex items-center gap-3">
+              <div className="border-t pt-5 mb-5">
+                {/* Tipo */}
+                <p className="text-sm font-semibold text-[#0F332D] mb-3">
+                  2. Tipo de cotización
+                </p>
+                <div className="flex gap-3">
+                  {(["productos", "servicios"] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTipo(t)}
+                      className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
+                        tipo === t
+                          ? "bg-[#174940] text-white"
+                          : "bg-white border border-[#174940] text-[#174940] hover:bg-[#f0f7f5]"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t pt-5 mb-5">
+                {/* Cantidad */}
+                <p className="text-sm font-semibold text-[#0F332D] mb-3">
+                  3. ¿Cuántos {tipo} vas a cotizar?
+                </p>
+                <div className="flex items-center gap-3 mb-3">
                   <input
                     type="number"
                     min={1}
                     max={200}
-                    value={numProductos}
+                    value={numItems}
                     onChange={(e) => {
                       const v = parseInt(e.target.value);
-                      if (!isNaN(v) && v >= 1 && v <= 200) setNumProductos(v);
+                      if (!isNaN(v) && v >= 1 && v <= 200) setNumItems(v);
                     }}
-                    className="w-24 px-3 py-2 rounded-lg border border-[#174940] text-[#174940] font-bold text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#174940]"
+                    className="w-20 px-3 py-2 rounded-lg border border-[#174940] text-[#174940] font-bold text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#174940]"
                   />
-                  <span className="text-sm text-gray-500">
-                    productos (máx. 200)
-                  </span>
+                  <span className="text-sm text-gray-400">máx. 200</span>
                 </div>
-                <div className="flex gap-2 mt-3 flex-wrap">
+                <div className="flex gap-2 flex-wrap">
                   {[5, 10, 15, 20, 30, 50].map((n) => (
                     <button
                       key={n}
-                      onClick={() => setNumProductos(n)}
+                      onClick={() => setNumItems(n)}
                       className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                        numProductos === n
+                        numItems === n
                           ? "bg-[#174940] text-white"
                           : "bg-white border border-[#174940] text-[#174940] hover:bg-[#f0f7f5]"
                       }`}
@@ -149,19 +179,15 @@ export default function ExcelStep1Modal({ open, onClose, onNext }: Props) {
                 </div>
               </div>
 
-              {/* Instrucciones */}
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-600 space-y-1">
-                <p className="font-medium text-gray-800">¿Cómo funciona?</p>
-                <ol className="list-decimal list-inside space-y-1">
-                  <li>Selecciona las organizaciones que quieres cotizar.</li>
-                  <li>Elige cuántos productos necesitas.</li>
-                  <li>Descarga la plantilla Excel con esas filas listas.</li>
-                  <li>Llena los datos y sube el archivo en el siguiente paso.</li>
-                </ol>
-              </div>
+              {/* Nota */}
+              <p className="text-xs text-amber-600 font-medium bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-6">
+                ⚠️ La plantilla solo funcionará con las mismas organizaciones y
+                tipo seleccionados. Si cambias algo, descarga una nueva
+                plantilla.
+              </p>
 
               {/* Botones */}
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-6 border-t mt-6">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-4 border-t">
                 <button
                   type="button"
                   onClick={handleDownload}
