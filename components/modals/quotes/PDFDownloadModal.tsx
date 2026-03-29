@@ -1,11 +1,13 @@
-// components/quotes/PdfDownloadModal.tsx
+// components/modals/quotes/PDFDownloadModal.tsx
 'use client'
 
 import { Dialog } from '@headlessui/react'
-import { useActionState, useEffect, useMemo, useState } from 'react'
+import { useActionState, useEffect, useMemo, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { downloadQuotePdfAction } from '@/actions/quotes/GetQuotePdfAction'
-import { Loader2, Download, X, Plus, Trash2, List, Text } from 'lucide-react'
+import { getTemplateDefaultDataAction } from '@/actions/quotes/getTemplateDefaultDataAction'
+import { updateTemplateDataAction } from '@/actions/quotes/updateTemplateDataAction'
+import { Loader2, Download, X, Plus, Trash2, List, Text, Save } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 type Persisted = {
@@ -16,10 +18,8 @@ type Persisted = {
   lugar?: string
   fecha?: string
   incluirFirma?: boolean
-  // firma (se guardan por separado, se envían juntos con <br>)
   firmanteNombre?: string
   firmanteCargo?: string
-  // constructor de condiciones
   condicionesItems?: string[]
   condicionesText?: string
   condicionesMode?: 'list' | 'text'
@@ -48,18 +48,19 @@ export default function PdfDownloadModal({
   const [fecha, setFecha] = useState(today)
   const [incluirFirma, setIncluirFirma] = useState(false)
 
-  // ---- Firma (se envía como un solo string con <br>)
+  // ---- Firma
   const [firmanteNombre, setFirmanteNombre] = useState('')
   const [firmanteCargo, setFirmanteCargo] = useState('')
 
-  // ---- Condiciones (constructor)
+  // ---- Condiciones
   const [condicionesItems, setCondicionesItems] = useState<string[]>([])
   const [condicionesText, setCondicionesText] = useState('')
   const [condicionesMode, setCondicionesMode] = useState<'list' | 'text'>('list')
 
   const [state, formAction, pending] = useActionState(downloadQuotePdfAction, {})
+  const [loadingTemplate, setLoadingTemplate] = useState(false)
+  const [savingTemplate, setSavingTemplate] = useState(false)
 
-  // Validación mínima
   const isValid = destinatario.trim().length > 0 && fecha.trim().length > 0
 
   // Helpers para condiciones
@@ -102,35 +103,89 @@ export default function PdfDownloadModal({
     setCondicionesMode('list')
     try { localStorage.removeItem(LS_KEY) } catch { }
   }
+
   const handleClose = () => { resetForm(); onClose() }
 
-  // Cargar guardado
+  const loadTemplateDefaults = useCallback(async () => {
+    setLoadingTemplate(true)
+    try {
+      const result = await getTemplateDefaultDataAction(empresa)
+      
+      if (result.success && result.data) {
+        const data = result.data
+        setDestinatario(data.destinatario || '')
+        setPresente(data.presente || '')
+        setDescripcion(data.descripcion || '')
+        setFolio(data.folio || '') // Usar el folio guardado directamente
+        setLugar(data.lugar || '')
+        setIncluirFirma(data.incluirFirma ?? false)
+        
+        const firmanteParts = data.firmanteNombre?.split('<br>') || []
+        setFirmanteNombre(firmanteParts[0] || '')
+        setFirmanteCargo(firmanteParts[1] || data.firmanteCargo || '')
+        
+        setCondicionesMode(data.condicionesMode || 'list')
+        
+        if (data.condicionesMode === 'list' || (data.condicionesItems && data.condicionesItems.length > 0)) {
+          setCondicionesItems(data.condicionesItems || [])
+          setCondicionesText('')
+        } else if (data.condicionesMode === 'text' && data.condicionesText) {
+          setCondicionesText(data.condicionesText)
+          setCondicionesItems([])
+        } else if (data.condicionesItems && data.condicionesItems.length > 0) {
+          setCondicionesItems(data.condicionesItems)
+          setCondicionesMode('list')
+          setCondicionesText('')
+        } else if (data.condicionesText) {
+          setCondicionesText(data.condicionesText)
+          setCondicionesMode('text')
+          setCondicionesItems([])
+        } else {
+          setCondicionesItems([])
+          setCondicionesText('')
+          setCondicionesMode('list')
+        }
+      }
+    } catch (error) {
+      console.error('Error loading template defaults:', error)
+    } finally {
+      setLoadingTemplate(false)
+    }
+  }, [empresa])
+
+  // Cargar guardado local o template defaults
   useEffect(() => {
     if (!open) return
-    try {
-      const raw = localStorage.getItem(LS_KEY)
-      if (raw) {
-        const j: Persisted = JSON.parse(raw)
-        setDestinatario(j.destinatario ?? '')
-        setPresente(j.presente ?? '')
-        setDescripcion(j.descripcion ?? '')
-        setFolio(j.folio ?? '')
-        setLugar(j.lugar ?? '')
-        setFecha(j.fecha ?? today)
-        setIncluirFirma(!!j.incluirFirma)
-        setFirmanteNombre(j.firmanteNombre ?? '')
-        setFirmanteCargo(j.firmanteCargo ?? '')
-        setCondicionesItems(j.condicionesItems ?? [])
-        setCondicionesText(j.condicionesText ?? '')
-        setCondicionesMode(j.condicionesMode ?? 'list')
-      } else {
-        resetForm()
-      }
-    } catch { resetForm() }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, LS_KEY])
 
-  // Guardar cambios
+    const loadData = async () => {
+      try {
+        const raw = localStorage.getItem(LS_KEY)
+        if (raw) {
+          const j: Persisted = JSON.parse(raw)
+          setDestinatario(j.destinatario ?? '')
+          setPresente(j.presente ?? '')
+          setDescripcion(j.descripcion ?? '')
+          setFolio(j.folio ?? '')
+          setLugar(j.lugar ?? '')
+          setFecha(j.fecha ?? today)
+          setIncluirFirma(!!j.incluirFirma)
+          setFirmanteNombre(j.firmanteNombre ?? '')
+          setFirmanteCargo(j.firmanteCargo ?? '')
+          setCondicionesItems(j.condicionesItems ?? [])
+          setCondicionesText(j.condicionesText ?? '')
+          setCondicionesMode(j.condicionesMode ?? 'list')
+        } else {
+          await loadTemplateDefaults()
+        }
+      } catch {
+        await loadTemplateDefaults()
+      }
+    }
+
+    loadData()
+  }, [open, LS_KEY, today, loadTemplateDefaults])
+
+  // Guardar cambios en localStorage
   useEffect(() => {
     if (!open) return
     const payload: Persisted = {
@@ -158,7 +213,6 @@ export default function PdfDownloadModal({
     } else if (state?.error) {
       toast.error(state.error)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state])
 
   // ---- UI
@@ -189,281 +243,281 @@ export default function PdfDownloadModal({
                 </button>
               </div>
 
-              <p className="text-xs text-gray-600 mb-4">
-                Algunos campos no aparecen en ciertos formatos, pero se envían para mantener la compatibilidad entre plantillas.
-              </p>
-
-              <form
-                action={(fd) => {
-                  // 1) Condiciones -> HTML
-                  const items =
-                    condicionesItems.length ? condicionesItems : fromTextToItems(condicionesText)
-                  const condicionesHtml = items.length ? buildCondHtml(items) : ''
-
-                  // 2) firmanteNombre SIEMPRE (aunque incluirFirma sea false)
-                  const name = firmanteNombre.trim()
-                  const role = firmanteCargo.trim()
-                  const combinedFirmante = role ? `${name}<br>${role}` : name
-                  fd.append('firmanteNombre', combinedFirmante) // 👈 siempre
-
-                  // 3) Campos habituales
-                  fd.append('quoteId', quoteId)
-                  fd.append('empresa', String(empresa))
-                  fd.append('destinatario', destinatario)
-                  fd.append('presente', presente)
-                  fd.append('descripcion', descripcion)
-                  fd.append('folio', folio)
-                  fd.append('lugar', lugar)
-                  fd.append('fecha', fecha)
-                  fd.append('incluirFirma', incluirFirma ? 'true' : 'false')
-                  fd.append('condiciones', condicionesHtml)
-
-                  return formAction(fd)
-                }}
-                className="space-y-6"
-              >
-
-                {/* Datos generales */}
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Destinatario *</label>
-                    <input
-                      value={destinatario}
-                      onChange={(e) => setDestinatario(e.target.value)}
-                      required
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                      placeholder="Nombre del cliente o dependencia"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">“Presente” / Encabezado</label>
-                    <input
-                      value={presente}
-                      onChange={(e) => setPresente(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                      placeholder="Ej. A QUIEN CORRESPONDA"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Lugar</label>
-                    <input
-                      value={lugar}
-                      onChange={(e) => setLugar(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                      placeholder="Ciudad, Estado"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
-                    <input
-                      title='fecha'
-                      type="date"
-                      value={fecha}
-                      onChange={(e) => setFecha(e.target.value)}
-                      required
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Folio</label>
-                    <input
-                      value={folio}
-                      onChange={(e) => setFolio(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                      placeholder="COT-2025-0001"
-                    />
-                  </div>
+              {loadingTemplate && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+                  <span className="ml-2 text-gray-600">Cargando datos de la plantilla...</span>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripción / Cuerpo</label>
-                  <textarea
-                    value={descripcion}
-                    onChange={(e) => setDescripcion(e.target.value)}
-                    rows={4}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                    placeholder="Texto que aparecerá en el PDF"
-                  />
-                </div>
+              {!loadingTemplate && (
+                <form
+                  action={(fd) => {
+                    const items = condicionesItems.length ? condicionesItems : fromTextToItems(condicionesText)
+                    const condicionesHtml = items.length ? buildCondHtml(items) : ''
 
-                {/* ====== Constructor de condiciones ====== */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">Condiciones / Términos</label>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setCondicionesMode('list')}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm ${condicionesMode === 'list'
-                            ? 'bg-green-600 text-white'
-                            : 'bg-gray-100 text-gray-700'
-                          }`}
-                        title="Constructor de lista"
-                      >
-                        <List size={16} /> Lista
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCondicionesMode('text')}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm ${condicionesMode === 'text'
-                            ? 'bg-green-600 text-white'
-                            : 'bg-gray-100 text-gray-700'
-                          }`}
-                        title="Pegar texto y convertir"
-                      >
-                        <Text size={16} /> Texto
-                      </button>
+                    const name = firmanteNombre.trim()
+                    const role = firmanteCargo.trim()
+                    const combinedFirmante = role ? `${name}<br>${role}` : name
+                    fd.append('firmanteNombre', combinedFirmante)
+
+                    fd.append('quoteId', quoteId)
+                    fd.append('empresa', String(empresa))
+                    fd.append('destinatario', destinatario)
+                    fd.append('presente', presente)
+                    fd.append('descripcion', descripcion)
+                    fd.append('folio', folio)
+                    fd.append('lugar', lugar)
+                    fd.append('fecha', fecha)
+                    fd.append('incluirFirma', incluirFirma ? 'true' : 'false')
+                    fd.append('condiciones', condicionesHtml)
+
+                    return formAction(fd)
+                  }}
+                  className="space-y-6"
+                >
+                  {/* Datos generales */}
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Destinatario *</label>
+                      <input
+                        value={destinatario}
+                        onChange={(e) => setDestinatario(e.target.value)}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                        placeholder="Nombre del cliente o dependencia"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">“Presente” / Encabezado</label>
+                      <input
+                        value={presente}
+                        onChange={(e) => setPresente(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                        placeholder="Ej. A QUIEN CORRESPONDA"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Lugar</label>
+                      <input
+                        value={lugar}
+                        onChange={(e) => setLugar(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                        placeholder="Ciudad, Estado"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
+                      <input
+                        title='fecha'
+                        type="date"
+                        value={fecha}
+                        onChange={(e) => setFecha(e.target.value)}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Folio</label>
+                      <input
+                        value={folio}
+                        onChange={(e) => setFolio(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                        placeholder="COT-2025-0001"
+                      />
                     </div>
                   </div>
 
-                  {condicionesMode === 'list' ? (
-                    <div className="rounded-lg border border-gray-200 p-3 space-y-3">
-                      {condicionesItems.length === 0 && (
-                        <p className="text-xs text-gray-500">Sin ítems. Agrega condiciones con el botón de abajo.</p>
-                      )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Descripción / Cuerpo</label>
+                    <textarea
+                      value={descripcion}
+                      onChange={(e) => setDescripcion(e.target.value)}
+                      rows={4}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                      placeholder="Texto que aparecerá en el PDF"
+                    />
+                  </div>
 
-                      {condicionesItems.map((it, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <input
-                            className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-                            value={it}
-                            onChange={(e) => {
-                              const arr = [...condicionesItems]
-                              arr[idx] = e.target.value
-                              setCondicionesItems(arr)
-                            }}
-                            placeholder={`Condición #${idx + 1}`}
-                          />
+                  {/* Constructor de condiciones */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-700">Condiciones / Términos</label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setCondicionesMode('list')}
+                          className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm ${condicionesMode === 'list'
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gray-100 text-gray-700'
+                            }`}
+                          title="Constructor de lista"
+                        >
+                          <List size={16} /> Lista
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCondicionesMode('text')}
+                          className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm ${condicionesMode === 'text'
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gray-100 text-gray-700'
+                            }`}
+                          title="Pegar texto y convertir"
+                        >
+                          <Text size={16} /> Texto
+                        </button>
+                      </div>
+                    </div>
+
+                    {condicionesMode === 'list' ? (
+                      <div className="rounded-lg border border-gray-200 p-3 space-y-3">
+                        {condicionesItems.length === 0 && (
+                          <p className="text-xs text-gray-500">Sin ítems. Agrega condiciones con el botón de abajo.</p>
+                        )}
+
+                        {condicionesItems.map((it, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <input
+                              className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                              value={it}
+                              onChange={(e) => {
+                                const arr = [...condicionesItems]
+                                arr[idx] = e.target.value
+                                setCondicionesItems(arr)
+                              }}
+                              placeholder={`Condición #${idx + 1}`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setCondicionesItems(condicionesItems.filter((_, i) => i !== idx))}
+                              className="p-2 rounded-md text-red-600 hover:bg-red-50"
+                              aria-label="Eliminar condición"
+                              title="Eliminar"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ))}
+
+                        <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={() => setCondicionesItems(condicionesItems.filter((_, i) => i !== idx))}
-                            className="p-2 rounded-md text-red-600 hover:bg-red-50"
-                            aria-label="Eliminar condición"
-                            title="Eliminar"
+                            onClick={() => setCondicionesItems([...condicionesItems, ''])}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm"
                           >
-                            <Trash2 size={16} />
+                            <Plus size={16} /> Agregar condición
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCondicionesItems(['Precios en MXN', 'Entrega: 7 días', 'Garantía: 12 meses'])
+                            }}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm"
+                          >
+                            Usar ejemplo
                           </button>
                         </div>
-                      ))}
-
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setCondicionesItems([...condicionesItems, ''])}
-                          className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm"
-                        >
-                          <Plus size={16} /> Agregar condición
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCondicionesItems(['Precios en MXN', 'Entrega: 7 días', 'Garantía: 12 meses'])
-                          }}
-                          className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm"
-                        >
-                          Usar ejemplo
-                        </button>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border border-gray-200 p-3 space-y-2">
-                      <textarea
-                        rows={4}
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-                        value={condicionesText}
-                        onChange={(e) => setCondicionesText(e.target.value)}
-                        placeholder={`Pega cada condición en una línea (o sepáralas con ';')\nEj:\nPrecios en MXN\nEntrega: 7 días\nGarantía: 12 meses`}
+                    ) : (
+                      <div className="rounded-lg border border-gray-200 p-3 space-y-2">
+                        <textarea
+                          rows={4}
+                          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                          value={condicionesText}
+                          onChange={(e) => setCondicionesText(e.target.value)}
+                          placeholder={`Pega cada condición en una línea (o sepáralas con ';')\nEj:\nPrecios en MXN\nEntrega: 7 días\nGarantía: 12 meses`}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={importFromTextarea}
+                            className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm"
+                          >
+                            Importar como lista
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Firma */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="incluirFirma"
+                      type="checkbox"
+                      checked={incluirFirma}
+                      onChange={(e) => setIncluirFirma(e.target.checked)}
+                      className="h-5 w-5 rounded border-gray-300 text-[#63B23D] focus:ring-[#57a533]"
+                    />
+                    <label htmlFor="incluirFirma" className="text-sm font-medium text-gray-700">
+                      Incluir firma
+                    </label>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4 -mt-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nombre del firmante
+                      </label>
+                      <input
+                        value={firmanteNombre}
+                        onChange={(e) => setFirmanteNombre(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                        placeholder="Ej. Ing. Laura Gómez"
                       />
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={importFromTextarea}
-                          className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm"
-                        >
-                          Importar como lista
-                        </button>
-                      </div>
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Cargo
+                      </label>
+                      <input
+                        value={firmanteCargo}
+                        onChange={(e) => setFirmanteCargo(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                        placeholder="Ej. Directora de ventas"
+                      />
+                    </div>
+                    <p className="sm:col-span-2 text-xs text-gray-500 -mt-2">
+                      Se enviará como un solo campo usando un salto de línea (&lt;br&gt;) entre nombre y cargo.
+                    </p>
+                  </div>
+
+                  {/* Botones */}
+                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t mt-2">
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      disabled={pending}
+                      className="px-6 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={pending || !isValid}
+                      aria-disabled={pending || !isValid}
+                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors ${pending || !isValid
+                          ? 'bg-green-400 cursor-not-allowed'
+                          : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
+                        }`}
+                    >
+                      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                      {pending ? 'Generando…' : 'Generar PDF'}
+                    </button>
+                  </div>
+
+                  {!isValid && (
+                    <p className="text-xs text-red-600 mt-2">
+                      Completa los campos obligatorios: <b>Destinatario</b> y <b>Fecha</b>.
+                    </p>
                   )}
-                </div>
-
-                {/* Firma */}
-                <div className="flex items-center gap-3">
-                  <input
-                    id="incluirFirma"
-                    type="checkbox"
-                    checked={incluirFirma}
-                    onChange={(e) => setIncluirFirma(e.target.checked)}
-                    className="h-5 w-5 rounded border-gray-300 text-[#63B23D] focus:ring-[#57a533]"
-                  />
-                  <label htmlFor="incluirFirma" className="text-sm font-medium text-gray-700">
-                    Incluir firma
-                  </label>
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-4 -mt-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre del firmante
-                    </label>
-                    <input
-                      value={firmanteNombre}
-                      onChange={(e) => setFirmanteNombre(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                      placeholder="Ej. Ing. Laura Gómez"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Cargo
-                    </label>
-                    <input
-                      value={firmanteCargo}
-                      onChange={(e) => setFirmanteCargo(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                      placeholder="Ej. Directora de ventas"
-                    />
-                  </div>
-                  <p className="sm:col-span-2 text-xs text-gray-500 -mt-2">
-                    Se enviará como un solo campo usando un salto de línea (&lt;br&gt;) entre nombre y cargo.
-                  </p>
-                </div>
-
-                {/* Botones */}
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t mt-2">
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    disabled={pending}
-                    className="px-6 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={pending || !isValid}
-                    aria-disabled={pending || !isValid}
-                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors ${pending || !isValid
-                        ? 'bg-green-400 cursor-not-allowed'
-                        : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
-                      }`}
-                  >
-                    {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                    {pending ? 'Generando…' : 'Generar PDF'}
-                  </button>
-                </div>
-
-                {!isValid && (
-                  <p className="text-xs text-red-600 mt-2">
-                    Completa los campos obligatorios: <b>Destinatario</b> y <b>Fecha</b>.
-                  </p>
-                )}
-              </form>
+                </form>
+              )}
             </motion.div>
           </div>
         </Dialog>

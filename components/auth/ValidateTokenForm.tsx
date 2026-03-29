@@ -33,7 +33,6 @@ export default function ValidateTokenForm({ setIsValidToken, token, setToken }: 
         if (state.errors) {
             state.errors.forEach(error => {
                 toast.error(error)
-                console.error(error)
             })
         }
         if (state.success) {
