@@ -28,6 +28,9 @@ export default function ExcelQuoteFlow() {
   const handleStep2Success = (newQuoteId: string, empresas: number[]) => {
     setQuoteId(newQuoteId);
     setEmpresaIds(empresas);
+
+    localStorage.setItem(`quote:${newQuoteId}:formats`, JSON.stringify(empresas));
+
     const [first, ...rest] = empresas;
     setPdfEmpresa(first);
     setPdfQueue(rest);
