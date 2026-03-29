@@ -166,12 +166,62 @@ export default function EditProductModal({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Link de compra
+                    Link de compra (principal)
                   </label>
                   <input
                     name="link_compra"
                     type="url"
                     defaultValue={producto.link_compra ?? ''}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tienda física
+                  </label>
+                  <input
+                    name="tienda_fisica"
+                    defaultValue={producto.tienda_fisica ?? ''}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                    placeholder="Nombre de la tienda física"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Dirección
+                  </label>
+                  <input
+                    name="direccion"
+                    defaultValue={producto.direccion ?? ''}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                    placeholder="Dirección de la tienda"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Link de compra 2 (opcional)
+                  </label>
+                  <input
+                    name="link_compra2"
+                    type="url"
+                    defaultValue={producto.link_compra2 ?? ''}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Link de compra 3 (opcional)
+                  </label>
+                  <input
+                    name="link_compra3"
+                    type="url"
+                    defaultValue={producto.link_compra3 ?? ''}
                     className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
                     placeholder="https://..."
                   />

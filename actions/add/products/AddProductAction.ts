@@ -52,20 +52,45 @@ export default async function AddProductAction(
 
   // --- Link de compra (opcional) ---
   const linkCompra = formData.get('link_compra')
-
   if (typeof linkCompra === 'string' && linkCompra.trim() !== '') {
     let normalizedLink = linkCompra.trim()
-
     if (!/^https?:\/\//i.test(normalizedLink)) {
       normalizedLink = `https://${normalizedLink}`
     }
-
     form.append('link_compra', normalizedLink)
+  }
+
+  // --- Nuevos campos opcionales ---
+  const tiendaFisica = formData.get('tienda_fisica')
+  if (typeof tiendaFisica === 'string' && tiendaFisica.trim() !== '') {
+    form.append('tienda_fisica', tiendaFisica.trim())
+  }
+
+  const direccion = formData.get('direccion')
+  if (typeof direccion === 'string' && direccion.trim() !== '') {
+    form.append('direccion', direccion.trim())
+  }
+
+  const linkCompra2 = formData.get('link_compra2')
+  if (typeof linkCompra2 === 'string' && linkCompra2.trim() !== '') {
+    let normalizedLink = linkCompra2.trim()
+    if (!/^https?:\/\//i.test(normalizedLink)) {
+      normalizedLink = `https://${normalizedLink}`
+    }
+    form.append('link_compra2', normalizedLink)
+  }
+
+  const linkCompra3 = formData.get('link_compra3')
+  if (typeof linkCompra3 === 'string' && linkCompra3.trim() !== '') {
+    let normalizedLink = linkCompra3.trim()
+    if (!/^https?:\/\//i.test(normalizedLink)) {
+      normalizedLink = `https://${normalizedLink}`
+    }
+    form.append('link_compra3', normalizedLink)
   }
 
   // --- Imagen (opcional) ---
   const file = formData.get('file') as File
-
   if (file && file.size > 0) {
     form.append('file', file)
   }

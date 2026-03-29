@@ -1,6 +1,6 @@
 'use client'
 
-import { startTransition, useActionState, useEffect, useState } from 'react'
+import { startTransition, useActionState, useEffect, useState, useRef } from 'react'
 import { useDropzone } from 'react-dropzone'
 import AddProductAction from '@/actions/add/products/AddProductAction'
 import { toast } from 'react-toastify'
@@ -20,6 +20,10 @@ export default function ProductForm({ categorias }: Props) {
   const [fileName, setFileName] = useState('')
   const [previewUrl, setPreviewUrl] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [categoryName, setCategoryName] = useState('')
+  const [categoryId, setCategoryId] = useState('')
+  
+  const formRef = useRef<HTMLFormElement>(null)
 
   const MAX_MB = 10
   const ACCEPT = {
@@ -56,9 +60,28 @@ export default function ProductForm({ categorias }: Props) {
   }, [previewUrl])
 
   useEffect(() => {
-    if (state.errors.length) state.errors.forEach(e => toast.error(e))
-    if (state.success) toast.success(state.success)
-  }, [state])
+    if (state.success) {
+      setFileName('')
+      setFile(null)
+      setCategoryName('')
+      setCategoryId('')
+      
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+        setPreviewUrl('')
+      }
+
+      if (formRef.current) {
+        formRef.current.reset()
+      }
+
+      toast.success(state.success)
+    }
+    
+    if (state.errors.length) {
+      state.errors.forEach(e => toast.error(e))
+    }
+  }, [state, previewUrl])
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -66,12 +89,6 @@ export default function ProductForm({ categorias }: Props) {
     if (file) formData.set('file', file)
     startTransition(() => dispatch(formData))
   }
-
-  /** ===============================
-   *  CATEGORÍA (HÍBRIDO REAL)
-   *  =============================== */
-  const [categoryName, setCategoryName] = useState('')
-  const [categoryId, setCategoryId] = useState('')
 
   const handleCategoryChange = (value: string) => {
     setCategoryName(value)
@@ -84,108 +101,200 @@ export default function ProductForm({ categorias }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {/* IZQUIERDA */}
+        {/* COLUMNA IZQUIERDA */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[#174940] mb-1">Nombre</label>
+            <label className="block text-sm font-medium text-[#174940] mb-1">
+              Nombre <span className="text-red-500">*</span>
+            </label>
             <input
               name="nombre"
               required
               placeholder="Nombre del producto"
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#174940] mb-1">Precio</label>
+            <label className="block text-sm font-medium text-[#174940] mb-1">
+              Precio <span className="text-red-500">*</span>
+            </label>
             <input
               name="precio"
               type="number"
               step="0.01"
               min="0"
               required
-              placeholder="1000.00"
-              className="w-full px-4 py-2 border rounded-lg"
+              placeholder="$1000.00"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
             />
           </div>
 
-          {/* 🔥 SELECT HÍBRIDO */}
+          {/* SELECT HÍBRIDO DE CATEGORÍA */}
           <div>
             <label className="block text-sm font-medium text-[#174940] mb-1">
-              Categoría
+              Categoría <span className="text-red-500">*</span>
             </label>
-
             <input
               list="categorias-list"
               value={categoryName}
               onChange={(e) => handleCategoryChange(e.target.value)}
               placeholder="Selecciona o escribe una categoría"
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
               required
             />
-
             <datalist id="categorias-list">
               {categorias.map(cat => (
                 <option key={cat.id} value={cat.nombre} />
               ))}
             </datalist>
-
-            {/* 👈 ESTE es el que viaja al backend */}
             <input type="hidden" name="categoryId" value={categoryId} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[#174940] mb-1">
+              Tienda física
+            </label>
+            <input
+              name="tienda_fisica"
+              placeholder="Ej: Walmart, Trupper, Office Depot"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[#174940] mb-1">
+              Dirección
+            </label>
+            <textarea
+              name="direccion"
+              placeholder="Dirección de la tienda física"
+              rows={3}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
+            />
           </div>
         </div>
 
-        {/* DERECHA */}
+        {/* COLUMNA DERECHA */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[#174940] mb-1">Descripción</label>
+            <label className="block text-sm font-medium text-[#174940] mb-1">
+              Descripción <span className="text-red-500">*</span>
+            </label>
             <textarea
               name="descripcion"
-              placeholder='Descripción del producto (Máximo 128 carácteres)'
+              placeholder="Descripción del producto (Máximo 128 caracteres)"
               maxLength={128}
               rows={4}
               required
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
             />
-            <p className="text-sm font-bold text-gray-500">Máximo 128 carácteres</p>
+            <p className="text-xs text-gray-500 mt-1">
+              {`Máximo 128 caracteres`}
+            </p>
           </div>
 
-
           <div>
-            <label className="block text-sm font-medium text-[#174940] mb-1">Link de compra</label>
+            <label className="block text-sm font-medium text-[#174940] mb-1">
+              Link de compra (principal)
+            </label>
             <input
               name="link_compra"
               type="url"
               placeholder="https://ejemplo.com"
-              className="w-full px-4 py-2 border rounded-lg"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
             />
           </div>
 
-          <div {...getRootProps()} className="border-2 border-dashed p-6 rounded-lg cursor-pointer">
-            <input {...getInputProps()} />
-            {previewUrl ? (
-              <Image
-                src={previewUrl}
-                alt="Preview"
-                width={160}
-                height={160}
-                unoptimized
-              />
-            ) : (
-              <p>{isDragActive ? 'Suelta la imagen…' : 'Arrastra o selecciona imagen'}</p>
-            )}
+          <div>
+            <label className="block text-sm font-medium text-[#174940] mb-1">
+              Link de compra 2
+            </label>
+            <input
+              name="link_compra2"
+              type="url"
+              placeholder="https://ejemplo.com"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[#174940] mb-1">
+              Link de compra 3
+            </label>
+            <input
+              name="link_compra3"
+              type="url"
+              placeholder="https://ejemplo.com"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#63B23D] focus:border-[#63B23D] outline-none transition"
+            />
+          </div>
+
+          {/* ÁREA DE IMAGEN */}
+          <div>
+            <label className="block text-sm font-medium text-[#174940] mb-1">
+              Imagen del producto
+            </label>
+            <div 
+              {...getRootProps()} 
+              className={`border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
+                isDragActive ? 'border-[#63B23D] bg-[#63B23D]/5' : 'border-gray-300 hover:border-[#63B23D]'
+              }`}
+            >
+              <input {...getInputProps()} />
+              {previewUrl ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Image
+                    src={previewUrl}
+                    alt="Preview"
+                    width={160}
+                    height={160}
+                    className="object-cover rounded-lg"
+                    unoptimized
+                  />
+                  <p className="text-sm text-gray-500">Haz clic o arrastra para cambiar la imagen</p>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className="text-gray-500">
+                    {isDragActive ? 'Suelta la imagen aquí' : 'Arrastra o selecciona una imagen'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Formatos: JPG, PNG, WEBP, HEIC/HEIF (Máx. {MAX_MB} MB)
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end">
+      {/* BOTONES */}
+      <div className="flex justify-end gap-3 pt-4 border-t">
+        <button
+          type="reset"
+          onClick={() => {
+            if (formRef.current) formRef.current.reset()
+            setCategoryName('')
+            setCategoryId('')
+            if (previewUrl) {
+              URL.revokeObjectURL(previewUrl)
+              setPreviewUrl('')
+            }
+            setFile(null)
+            setFileName('')
+          }}
+          className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+        >
+          Limpiar
+        </button>
         <button
           type="submit"
           disabled={pending}
-          className="px-6 py-2 bg-[#63B23D] text-white rounded-lg"
+          className="px-6 py-2 bg-[#63B23D] text-white rounded-lg hover:bg-[#4F8E30] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {pending ? 'Guardando…' : 'Guardar Producto'}
         </button>
