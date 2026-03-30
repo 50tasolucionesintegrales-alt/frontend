@@ -66,15 +66,13 @@ export async function downloadQuotePdfAction(_prev: State, formData: FormData): 
 
     if (!updateRes.ok) {
       const errorText = await updateRes.text();
-      console.error('Error al actualizar plantilla:', errorText);
     } else {
       const result = await updateRes.json();
       // Revalidar los datos de la plantilla
       revalidateTag(`template-data-${empresa}`, 'max')
     }
   } catch (error) {
-    console.error('Error al actualizar plantilla:', error);
-    // Continuamos con la generación del PDF aunque falle el guardado
+    
   }
 
   // 2. Generar el PDF

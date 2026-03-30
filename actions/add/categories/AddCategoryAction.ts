@@ -23,7 +23,6 @@ export default async function AddCategoryAction(prevState: ActionType, formData:
         },
         body: JSON.stringify(data)
     })
-    console.log(res)
 
     const json = await res.json()
     if(!res.ok) {

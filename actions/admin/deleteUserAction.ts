@@ -25,8 +25,6 @@ export default async function deleteUserAction(prev: ActionType, formData: FormD
             Authorization: `Bearer ${token}`
         }
     });
-
-    console.log(res)
     const json = await res.json();
 
     // 3. Manejar errores

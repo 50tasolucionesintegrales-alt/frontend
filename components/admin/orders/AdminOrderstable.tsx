@@ -18,7 +18,6 @@ export default function AdminOrderTable({ orders, type }: Props) {
         : 'Todas las órdenes están pendientes de revisión.',
     [type]
   )
-  console.log(orders)
   if (!orders.length) {
     return (
       <div className="bg-white p-8 rounded-xl border border-[#e5e7eb] shadow-sm text-center">

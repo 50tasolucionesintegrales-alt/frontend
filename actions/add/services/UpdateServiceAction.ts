@@ -38,7 +38,6 @@ export default async function UpdateServiceAction(_prev: ActionType, formData: F
     })
 
     const json = await res.json()
-    console.log(res)
 
     if(!res.ok) {
         return {

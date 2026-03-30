@@ -59,7 +59,6 @@ export function QuoteRow({
     setItem({ ...item, costo_unitario: numValue })
   }
 
-  // Y en el componente QuoteRow, modifica handleMarginChange:
   const handleMarginChange = (format: number, value: string) => {
     let numValue: number | null = null
     
@@ -78,7 +77,6 @@ export function QuoteRow({
     
     setItem(updatedItem)
     
-    // Notificar al padre sobre el cambio (si se proporcionó la prop)
     if (onMarginChange) {
       onMarginChange(format, numValue)
     }
@@ -139,8 +137,6 @@ export function QuoteRow({
       setShowDeleteConfirm(false)
     } catch (error) {
       toast.error('Error al eliminar el producto')
-    } finally {
-
     }
   }
 
@@ -207,7 +203,6 @@ export function QuoteRow({
                 </div>
               </div>
               
-              {/* Botón para expandir detalles */}
               <button
                 onClick={() => setExpanded(!expanded)}
                 className="mt-2 flex items-center gap-1 text-sm text-[#174940] hover:text-[#0F332D]"
@@ -223,10 +218,8 @@ export function QuoteRow({
                 )}
               </button>
               
-              {/* Detalles expandidos */}
               {expanded && (
                 <div className="mt-3 space-y-3 border-t pt-3">
-                  {/* Cantidad y costo en móvil */}
                   {isProductQuote && (
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -244,7 +237,6 @@ export function QuoteRow({
                     </div>
                   )}
                   
-                  {/* Márgenes en móvil */}
                   {selectedFormats.map((format) => {
                     const { marginValue, precioFinal, subtotalBase, subtotalConMargen, ganancia } = getCalculatedValues(format)
                     const empresaNombre = formatToEmpresaMap[format] ?? `F${format}`
@@ -261,7 +253,7 @@ export function QuoteRow({
                             ) : (
                               <input
                                 type="number"
-                                step="0.01"
+                                step="0.1"
                                 min="0"
                                 value={marginValue === null ? '' : marginValue}
                                 onChange={(e) => handleMarginChange(format, e.target.value)}
@@ -297,16 +289,15 @@ export function QuoteRow({
             </div>
           </div>
         </td>
-      </tr>
+       </tr>
 
-      {/* Vista desktop (igual que antes pero oculta en móvil) */}
+      {/* Vista desktop - columnas optimizadas */}
       <tr className="hover:bg-[#f9fafb] group hidden lg:table-row">
-        {/* Columna de Producto/Servicio con botón de eliminar */}
-        <td className="py-4 px-4 sticky left-0 z-10 bg-white">
+        {/* Columna de Producto/Servicio - más ancha */}
+        <td className="py-4 px-4 sticky left-0 z-10 bg-white min-w-[280px] max-w-[400px]">
           <div className="flex items-center gap-3">
-            {/* Botón de eliminar */}
             {!isSent && onDelete && (
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 {showDeleteConfirm ? (
                   <div className="flex flex-col items-center gap-1 w-24">
                     <span className="text-xs text-red-600 font-medium">¿Eliminar?</span>
@@ -338,9 +329,9 @@ export function QuoteRow({
               </div>
             )}
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               {itemImage && (
-                <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                   <img
                     src={itemImage}
                     alt={itemName}
@@ -348,9 +339,9 @@ export function QuoteRow({
                   />
                 </div>
               )}
-              <div>
-                <div className="font-semibold text-[#0F332D]">{itemName}</div>
-                <div className="text-sm text-gray-600 line-clamp-1">{itemDescription}</div>
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-[#0F332D] truncate">{itemName}</div>
+                <div className="text-sm text-gray-600 line-clamp-2 break-words">{itemDescription}</div>
                 {item.unidad && (
                   <div className="text-xs text-gray-500 mt-1">
                     Unidad: {item.unidad}
@@ -361,79 +352,74 @@ export function QuoteRow({
           </div>
         </td>
 
-        {/* Cantidad (solo para productos) */}
+        {/* Cantidad - columna angosta */}
         {isProductQuote && (
-          <td className="py-4 px-4">
+          <td className="py-4 px-2 w-[70px]">
             <div className="text-center font-medium">{item.cantidad}</div>
           </td>
         )}
 
-        {/* Costo Unitario */}
-        <td className="py-4 px-4">
-          <div className="font-medium text-right">{formatCurrency(item.costo_unitario || 0)}</div>
+        {/* Costo Unitario - columna angosta */}
+        <td className="py-4 px-2 w-[100px]">
+          <div className="font-medium text-right whitespace-nowrap">{formatCurrency(item.costo_unitario || 0)}</div>
         </td>
 
-        {/* Columnas de márgenes */}
+        {/* Columnas de márgenes - mantienen su tamaño */}
         {selectedFormats.map((format) => {
           const empresaNombre = formatToEmpresaMap[format] ?? `Formato ${format}`
           const { marginValue, precioFinal, subtotalBase, subtotalConMargen, ganancia } = getCalculatedValues(format)
           
           return (
-            <td key={format} className="py-4 px-4">
-              <div className="space-y-3">
-                {/* Input del margen */}
+            <td key={format} className="py-4 px-3 min-w-[140px]">
+              <div className="space-y-2">
                 <div>
                   {isSent ? (
-                    <div className="font-medium text-center">
+                    <div className="font-medium text-center text-sm">
                       {marginValue !== null && marginValue !== undefined ? `${marginValue}%` : '0%'}
                     </div>
                   ) : (
                     <div className="relative">
                       <input
                         type="number"
-                        step="0.01"
+                        step="0.1"
                         min="0"
                         max="1000"
                         value={marginValue === null ? '' : marginValue}
                         onChange={(e) => handleMarginChange(format, e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-[#174940] focus:border-transparent"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-[#174940] focus:border-transparent pr-6 text-sm"
                         placeholder="0"
                       />
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">
                         %
-                      </div>
+                      </span>
                     </div>
                   )}
                 </div>
 
-                {/* Precio Final */}
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">Precio final</div>
-                  <div className="font-semibold text-[#174940] text-center">
+                  <div className="text-xs text-gray-500 mb-0.5 text-center">Precio final</div>
+                  <div className="font-semibold text-[#174940] text-center text-sm whitespace-nowrap">
                     {formatCurrency(precioFinal)}
                   </div>
                 </div>
 
-                {/* Subtotal Base */}
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">Subtotal base</div>
-                  <div className="font-medium text-gray-700 text-center">
+                  <div className="text-xs text-gray-500 mb-0.5 text-center">Subtotal base</div>
+                  <div className="font-medium text-gray-700 text-center text-sm whitespace-nowrap">
                     {formatCurrency(subtotalBase)}
                   </div>
                 </div>
 
-                {/* Subtotal + Margen */}
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">Subtotal + margen</div>
-                  <div className="font-semibold text-center">
+                  <div className="text-xs text-gray-500 mb-0.5 text-center">Subtotal + margen</div>
+                  <div className="font-semibold text-center text-sm whitespace-nowrap">
                     {formatCurrency(subtotalConMargen)}
                   </div>
                 </div>
 
-                {/* Ganancia */}
                 <div>
-                  <div className="text-xs text-gray-500 mb-1">Ganancia</div>
-                  <div className={`font-semibold text-center ${ganancia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className="text-xs text-gray-500 mb-0.5 text-center">Ganancia</div>
+                  <div className={`font-semibold text-center text-sm whitespace-nowrap ${ganancia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatCurrency(ganancia)}
                   </div>
                 </div>

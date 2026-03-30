@@ -18,7 +18,6 @@ export default function DeleteUserModal({
     onClose: () => void;
     onEliminado: () => void;
 }) {
-    console.log(userId)
     const [state, dispatch, pending] = useActionState(
         deleteUserAction, {
         errors: [],

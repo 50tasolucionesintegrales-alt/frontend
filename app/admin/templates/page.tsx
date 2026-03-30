@@ -18,7 +18,7 @@ export default function TemplatesPage() {
         setTemplates(res.items)
       }
     } catch (err) {
-      console.error(err)
+
     } finally {
       setLoading(false)
     }

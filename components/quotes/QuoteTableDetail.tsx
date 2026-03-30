@@ -131,7 +131,6 @@ export function QuoteTable({
       }
     } catch (error) {
       toast.error('Error al procesar la solicitud')
-      console.error('Error saving changes:', error)
     } finally {
       setIsSaving(false)
     }
@@ -209,7 +208,6 @@ export function QuoteTable({
     } catch (error) {
       setLocalItems(previousItems)
       toast.error(error instanceof Error ? error.message : 'Error al eliminar el producto')
-      console.error('Error deleting item:', error)
     } finally {
       setIsDeleting(null)
     }

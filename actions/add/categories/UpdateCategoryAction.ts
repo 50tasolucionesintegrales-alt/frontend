@@ -36,9 +36,7 @@ export default async function UpdateCategoryAction(_prev: ActionType, formData: 
         body: JSON.stringify(data)
     })
 
-    console.log(res)
     const json = await res.json()
-    console.log(json)
 
     if(!res.ok) {
         return {

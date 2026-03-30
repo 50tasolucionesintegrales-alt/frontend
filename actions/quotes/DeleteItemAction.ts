@@ -25,7 +25,6 @@ export async function deleteItemAction(itemId: string) {
     
     return { success: true, error: null }
   } catch (error) {
-    console.error('Error deleting item:', error)
     return { success: false, error: (error as Error).message }
   }
 }

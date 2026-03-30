@@ -17,6 +17,19 @@ type Props = {
   getProductImageDataUrl: (id: string) => Promise<string | null>
 }
 
+// Función de formato de moneda
+const formatCurrency = (value: number | string | undefined): string => {
+  if (value === undefined || value === null) return '$0.00'
+  const num = typeof value === 'string' ? parseFloat(value) : value
+  if (isNaN(num)) return '$0.00'
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(num)
+}
+
 export default function ProductTable({ products, categorias, getProductImageDataUrl }: Props) {
   const [items, setItems] = useState<Producto[]>(products)
   const [q, setQ] = useState('')
@@ -133,7 +146,7 @@ export default function ProductTable({ products, categorias, getProductImageData
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#174940] font-medium">
-                  ${parseFloat(p.precio.toString()).toFixed(2)}
+                  {formatCurrency(p.precio)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-[#174940]">
                   {p.category?.nombre ??

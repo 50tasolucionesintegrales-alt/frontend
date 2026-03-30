@@ -24,7 +24,6 @@ export default async function AdminMetricsPage({
       if (typeof res === "string" && res.startsWith("<")) return []; // Evita HTML
       return res;
     } catch (err) {
-      console.error("Error fetching metric:", err);
       return [];
     }
   }

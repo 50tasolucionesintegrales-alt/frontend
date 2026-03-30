@@ -7,6 +7,19 @@ import EditServiceModal from '@/components/modals/service/EditarModal'
 import DeleteServiceAction from '@/actions/add/services/DeleteServiceAction'
 import { Service } from '@/src/schemas'
 
+// Función de formato de moneda
+const formatCurrency = (value: number | string | undefined): string => {
+  if (value === undefined || value === null) return '$0.00'
+  const num = typeof value === 'string' ? parseFloat(value) : value
+  if (isNaN(num)) return '$0.00'
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(num)
+}
+
 export default function ServiceTable({ services }: { services: Service[] }) {
   const [items, setItems] = useState<Service[]>(services)
   const [editing, setEditing] = useState<Service | null>(null)
@@ -19,9 +32,24 @@ export default function ServiceTable({ services }: { services: Service[] }) {
   useEffect(() => { setItems(services) }, [services])
 
   const columns: Column<Service>[] = [
-    { header: 'Nombre', render: s => s.nombre },
-    { header: 'Descripción', render: s => s.descripcion ?? '—' },
-    { header: 'Precio base', render: s => `$${s.precioBase}` },
+    { 
+      header: 'Nombre', 
+      render: s => s.nombre,
+      width: '200px',
+    },
+    { 
+      header: 'Descripción', 
+      render: s => s.descripcion ?? '—',
+      width: '500px',
+      maxLines: 5,
+      className: 'break-words',
+    },
+    { 
+      header: 'Precio base', 
+      render: s => formatCurrency(s.precioBase), // <-- Aquí se aplica el formato
+      width: '140px',
+      className: 'text-right font-medium',
+    },
   ]
 
   const searchable = (s: Service, q: string) =>

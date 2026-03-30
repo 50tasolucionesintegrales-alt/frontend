@@ -10,6 +10,9 @@ export type Column<T> = {
   render: (row: T) => React.ReactNode
   className?: string
   headerClassName?: string
+  width?: string 
+  maxLines?: number 
+  lineHeight?: string // Nueva prop para controlar la altura de línea
 }
 
 type Props<T> = {
@@ -22,7 +25,6 @@ type Props<T> = {
   pageSize?: number
   extraFilters?: React.ReactNode
   title?: string
-  /** Opcional: etiqueta amigable para mostrar en el modal (e.g., nombre) */
   getDeleteLabel?: (row: T) => string
 }
 
@@ -41,7 +43,6 @@ export default function CrudTable<T>({
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
 
-  // Estado del modal de confirmación
   const [confirming, setConfirming] = useState<{ row: T; id: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -76,6 +77,15 @@ export default function CrudTable<T>({
     }
   }
 
+  // Calcular la altura máxima basada en maxLines
+  const getMaxHeightClass = (maxLines?: number) => {
+    if (!maxLines) return ''
+    // Asumiendo que cada línea tiene aproximadamente 1.5rem (24px)
+    const lineHeight = 1.5 // rem
+    const maxHeight = maxLines * lineHeight
+    return `max-h-[${maxHeight}rem]`
+  }
+
   return (
     <div className="space-y-4">
       {(title || searchable || extraFilters) && (
@@ -108,12 +118,13 @@ export default function CrudTable<T>({
                 <th
                   key={i}
                   className={`px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider ${c.headerClassName ?? ''}`}
+                  style={{ width: c.width }}
                 >
                   {c.header}
                 </th>
               ))}
               {(onEdit || onDelete) && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider sticky right-0 bg-[#174940] shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">
                   Acciones
                 </th>
               )}
@@ -124,21 +135,34 @@ export default function CrudTable<T>({
               const id = getRowId(row)
               return (
                 <tr key={id} className="hover:bg-[#f0f7f5] transition-colors">
-                  {columns.map((c, i) => (
-                    <td
-                      key={i}
-                      className={`px-6 py-4 whitespace-nowrap text-sm ${c.className ?? ''}`}
-                    >
-                      {c.render(row)}
-                    </td>
-                  ))}
+                  {columns.map((c, i) => {
+                    // Aplicar clase de líneas máximas si está definida
+                    const lineClampClass = c.maxLines 
+                      ? `line-clamp-${c.maxLines}` 
+                      : ''
+                    
+                    // Altura máxima fija para mantener filas consistentes
+                    const maxHeightClass = c.maxLines ? 'max-h-[7.5rem]' : '' // 5 líneas * 1.5rem = 7.5rem
+                    
+                    return (
+                      <td
+                        key={i}
+                        className={`px-6 py-4 text-sm align-top ${c.className ?? ''}`}
+                        style={{ width: c.width }}
+                      >
+                        <div className={`${lineClampClass} ${maxHeightClass} overflow-hidden`}>
+                          {c.render(row)}
+                        </div>
+                       </td>
+                    )
+                  })}
                   {(onEdit || onDelete) && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-6 py-4 text-sm font-medium sticky right-0 bg-white shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.05)] align-top">
                       <div className="flex items-center gap-3">
                         {onEdit && (
                           <button
                             onClick={() => onEdit(row)}
-                            className="text-[#174940] hover:text-[#0F332D] flex items-center gap-1"
+                            className="text-[#174940] hover:text-[#0F332D] flex items-center gap-1 whitespace-nowrap"
                           >
                             <Edit2 className="h-4 w-4" />
                             <span>Editar</span>
@@ -147,16 +171,16 @@ export default function CrudTable<T>({
                         {onDelete && (
                           <button
                             onClick={() => handleAskDelete(row)}
-                            className="text-red-600 hover:text-red-800 flex items-center gap-1"
+                            className="text-red-600 hover:text-red-800 flex items-center gap-1 whitespace-nowrap"
                           >
                             <Trash2 className="h-4 w-4" />
                             <span>Eliminar</span>
                           </button>
                         )}
                       </div>
-                    </td>
+                     </td>
                   )}
-                </tr>
+                 </tr>
               )
             })}
             {paged.length === 0 && (
@@ -262,7 +286,6 @@ export default function CrudTable<T>({
             onClose={() => (deleting ? null : setConfirming(null))}
             className="relative z-50"
           >
-            {/* Backdrop animado */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -272,7 +295,6 @@ export default function CrudTable<T>({
               aria-hidden="true"
             />
 
-            {/* Contenedor del modal */}
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <motion.div
                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -281,7 +303,6 @@ export default function CrudTable<T>({
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl mx-2"
               >
-                {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <Dialog.Title className="text-xl font-bold text-gray-900">
                     Confirmar eliminación
@@ -296,7 +317,6 @@ export default function CrudTable<T>({
                   </button>
                 </div>
 
-                {/* Contenido */}
                 <div className="space-y-3">
                   <p className="text-gray-700">
                     ¿Seguro que deseas eliminar este registro
@@ -315,7 +335,6 @@ export default function CrudTable<T>({
                   </p>
                 </div>
 
-                {/* Acciones */}
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t mt-6">
                   <button
                     type="button"

@@ -147,7 +147,7 @@ export default function PdfDownloadModal({
         }
       }
     } catch (error) {
-      console.error('Error loading template defaults:', error)
+  
     } finally {
       setLoadingTemplate(false)
     }
