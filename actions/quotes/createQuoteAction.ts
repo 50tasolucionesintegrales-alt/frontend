@@ -35,7 +35,7 @@ export async function createDraft(prevState: ActionType, formData: FormData) {
     }
   }
 
-  revalidateTag('quotes-drafts', 'page')
+  revalidateTag('quotes-drafts', 'max')
 
   return {
     errors: [],

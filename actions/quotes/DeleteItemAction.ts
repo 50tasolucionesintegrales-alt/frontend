@@ -21,7 +21,7 @@ export async function deleteItemAction(itemId: string) {
     }
 
     // Revalidar la cotización
-    revalidateTag('quote-*', 'layout')
+    revalidateTag('quote-*', 'max')
     
     return { success: true, error: null }
   } catch (error) {
