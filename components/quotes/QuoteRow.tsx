@@ -188,6 +188,7 @@ export function QuoteRow({
                       <img
                         src={itemImage}
                         alt={itemName}
+                        loading="lazy"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -335,6 +336,7 @@ export function QuoteRow({
                   <img
                     src={itemImage}
                     alt={itemName}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 </div>

@@ -59,6 +59,12 @@ export default function ExcelStep2Modal({
     if (f) handleFile(f);
   };
 
+  const handleBack = () => {
+    setFile(null);
+    setRowErrors([]);
+    onBack();
+  };
+
   const handleProcess = async () => {
     if (!file) {
       toast.warn("Selecciona un archivo primero");
@@ -269,7 +275,7 @@ export default function ExcelStep2Modal({
               <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-6 border-t mt-6">
                 <button
                   type="button"
-                  onClick={onBack}
+                  onClick={handleBack}
                   disabled={loading}
                   className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
                 >
