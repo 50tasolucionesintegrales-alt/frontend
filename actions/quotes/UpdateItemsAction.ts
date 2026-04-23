@@ -1,7 +1,6 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { revalidateTag } from 'next/cache'
 
 type BatchUpdateItemDto = {
   id: string;
@@ -35,27 +34,16 @@ export async function updateQuoteItemsAction(quoteId: string, dtos: BatchUpdateI
       body: JSON.stringify(dtos),
     })
 
-    // Intentamos parsear la respuesta JSON (si el backend devuelve los items actualizados)
     const json = await res.json().catch(() => ({}))
 
     if (!res.ok) {
       throw new Error((json && json.message) || 'Error del servidor al guardar')
     }
 
-    // Revalidamos la cotización localmente
-    revalidateTag(`quote-${quoteId}`, 'max')
-
-    // Devolver items si el backend las incluye en la respuesta
     if (Array.isArray(json.items)) {
       return { success: true, error: null, items: json.items }
     }
 
-    // Algunos backends devuelven { itemsUpdated: [...] } o similar: intentar detectar
-    if (Array.isArray((json as any).itemsUpdated)) {
-      return { success: true, error: null, items: (json as any).itemsUpdated }
-    }
-
-    // Si no hay items en la respuesta, indicar success pero sin items
     return { success: true, error: null, items: null }
 
   } catch (error) {

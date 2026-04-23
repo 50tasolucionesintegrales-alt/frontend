@@ -117,18 +117,33 @@ export function QuoteTable({
         margenPct9: (item as any).margenPct9 ?? null,
         margenPct10: (item as any).margenPct10 ?? null,
         margenPct11: (item as any).margenPct11 ?? null,
-        margenPct12: (item as any).margenPct12 ?? null,  // <-- AGREGADO
+        margenPct12: (item as any).margenPct12 ?? null,
       }))
 
-      const result = await updateQuoteItemsAction(quoteId, dtos)
+      const res = await fetch(`/api/quotes/${quoteId}/items`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dtos),
+      })
 
-      if (result.success) {
-        toast.success('¡Cambios guardados con éxito!')
-        // Refrescar la página para obtener los datos actualizados del backend
-        router.refresh()
-      } else {
-        toast.error(result.error || 'Error al guardar los cambios')
+      const json = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        toast.error(json.message || 'Error al guardar los cambios')
+        return
       }
+
+      if (Array.isArray(json.items) && json.items.length > 0) {
+        setLocalItems(prev => prev.map(localItem => {
+          const updated = json.items.find((i: any) => i.id === localItem.id)
+          return updated ? { ...localItem, ...updated } : localItem
+        }))
+      }
+
+      toast.success('¡Cambios guardados con éxito!')
+
     } catch (error) {
       toast.error('Error al procesar la solicitud')
     } finally {

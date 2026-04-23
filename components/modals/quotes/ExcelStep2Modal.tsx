@@ -96,11 +96,22 @@ export default function ExcelStep2Modal({
 
       // Mostrar advertencias si hay
       if (result.advertencias?.length) {
-        result.advertencias.forEach((adv) =>
-          toast.info(adv, { autoClose: 6000 }),
-        );
-      }
+        const reutilizados = result.advertencias.filter(a => 
+          a.includes('ya existía')
+        ).length;
+        
+        if (reutilizados > 0) {
+          toast.info(
+            `${reutilizados} producto(s) ya existían y fueron reutilizados.`,
+            { autoClose: 6000 }
+          );
+        }
 
+        const otrasAdvertencias = result.advertencias.filter(a => 
+          !a.includes('ya existía')
+        );
+        otrasAdvertencias.forEach(adv => toast.warn(adv, { autoClose: 6000 }));
+      }
       toast.success(
         `Cotización creada: ${result.productosCreados} producto(s) nuevo(s), ${result.productosReutilizados} reutilizado(s)`,
       );

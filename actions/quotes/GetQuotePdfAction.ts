@@ -111,7 +111,10 @@ export async function downloadQuotePdfAction(_prev: State, formData: FormData): 
   const buf = await res.arrayBuffer()
   const base64 = Buffer.from(buf).toString('base64')
   const dataUrl = `data:application/pdf;base64,${base64}`
-  const filename = `quote_${quoteId}_m${empresa}.pdf`
+  const folioClean = folio 
+  ? folio.replace(/\//g, '-').replace(/[^a-zA-Z0-9\-_]/g, '')
+  : quoteId
+  const filename = `${folioClean}.pdf`
 
   return { dataUrl, filename }
 }

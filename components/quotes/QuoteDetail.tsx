@@ -1,11 +1,9 @@
 'use client'
 
-import { useActionState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 import type { Quote, Item } from '@/src/schemas'
-import sendQuoteAction from '@/actions/quotes/sendQuoteAction'
-import reOpenQuoteAction from '@/actions/quotes/reOpenQuoteAction'
 import { FileText } from 'lucide-react'
 
 import { useSelectedFormats } from './hooks/useSelectedFormats'
@@ -14,28 +12,69 @@ import { FormatsPicker } from './FormatsPicker'
 import { QuoteTable } from './QuoteTableDetail'
 import { PdfButtons } from './PDFButtons'
 
-export default function QuoteDetail(quote : Quote) {
+export default function QuoteDetail(quote: Quote) {
   const router = useRouter()
-  const { items} = useStableItems(String(quote.id), quote.items as Item[])
+  const { items } = useStableItems(String(quote.id), quote.items as Item[])
   const { selected, toggle, selectAll, clearAll, hydrated } =
-    useSelectedFormats(`quote:${quote.id}:formats`, [1,2,3]);
+    useSelectedFormats(`quote:${quote.id}:formats`, [1, 2, 3])
 
-  const isSent = quote.status === 'sent'
+  const [status, setStatus] = useState(quote.status)
+  const [pendingSend, setPendingSend] = useState(false)
+  const [pendingReopen, setPendingReopen] = useState(false)
+
+  const isSent = status === 'sent'
   const isProductQuote = quote.tipo === 'productos'
 
-  const [stateSend, dispatchSend, pendingSend]   = useActionState(sendQuoteAction, { errors: [], success: '' })
-  const [stateReopen, dispatchReopen, pendingReopen] = useActionState(reOpenQuoteAction, { errors: [], success: '' })
+  const handleSend = async () => {
+    if (selected.length === 0) return
+    setPendingSend(true)
 
-  // toasts + refresh
-  useEffect(() => {
-    stateSend.errors?.forEach(e => toast.error(e))
-    if (stateSend.success) { toast.success(stateSend.success); router.refresh() }
-  }, [stateSend, router])
+    try {
+      const res = await fetch(`/api/quotes/${quote.id}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
 
-  useEffect(() => {
-    stateReopen.errors?.forEach(e => toast.error(e))
-    if (stateReopen.success) { toast.success(stateReopen.success); router.refresh() }
-  }, [stateReopen, router])
+      const json = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        toast.error(json.message || 'Error al enviar la cotización')
+        return
+      }
+
+      setStatus('sent')
+      toast.success('Cotización enviada correctamente')
+    } catch {
+      toast.error('Error al enviar la cotización')
+    } finally {
+      setPendingSend(false)
+    }
+  }
+
+  const handleReopen = async () => {
+    setPendingReopen(true)
+
+    try {
+      const res = await fetch(`/api/quotes/${quote.id}/reopen`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const json = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        toast.error(json.message || 'Error al reabrir la cotización')
+        return
+      }
+
+      setStatus('draft')
+      toast.success('La cotización se reabrió correctamente')
+    } catch {
+      toast.error('Error al reabrir la cotización')
+    } finally {
+      setPendingReopen(false)
+    }
+  }
 
   return (
     <section className="mb-12">
@@ -45,7 +84,7 @@ export default function QuoteDetail(quote : Quote) {
           toggle={toggle}
           selectAll={selectAll}
           clearAll={clearAll}
-          hydrated={hydrated}    
+          hydrated={hydrated}
         />
       )}
 
@@ -59,30 +98,31 @@ export default function QuoteDetail(quote : Quote) {
 
       <div className="mt-8">
         {!isSent ? (
-          <form action={dispatchSend} className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <input type="hidden" name="quoteId" value={quote.id} />
-            {selected.map(n => (<input key={n} type="hidden" name="formats" value={n} />))}
-            <button type="submit" disabled={selected.length === 0}
-              className="px-6 py-3 bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] transition-colors flex items-center gap-2 font-medium disabled:opacity-50">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <button
+              onClick={handleSend}
+              disabled={pendingSend || selected.length === 0}
+              className="px-6 py-3 bg-[#174940] text-white rounded-lg hover:bg-[#0F332D] transition-colors flex items-center gap-2 font-medium disabled:opacity-50"
+            >
               <FileText className="h-5 w-5" />
-              <span>
-                {pendingSend ? 'Enviando...' : 'Enviar cotización'}
-              </span>
+              <span>{pendingSend ? 'Enviando...' : 'Enviar cotización'}</span>
             </button>
-          </form>
+          </div>
         ) : (
           <PdfButtons
             quoteId={String(quote.id)}
             selectedFormats={selected}
             onReopen={
-              <form action={dispatchReopen}>
-                <input type="hidden" name="quoteId" value={quote.id} />
-                <button type="submit"
-                  className="px-6 py-3 bg-white border border-[#e5e7eB] text-[#0F332D] rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center gap-2">
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3v18" stroke="currentColor" strokeWidth="2"/></svg>
-                  {pendingReopen ? 'Reabriendo...' : 'Reabrir cotización'}
-                </button>
-              </form>
+              <button
+                onClick={handleReopen}
+                disabled={pendingReopen}
+                className="px-6 py-3 bg-white border border-[#e5e7eb] text-[#0F332D] rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center gap-2 disabled:opacity-50"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 12h18M12 3v18" stroke="currentColor" strokeWidth="2" />
+                </svg>
+                {pendingReopen ? 'Reabriendo...' : 'Reabrir cotización'}
+              </button>
             }
           />
         )}

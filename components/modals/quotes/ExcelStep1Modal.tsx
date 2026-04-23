@@ -152,18 +152,18 @@ export default function ExcelStep1Modal({ open, onClose, onNext }: Props) {
                   <input
                     type="number"
                     min={1}
-                    max={200}
+                    max={1000}
                     value={numItems}
                     onChange={(e) => {
                       const v = parseInt(e.target.value);
-                      if (!isNaN(v) && v >= 1 && v <= 200) setNumItems(v);
+                      if (!isNaN(v) && v >= 1 && v <= 1000) setNumItems(v);
                     }}
-                    className="w-20 px-3 py-2 rounded-lg border border-[#174940] text-[#174940] font-bold text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#174940]"
+                    className="w-22 px-3 py-2 rounded-lg border border-[#174940] text-[#174940] font-bold text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#174940]"
                   />
-                  <span className="text-sm text-gray-400">máx. 200</span>
+                  <span className="text-sm text-gray-400">máx. 1000</span>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  {[5, 10, 15, 20, 30, 50].map((n) => (
+                  {[5, 10, 25, 50, 100, 250, 500, 1000].map((n) => (
                     <button
                       key={n}
                       onClick={() => setNumItems(n)}

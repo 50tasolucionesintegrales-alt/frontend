@@ -17,27 +17,13 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
         cache: 'no-store' as const,
     }
 
-    const quotePromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${id}`, {
+    // Cargar la cotización primero
+    const quote = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/quotes/${id}`, {
         ...fetchOptions,
         cache: 'no-store',
     }).then((res) => res.json())
 
-    const productsPromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
-        ...fetchOptions,
-        cache: 'no-store',
-    }).then((res) => res.json())
-
-    const servicesPromise = fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`, {
-        ...fetchOptions,
-        cache: 'no-store',
-    }).then((res) => res.json())
-
-    const [quote, productos, servicios] = await Promise.all([
-        quotePromise,
-        productsPromise,
-        servicesPromise,
-    ])
-
+    // Cargar imágenes de productos
     const itemsWithImages = await Promise.all(
         quote.items.map(async (item: Item) => {
             if (item.product?.id) {
@@ -46,38 +32,43 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
             }
             return item
         })
-    ) 
-
-    const usedProductIds = new Set(
-        quote.items
-            .filter((item: Item) => item.product)
-            .map((item: Item) => item.product.id)
     )
 
-    const usedServiceIds = new Set(
-        quote.items
-            .filter((item: Item) => item.service)
-            .map((item: Item) => item.service?.id)
-    )
+    // Solo cargar productos/servicios si es borrador
+    let disponibles: any[] = []
 
-    const productosFiltrados = productos.filter((p: Producto) => !usedProductIds.has(p.id))
-    const serviciosFiltrados = servicios.filter((s: Service) => !usedServiceIds.has(s.id))
+    if (quote.status === 'draft') {
+        const [productos, servicios] = await Promise.all([
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, fetchOptions).then(r => r.json()),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`, fetchOptions).then(r => r.json()),
+        ])
 
-    const disponibles =
-        quote.tipo === 'productos' ? productosFiltrados : serviciosFiltrados
+        const usedProductIds = new Set(
+            quote.items
+                .filter((item: Item) => item.product)
+                .map((item: Item) => item.product.id)
+        )
+        const usedServiceIds = new Set(
+            quote.items
+                .filter((item: Item) => item.service)
+                .map((item: Item) => item.service?.id)
+        )
+
+        const productosFiltrados = productos.filter((p: Producto) => !usedProductIds.has(p.id))
+        const serviciosFiltrados = servicios.filter((s: Service) => !usedServiceIds.has(s.id))
+
+        disponibles = quote.tipo === 'productos' ? productosFiltrados : serviciosFiltrados
+    }
 
     const quoteWithImages = {
         ...quote,
         items: itemsWithImages,
-    }       
+    }
 
     return (
         <div className="p-6">
-            {/* Header con título y botón de volver */}
             <div className="flex items-center justify-between mb-6 gap-3">
                 <h1 className="text-3xl font-bold text-[#0F332D]">{quote.titulo}</h1>
-
-                {/* Botón de volver */}
                 <ButtonBack href="/quotes" />
             </div>
 
