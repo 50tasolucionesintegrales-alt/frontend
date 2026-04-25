@@ -1,5 +1,4 @@
 import { getProductImageDataUrl } from "@/actions/add/products/ProductImageAction"
-import AddItemsModal from "@/components/quotes/AddItemsModal"
 import QuoteDetail from "@/components/quotes/QuoteDetail"
 import { Item, Producto, Service } from "@/src/schemas"
 import { cookies } from "next/headers"
@@ -72,11 +71,7 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
                 <ButtonBack href="/quotes" />
             </div>
 
-            {quote.status === 'draft' && (
-                <AddItemsModal quoteId={id} quoteType={quote.tipo} availableItems={disponibles} />
-            )}
-
-            <QuoteDetail {...quoteWithImages} />
+            <QuoteDetail {...quoteWithImages} availableItems={disponibles} />
         </div>
     )
 }

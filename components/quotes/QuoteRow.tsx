@@ -133,7 +133,6 @@ export function QuoteRow({
     
     try {
       await onDelete(item.id)
-      toast.success('Producto eliminado de la cotización')
       setShowDeleteConfirm(false)
     } catch (error) {
       toast.error('Error al eliminar el producto')

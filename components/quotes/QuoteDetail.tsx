@@ -1,18 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect  } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 import type { Quote, Item } from '@/src/schemas'
 import { FileText } from 'lucide-react'
 
+import AddItemsModal from './AddItemsModal'
+import type { Producto } from '@/src/schemas'
 import { useSelectedFormats } from './hooks/useSelectedFormats'
 import { useStableItems } from './hooks/useStableItems'
 import { FormatsPicker } from './FormatsPicker'
 import { QuoteTable } from './QuoteTableDetail'
 import { PdfButtons } from './PDFButtons'
 
-export default function QuoteDetail(quote: Quote) {
+export default function QuoteDetail(quote: Quote & { availableItems?: Producto[] }) {
   const router = useRouter()
   const { items } = useStableItems(String(quote.id), quote.items as Item[])
   const { selected, toggle, selectAll, clearAll, hydrated } =
@@ -21,6 +23,11 @@ export default function QuoteDetail(quote: Quote) {
   const [status, setStatus] = useState(quote.status)
   const [pendingSend, setPendingSend] = useState(false)
   const [pendingReopen, setPendingReopen] = useState(false)
+  const [localAvailableItems, setLocalAvailableItems] = useState(quote.availableItems ?? [])
+
+  useEffect(() => {
+    setLocalAvailableItems(quote.availableItems ?? [])
+  }, [quote.availableItems])
 
   const isSent = status === 'sent'
   const isProductQuote = quote.tipo === 'productos'
@@ -38,7 +45,7 @@ export default function QuoteDetail(quote: Quote) {
       const json = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        toast.error(json.message || 'Error al enviar la cotización')
+          toast.error(json.errors?.[0]?.message || json.message || 'Error al enviar la cotización')
         return
       }
 
@@ -53,22 +60,19 @@ export default function QuoteDetail(quote: Quote) {
 
   const handleReopen = async () => {
     setPendingReopen(true)
-
     try {
       const res = await fetch(`/api/quotes/${quote.id}/reopen`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
       })
-
       const json = await res.json().catch(() => ({}))
-
       if (!res.ok) {
-        toast.error(json.message || 'Error al reabrir la cotización')
+        toast.error(json.errors?.[0]?.message || json.message || 'Error al reabrir la cotización')
         return
       }
-
       setStatus('draft')
       toast.success('La cotización se reabrió correctamente')
+      router.refresh() 
     } catch {
       toast.error('Error al reabrir la cotización')
     } finally {
@@ -78,6 +82,14 @@ export default function QuoteDetail(quote: Quote) {
 
   return (
     <section className="mb-12">
+      {!isSent && (
+        <AddItemsModal
+          quoteId={String(quote.id)}
+          quoteType={quote.tipo as 'productos' | 'servicios'}
+          availableItems={localAvailableItems}
+        />
+      )}
+
       {!isSent && (
         <FormatsPicker
           selected={selected}

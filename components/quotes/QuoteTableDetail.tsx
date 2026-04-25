@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight, Settings, Check } from 'lucide-react'
 import type { Item } from '@/src/schemas'
 import { QuoteRow } from './QuoteRow'
 import { toast } from 'react-toastify'
-import { updateQuoteItemsAction } from '@/actions/quotes/UpdateItemsAction'
 import { deleteItemAction } from '@/actions/quotes/DeleteItemAction'
 import { useRouter } from 'next/navigation'
 
@@ -43,7 +42,7 @@ type BatchUpdateItemDto = {
   margenPct9?: number | null;
   margenPct10?: number | null;
   margenPct11?: number | null;
-  margenPct12?: number | null;  // <-- AGREGADO
+  margenPct12?: number | null;  
 }
 
 export function QuoteTable({
@@ -73,24 +72,28 @@ export function QuoteTable({
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const router = useRouter()
 
-  // Sincronizar items locales cuando cambian los props
+  // Efecto 1 — solo cuando cambian los items del servidor
   useEffect(() => {
     setLocalItems(initialItems)
-    
-    // Extraer márgenes actuales de los items para mostrarlos en los botones
-    if (initialItems.length > 0) {
-      const firstItem = initialItems[0]
-      const currentMargins: Record<number, number | null> = {}
-      
+  }, [initialItems])
+
+  // Efecto 2 — solo agrega márgenes de formatos NUEVOS, no resetea los existentes
+  useEffect(() => {
+    if (initialItems.length === 0) return
+    const firstItem = initialItems[0]
+    setAppliedMargins(prev => {
+      const updated = { ...prev }
       selectedFormats.forEach(format => {
-        const marginKey = `margenPct${format}` as keyof ItemWithMargins
-        const marginValue = (firstItem as any)[marginKey]
-        currentMargins[format] = marginValue !== undefined && marginValue !== null ? marginValue : null
+        // Solo inicializa si NO existe ya en el estado local
+        if (!(format in updated)) {
+          const marginKey = `margenPct${format}` as keyof ItemWithMargins
+          const marginValue = (firstItem as any)[marginKey]
+          updated[format] = marginValue !== undefined && marginValue !== null ? marginValue : null
+        }
       })
-      
-      setAppliedMargins(currentMargins)
-    }
-  }, [initialItems, selectedFormats])
+      return updated
+    })
+  }, [selectedFormats])
 
   const minWidth = useMemo(() => {
     const base = isProductQuote ? 480 : 380
@@ -131,7 +134,7 @@ export function QuoteTable({
       const json = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        toast.error(json.message || 'Error al guardar los cambios')
+        toast.error(json.errors?.[0]?.message || json.message || 'Error al guardar los cambios')
         return
       }
 
@@ -401,15 +404,15 @@ export function QuoteTable({
                           onClick={() => openMarginModal(format)}
                           className={`
                             inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm
-                            ${currentMargin !== null 
+                            ${currentMargin !== null && currentMargin !== undefined
                               ? 'bg-[#174940] text-white hover:bg-[#0F332D]' 
                               : 'bg-white text-[#174940] border border-[#174940] hover:bg-[#f0f7f5]'
                             }
                           `}
                         >
                           <Settings size={14} />
-                          {currentMargin !== null ? `${currentMargin}%` : 'Establecer margen'}
-                          {currentMargin !== null && <Check size={14} />}
+                          {currentMargin !== null && currentMargin !== undefined ? `${currentMargin}%` : 'Establecer margen'}
+                          {currentMargin !== null && currentMargin !== undefined && <Check size={14} />}
                         </button>
                       </td>
                     )
