@@ -66,7 +66,7 @@ export function QuoteRow({
       numValue = null
     } else {
       const parsed = parseFloat(value)
-      numValue = isNaN(parsed) ? null : Math.max(0, parsed)
+      numValue = isNaN(parsed) ? null : parsed
     }
     
     const marginKey = `margenPct${format}` as keyof ItemWithMargins
@@ -254,7 +254,8 @@ export function QuoteRow({
                               <input
                                 type="number"
                                 step="0.1"
-                                min="0"
+                                min="-100"
+                                max="1000"
                                 value={marginValue === null ? '' : marginValue}
                                 onChange={(e) => handleMarginChange(format, e.target.value)}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-center text-sm"
@@ -383,7 +384,7 @@ export function QuoteRow({
                       <input
                         type="number"
                         step="0.1"
-                        min="0"
+                        min="-100"
                         max="1000"
                         value={marginValue === null ? '' : marginValue}
                         onChange={(e) => handleMarginChange(format, e.target.value)}

@@ -167,8 +167,8 @@ export function QuoteTable({
     
     if (tempMarginValue.trim() !== '') {
       const parsed = parseFloat(tempMarginValue)
-      if (isNaN(parsed) || parsed < 0 || parsed > 1000) {
-        toast.error('El margen debe estar entre 0 y 1000%')
+      if (isNaN(parsed) || parsed < -100 || parsed > 1000) {
+        toast.error('El margen debe estar entre -100 y 1000%')
         return
       }
       marginValue = parsed
@@ -286,7 +286,7 @@ export function QuoteTable({
                   <input
                     type="number"
                     step="0.1"
-                    min="0"
+                    min="-100"
                     max="1000"
                     value={tempMarginValue}
                     onChange={(e) => setTempMarginValue(e.target.value)}
