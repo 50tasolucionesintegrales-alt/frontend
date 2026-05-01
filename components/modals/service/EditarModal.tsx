@@ -2,7 +2,7 @@
 
 import { Dialog } from '@headlessui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useActionState, useEffect } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import UpdateServiceAction from '@/actions/add/services/UpdateServiceAction'
 import { toast } from 'react-toastify'
@@ -40,6 +40,16 @@ export default function EditServiceModal({
     errors: [], success: '', item: undefined
   })
   const router = useRouter()
+  
+  // Estado para trackear descripción y longitud
+  const [descripcion, setDescripcion] = useState(servicio.descripcion ?? '')
+  const descripcionLength = descripcion.length
+  const exceedsLimit = descripcionLength > 2500
+
+  // Actualizar cuando cambia el servicio
+  useEffect(() => {
+    setDescripcion(servicio.descripcion ?? '')
+  }, [servicio.descripcion])
 
   useEffect(() => {
     if (state.errors?.length) state.errors.forEach((e: string) => toast.error(e))
@@ -115,11 +125,29 @@ export default function EditServiceModal({
                   </label>
                   <textarea 
                     name="descripcion" 
-                    defaultValue={servicio.descripcion ?? ''} 
+                    value={descripcion}
+                    onChange={(e) => setDescripcion(e.target.value)}
                     rows={3}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                    className={`w-full rounded-lg border px-4 py-2.5 focus:ring-2 outline-none transition ${
+                      exceedsLimit 
+                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                        : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
+                    }`}
                     placeholder="Descripción del servicio"
                   />
+                  {/* Contador de caracteres */}
+                  <div className={`mt-1 text-xs flex items-center justify-between ${
+                    exceedsLimit ? 'text-red-600' : 'text-gray-500'
+                  }`}>
+                    <span>
+                      {descripcionLength.toLocaleString()} / 2,500 caracteres
+                    </span>
+                    {exceedsLimit && (
+                      <span className="font-semibold">
+                        ⚠️ Excede por {(descripcionLength - 2500).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div>
